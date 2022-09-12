@@ -1,15 +1,15 @@
 {
-    "name": "Reddit Avatar Exporter",
-    "action": {},
-    "manifest_version": 3,
-    "version": "1.0.0",
-    "description": "Export your Reddit Avatar",
-    "permissions": [
-        "activeTab",
-        "declarativeContent",
-        "scripting"
-    ],
-    "background": {
-        "service_worker": "bundle.js"
-    }
+  "name": "Reddit Avatar Exporter",
+  "action": {},
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "description": "Export your Reddit Avatar",
+  "permissions": [
+    "activeTab",
+    "declarativeContent",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "main.js"
+  }
 }
