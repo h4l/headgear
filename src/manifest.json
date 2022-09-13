@@ -1,6 +1,9 @@
 {
   "name": "Reddit Avatar Exporter",
-  "action": {},
+  "action": {
+    "default_title": "Default Title",
+    "default_popup": "html/popup.html"
+  },
   "manifest_version": 3,
   "version": "1.0.0",
   "description": "Export your Reddit Avatar",

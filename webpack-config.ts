@@ -3,16 +3,16 @@ import * as path from "path";
 import { BannerPlugin, Configuration } from "webpack";
 
 const config: Configuration = {
-  context: path.resolve(__dirname, "./src"),
   entry: {
-    main: "./main.ts",
+    main: "./src/main.ts",
     ["api-token-retriever"]: {
-      import: "./api-token-retriever.ts",
+      import: "./src/api-token-retriever.ts",
       library: {
         type: "var",
         name: "apiTokenRetriever",
       },
     },
+    popup: "./src/popup.tsx",
   },
   devtool: "cheap-source-map",
   module: {
@@ -20,7 +20,11 @@ const config: Configuration = {
       {
         test: /\.tsx?$/,
         use: "ts-loader",
-        exclude: /node_modules/,
+        exclude: [/node_modules/, /\.test\.ts$/],
+      },
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader", "postcss-loader"],
       },
     ],
   },
@@ -46,7 +50,11 @@ const config: Configuration = {
       include: "api-token-retriever",
     }),
     new CopyPlugin({
-      patterns: [{ from: "./manifest.json", to: "." }],
+      patterns: [
+        { from: "./src/manifest.json", to: "." },
+        { from: "./src/html/*.html", to: "html/[name].html" },
+        { from: "./src/img/*", to: "img/[name][ext]" },
+      ],
     }),
   ],
 };
