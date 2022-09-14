@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "Chrome Browser plugin for exporting your Reddit Avatar",
   "scripts": {
-    "build": "webpack --mode development --config webpack-config.ts"
+    "build": "webpack --mode production --config webpack-config.ts",
+    "dev": "webpack --mode development --config webpack-config.ts",
+    "watch": "webpack --watch --mode development --config webpack-config.ts"
   },
   "author": "Hal Blackburn",
   "license": "MIT",
