@@ -1,5 +1,5 @@
 {
-  "name": "Reddit Avatar Exporter",
+  "name": "Taper",
   "action": {
     "default_title": "Default Title",
     "default_popup": "html/popup.html"
@@ -14,5 +14,10 @@
   ],
   "background": {
     "service_worker": "main.js"
+  },
+  "icons": {
+    "32": "img/logo_32.png",
+    "72": "img/logo_72.png",
+    "128": "img/logo_128.png"
   }
 }
