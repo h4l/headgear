@@ -48,9 +48,9 @@ render(
     </div>
     <div class="w-96 flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="p-4 flex-grow">
-        <h1 class="text-3xl font-bold text-center m-4">
-          <img class="inline w-7 h-7 mb-1" src="../img/logo.svg"></img>
-          <span class="opacity-0 -m-2">T</span>aper
+        <h1 class="text-3xl font-bold text-center ml-4 mr-4">
+          <img class="inline w-14 mb-1 mr-3" src="../img/logo.svg"></img>
+          Headgear
         </h1>
         <p class="text-center mx-6 my-4 text-sm">
           Unleash your Reddit Avatar's glorious, vectorised final form.

@@ -1,12 +1,12 @@
 {
-  "name": "Taper",
+  "name": "Headgear",
   "action": {
     "default_title": "Default Title",
     "default_popup": "html/popup.html"
   },
   "manifest_version": 3,
   "version": "1.0.0",
-  "description": "Export your Reddit Avatar",
+  "description": "The Reddit Avatar exporter.",
   "permissions": [
     "activeTab",
     "declarativeContent",
@@ -18,6 +18,7 @@
   "icons": {
     "32": "img/logo_32.png",
     "72": "img/logo_72.png",
-    "128": "img/logo_128.png"
+    "128": "img/logo_128.png",
+    "512": "img/logo_512.png"
   }
 }
