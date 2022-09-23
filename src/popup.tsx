@@ -32,6 +32,47 @@ const iconCross = (
   </svg>
 );
 
+function imageStyleOption(options: {
+  name: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div>
+      <input
+        type="radio"
+        id={`image-style-${options.name}`}
+        name="image-style"
+        value={options.name}
+        class="sr-only peer"
+        required
+      />
+      {/* // inline-flex justify-between items-center p-5 w-full text-gray-500 //
+      bg-white rounded-lg border border-gray-200 cursor-pointer //
+      dark:hover:text-gray-300 dark:border-gray-700
+      dark:peer-checked:text-blue-500 // peer-checked:border-blue-600
+      peer-checked:text-blue-600 // hover:text-gray-600 hover:bg-gray-100
+      dark:text-gray-400 dark:bg-gray-800 // dark:hover:bg-gray-700 */}
+      <label
+        class={`
+          flex flex-col my-2 p-5 rounded-lg border border-gray-200
+          cursor-pointer
+          peer-checked:text-blue-600 peer-checked:border-blue-600
+          hover:text-gray-600 hover:border-gray-300 hover:bg-gray-200
+          dark:text-gray-400 dark:border-gray-700 dark:bg-gray-800
+          dark:hover:text-gray-300 dark:hover:bg-gray-700 dark:hover:border-gray-600
+          dark:peer-checked:text-blue-500 dark:peer-checked:border-blue-500
+
+        `}
+        for={`image-style-${options.name}`}
+      >
+        <div class="font-medium">{options.title}</div>
+        <p class="text-xs font-normal">{options.description}</p>
+      </label>
+    </div>
+  );
+}
+
 render(
   <div class="w-[800px] h-[600px] flex flex-row relative text-base">
     <button
@@ -46,77 +87,86 @@ render(
         src="../img/h4l_dl-repro.svg"
       />
     </div>
-    <div class="w-96 flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
-      <div class="p-4 flex-grow">
-        <h1 class="text-3xl font-bold text-center ml-4 mr-4">
-          <img class="inline w-14 mb-1 mr-3" src="../img/logo.svg"></img>
-          Headgear
-        </h1>
-        <p class="text-center mx-6 my-4 text-sm">
-          Unleash your Reddit Avatar's glorious, vectorised final form.
-        </p>
-        <hr class="my-4" />
-
-        <h2 class="font-semibold my-3">Image Layout</h2>
-        <div class="flex my-2">
-          <div class="flex items-center h-5">
-            <input
-              id="helper-radio"
-              aria-describedby="helper-radio-text"
-              type="radio"
-              name="image-layout"
-              value="share"
-              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            ></input>
-          </div>
-          <div class="ml-2 text-sm">
-            <label
-              for="helper-radio"
-              class="font-medium text-gray-900 dark:text-gray-300"
-            >
-              White Background
-            </label>
-            <p
-              id="helper-radio-text"
-              class="text-xs font-normal text-gray-500 dark:text-gray-300"
-            >
-              Like the downloadable image from the Reddit avatar builder.
-            </p>
-          </div>
-        </div>
-        <div class="flex my-2">
-          <div class="flex items-center h-5">
-            <input
-              id="helper-radio"
-              aria-describedby="helper-radio-text"
-              type="radio"
-              name="image-layout"
-              value="background"
-              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            ></input>
-          </div>
-          <div class="ml-2 text-sm">
-            <label
-              for="helper-radio"
-              class="font-medium text-gray-900 dark:text-gray-300"
-            >
-              Collectable Avatar Background
-            </label>
-            <p
-              id="helper-radio-text"
-              class="text-xs font-normal text-gray-500 dark:text-gray-300"
-            >
-              Like the version on your profile page.
-            </p>
-          </div>
+    <div class="w-96 h-[100%] flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
+      <div class="pt-4 pl-4 pr-4 flex my-4">
+        <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg"></img>
+        <div class="mr-auto flex-shrink">
+          <h1 class="text-3xl font-bold">Headgear</h1>
+          <p class="text-xs">Unleash your Reddit Avatar.</p>
         </div>
       </div>
-      <div class="text-sm p-4 text-center">
+
+      <div class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 flex-grow overflow-y-scroll pl-4 pr-4">
+        {imageStyleOption({
+          name: "standard",
+          title: "Standard",
+          description: "The downloadable image from the Reddit avatar builder.",
+        })}
+        {imageStyleOption({
+          name: "background",
+          title: "Profile page card",
+          description: "The version on your profile page.",
+        })}
+        {imageStyleOption({
+          name: "headshot-hex",
+          title: "Comment thread headshot",
+          description: "The upper half in a hexagon.",
+        })}
+        {imageStyleOption({
+          name: "headshot-circle",
+          title: "UI Headshot",
+          description: "The upper half in a circle.",
+        })}
+
+        <h3 class="mt-6 mb-2 text-l font-semibold">Avatar Data</h3>
+        <p>
+          This data records the accessories and colors you chose when
+          customizing your Avatar. Currently it can't (directly) be used for
+          anything, but may be interesting to some people.
+        </p>
+        <div class="flex rounded-md shadow-sm mt-4 mb-4" role="group">
+          <button
+            type="button"
+            class={`
+            ml-auto rounded-l-lg
+            py-2 px-4 text-sm font-medium border
+            bg-white text-gray-900  border-gray-200
+            dark:bg-gray-700 dark:text-white dark:border-gray-600
+            hover:bg-gray-100 hover:text-blue-700
+            dark:hover:bg-gray-600 dark:hover:text-white
+            active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
+            dark:active:ring-blue-500 dark:active:text-white
+            `}
+          >
+            Copy as JSON
+          </button>
+          <button
+            type="button"
+            class={`
+            mr-auto rounded-r-lg
+            py-2 px-4 text-sm font-medium border
+            bg-white text-gray-900  border-gray-200
+            dark:bg-gray-700 dark:text-white dark:border-gray-600
+            hover:bg-gray-100 hover:text-blue-700
+            dark:hover:bg-gray-600 dark:hover:text-white
+            active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
+            dark:active:ring-blue-500 dark:active:text-white
+            `}
+          >
+            Copy <span class="font-mono">data:</span> URI
+          </button>
+        </div>
+      </div>
+      <div class="pl-4 pr-4 pt-2 pb-2 text-xs text-center">
         <p>Support this project if you found it useful.</p>
         <p>
-          <span class="rounded bg-slate-700 text-white font-mono my-2 p-2 leading-6">
-            0x00000000000000000000
-          </span>
+          <a
+            class="rounded bg-slate-200 font-mono my-2 p-1 leading-6"
+            target="_blank"
+            href="https://polygonscan.com/address/0x0000000000000000000000000000000000000000"
+          >
+            0x0000000000000000000000000000000000000000
+          </a>
         </p>
       </div>
       <a
