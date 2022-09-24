@@ -7,7 +7,7 @@ const iconArrowDown = (
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="w-7 h-7 inline m-1"
+    className="w-7 h-7 inline m-1 drop-shadow-lg"
   >
     <path
       fillRule="evenodd"
@@ -32,6 +32,20 @@ const iconCross = (
   </svg>
 );
 
+const BUTTON_STYLES = (
+  <div
+    class={`\
+rounded-lg border cursor-pointer
+bg-white text-gray-900  border-gray-200
+dark:bg-gray-700 dark:text-slate-50 dark:border-gray-600
+hover:bg-gray-100 hover:text-blue-700
+dark:hover:bg-gray-600 dark:hover:text-white
+active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
+dark:active:ring-blue-300 dark:active:text-blue-200
+`}
+  />
+).props.class;
+
 function imageStyleOption(options: {
   name: string;
   title: string;
@@ -54,14 +68,21 @@ function imageStyleOption(options: {
       peer-checked:text-blue-600 // hover:text-gray-600 hover:bg-gray-100
       dark:text-gray-400 dark:bg-gray-800 // dark:hover:bg-gray-700 */}
       <label
+        // TODO: make consistent with buttons
+        /*
+        py-2 px-4 text-sm font-medium border
+        bg-white text-gray-900  border-gray-200
+        dark:bg-gray-700 dark:text-white dark:border-gray-600
+        hover:bg-gray-100 hover:text-blue-700
+        dark:hover:bg-gray-600 dark:hover:text-white
+        active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
+        dark:active:ring-blue-500 dark:active:text-white
+        */
         class={`
-          flex flex-col my-2 p-5 rounded-lg border border-gray-200
-          cursor-pointer
+          flex flex-col my-2 p-5
           peer-checked:text-blue-600 peer-checked:border-blue-600
-          hover:text-gray-600 hover:border-gray-300 hover:bg-gray-200
-          dark:text-gray-400 dark:border-gray-700 dark:bg-gray-800
-          dark:hover:text-gray-300 dark:hover:bg-gray-700 dark:hover:border-gray-600
-          dark:peer-checked:text-blue-500 dark:peer-checked:border-blue-500
+          dark:peer-checked:text-blue-300 dark:peer-checked:border-blue-400
+          ${BUTTON_STYLES}
 
         `}
         for={`image-style-${options.name}`}
@@ -88,7 +109,7 @@ render(
       />
     </div>
     <div class="w-96 h-[100%] flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
-      <div class="pt-4 pl-4 pr-4 flex my-4">
+      <div class="px-4 flex my-4">
         <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg"></img>
         <div class="mr-auto flex-shrink">
           <h1 class="text-3xl font-bold">Headgear</h1>
@@ -128,14 +149,8 @@ render(
           <button
             type="button"
             class={`
-            ml-auto rounded-l-lg
-            py-2 px-4 text-sm font-medium border
-            bg-white text-gray-900  border-gray-200
-            dark:bg-gray-700 dark:text-white dark:border-gray-600
-            hover:bg-gray-100 hover:text-blue-700
-            dark:hover:bg-gray-600 dark:hover:text-white
-            active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
-            dark:active:ring-blue-500 dark:active:text-white
+              ml-auto rounded-r-none py-2 px-4 text-sm font-medium
+              ${BUTTON_STYLES}
             `}
           >
             Copy as JSON
@@ -143,14 +158,8 @@ render(
           <button
             type="button"
             class={`
-            mr-auto rounded-r-lg
-            py-2 px-4 text-sm font-medium border
-            bg-white text-gray-900  border-gray-200
-            dark:bg-gray-700 dark:text-white dark:border-gray-600
-            hover:bg-gray-100 hover:text-blue-700
-            dark:hover:bg-gray-600 dark:hover:text-white
-            active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
-            dark:active:ring-blue-500 dark:active:text-white
+              mr-auto rounded-l-none py-2 px-4 text-sm font-medium
+              ${BUTTON_STYLES}
             `}
           >
             Copy <span class="font-mono">data:</span> URI
@@ -161,7 +170,7 @@ render(
         <p>Support this project if you found it useful.</p>
         <p>
           <a
-            class="rounded bg-slate-200 font-mono my-2 p-1 leading-6"
+            class="rounded dark:text-slate-50  bg-slate-200 dark:bg-slate-600 font-mono my-2 p-1 leading-6"
             target="_blank"
             href="https://polygonscan.com/address/0x0000000000000000000000000000000000000000"
           >
@@ -170,12 +179,19 @@ render(
         </p>
       </div>
       <a
-        class="block flex text-lg font-medium bg-indigo-600 hover:bg-indigo-500 text-slate-50 p-3"
+        class={`\
+          flex text-lg font-medium
+          bg-indigo-600 hover:ring active:ring hover:ring-inset active:ring-inset hover:ring-indigo-500 active:ring-indigo-400
+          text-slate-50 p-3
+          `}
         href="data:text/plain;charset=utf-8,Hello%20World!%0A"
         download="hello.txt"
       >
         <span class="m-auto">
-          {iconArrowDown} <span class="m-1">Download SVG Image</span>
+          {iconArrowDown}{" "}
+          <span class="m-1 drop-shadow-lg shadow-white">
+            Download SVG Image
+          </span>
         </span>
       </a>
     </div>
