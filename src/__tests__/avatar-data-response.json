@@ -1,0 +1,272 @@
+{
+    "$": "A subset of the API response used to drive the Avatar shop/builder modal",
+    "data": {
+        "avatarBuilderCatalog": {
+            "accessories": [
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "10m-robots-blue_tone_0_head_1",
+                            "imageUrl": "https://i.redd.it/snoovatar/snoo_assets/fLF-Dt-5R6c_10m_robots_blue_tone_0_head_1.svg",
+                            "slotNumber": 50
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [
+                        "eyes"
+                    ],
+                    "defaultAccessoryId": "basic_face_lower_001",
+                    "id": "10m-robots-blue_tone_0_head_1",
+                    "sectionId": "main_expressions",
+                    "state": "RESTRICTED",
+                    "tags": [
+                        "section:expression",
+                        "collection:10m-robots-blue",
+                        "nft",
+                        "collection:10m-launch",
+                        "collection:10m-robots-colors"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "10m-robots-blue_tone_0_top_3_color_0",
+                            "imageUrl": "https://i.redd.it/snoovatar/snoo_assets/c_Z2_QN0wLk_10m_robots_blue_tone_0_top_3_color_0.svg",
+                            "slotNumber": 40
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [],
+                    "defaultAccessoryId": "basic_body_001",
+                    "id": "10m-robots-blue_tone_0_top_3_color_0",
+                    "sectionId": "top_body_tops",
+                    "state": "RESTRICTED",
+                    "tags": [
+                        "section:Tops",
+                        "collection:10m-robots-blue",
+                        "nft",
+                        "collection:10m-launch",
+                        "collection:10m-robots-colors"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "baldtuesdays_accessory_001",
+                            "imageUrl": "https://i.redd.it/snoovatar/snoo_assets/uJ07kxOVvbE_baldtuesdays_accessory_001.svg",
+                            "slotNumber": 100
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [],
+                    "defaultAccessoryId": null,
+                    "id": "baldtuesdays_accessory_001",
+                    "sectionId": "top_body_right_hand_accessories",
+                    "state": "RESTRICTED",
+                    "tags": [
+                        "section:right hand",
+                        "nft",
+                        "collection:creators2022H1",
+                        "collection:baldtuesdays"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "basic_background_001",
+                            "imageUrl": "https://i.redd.it/snoovatar/snoo_assets/bScSAf4TINE_basic_background_001.svg",
+                            "slotNumber": 0
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [],
+                    "defaultAccessoryId": "basic_background_001",
+                    "id": "basic_background_001",
+                    "sectionId": "default_default",
+                    "state": "ENABLED",
+                    "tags": [
+                        "basictest"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "basic_face_upper_002",
+                            "imageUrl": "https://i.redd.it/snoovatar/accessory_assets/9O5vgDLj4cM_basic_face_upper_002.svg",
+                            "slotNumber": 60
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [
+                        "eyes"
+                    ],
+                    "defaultAccessoryId": "basic_face_upper_001",
+                    "id": "basic_face_upper_002",
+                    "sectionId": "face_eyes",
+                    "state": "ENABLED",
+                    "tags": [
+                        "section:eyes"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "chipperdoodlescomic_head_accessory_003",
+                            "imageUrl": "https://i.redd.it/snoovatar/snoo_assets/yb9CwSJ5w6c_chipperdoodlescomic_head_accessory_003.svg",
+                            "slotNumber": 80
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [],
+                    "defaultAccessoryId": null,
+                    "id": "chipperdoodlescomic_head_accessory_003",
+                    "sectionId": "head_accessories",
+                    "state": "RESTRICTED",
+                    "tags": [
+                        "section:Hats",
+                        "nft",
+                        "collection:creators2022H1",
+                        "collection:creators_qa_2",
+                        "collection:chipperdoodlescomic"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "gaming_body_bottom_006",
+                            "imageUrl": "https://i.redd.it/snoovatar/accessory_assets/vO5m6xr_4KQ_gaming_body_bottom_006.svg",
+                            "slotNumber": 30
+                        }
+                    ],
+                    "isAvailableForCloset": true,
+                    "capabilityRequired": null,
+                    "customizableClasses": [
+                        "jumpsuit",
+                        "shoes",
+                        "body"
+                    ],
+                    "defaultAccessoryId": "basic_body_bottom_001",
+                    "id": "gaming_body_bottom_006",
+                    "sectionId": "bottom_body_bottoms",
+                    "state": "ENABLED",
+                    "tags": [
+                        "Gaming",
+                        "section:Bottoms"
+                    ]
+                },
+                {
+                    "assets": [
+                        {
+                            "accessoryId": "hoppydoodle_accessory_back_004",
+                            "imageUrl": "https://i.redd.it/snoovatar/snoo_assets/alCZeQ6SEJs_hoppydoodle_accessory_back_004.svg",
+                            "slotNumber": 90
+                        }
+                    ],
+                    "isAvailableForCloset": false,
+                    "capabilityRequired": null,
+                    "customizableClasses": [],
+                    "defaultAccessoryId": null,
+                    "id": "hoppydoodle_accessory_back_004",
+                    "sectionId": "top_body_left_hand_accessories",
+                    "state": "RESTRICTED",
+                    "tags": [
+                        "section:left hand",
+                        "nft",
+                        "collection:creators2022H1",
+                        "collection:hoppy_doodle"
+                    ]
+                }
+            ],
+            "avatar": {
+                "__typename": "UserAvatar",
+                "accessoryIds": [
+                    "10m-robots-blue_tone_0_head_1",
+                    "10m-robots-blue_tone_0_top_3_color_0",
+                    "baldtuesdays_accessory_001",
+                    "basic_background_001",
+                    "basic_face_upper_002",
+                    "chipperdoodlescomic_head_accessory_003",
+                    "gaming_body_bottom_006",
+                    "hoppydoodle_accessory_back_004"
+                ],
+                "accountId": "t2_37r42",
+                "id": "81090756",
+                "fullImage": {
+                    "url": "https://i.redd.it/snoovatar/avatars/nftv2_bmZ0X2VpcDE1NToxMzdfNDY2YTMzMDg4N2JkZjYyZDUzZjk2OGVhODI0NzkzMTUwZjA3NzYyZV8xMw_rare_0659ab1c-ebdf-4f63-b993-77036cb4f860.png"
+                },
+                "styles": [
+                    {
+                        "className": "body",
+                        "fill": "#FFFFFF"
+                    },
+                    {
+                        "className": "eyes",
+                        "fill": "#F0F0F0"
+                    },
+                    {
+                        "className": "hair",
+                        "fill": "#362317"
+                    },
+                    {
+                        "className": "facialhair",
+                        "fill": "#C08D41"
+                    },
+                    {
+                        "className": "jumpsuit",
+                        "fill": "#FDFFF8"
+                    },
+                    {
+                        "className": "shoes",
+                        "fill": "#3490E9"
+                    }
+                ],
+                "tags": []
+            },
+            "pastAvatars": [
+                {
+                    "__typename": "UserAvatar",
+                    "accessoryIds": [
+                        "basic_background_001",
+                        "basic_face_lower_001",
+                        "basic_face_upper_001",
+                        "outfits_2_body_018",
+                        "outfits_2_body_bottom_018",
+                        "outfits_2_hair_002"
+                    ],
+                    "accountId": "t2_37r42",
+                    "id": "4530594",
+                    "fullImage": {
+                        "url": "https://i.redd.it/snoovatar/avatars/f1a4ec49-de9f-4464-baed-fc370d5bd463.png"
+                    },
+                    "styles": [
+                        {
+                            "className": "body",
+                            "fill": "#FFFFFF"
+                        },
+                        {
+                            "className": "eyes",
+                            "fill": "#FF4500"
+                        },
+                        {
+                            "className": "hair",
+                            "fill": "#362317"
+                        },
+                        {
+                            "className": "facialhair",
+                            "fill": "#C08D41"
+                        }
+                    ],
+                    "tags": []
+                }
+            ]
+        },
+        "globalProductOffers": {},
+        "avatarStorefront": {}
+    }
+}

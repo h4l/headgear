@@ -44,9 +44,9 @@ function validateAvatarDataResponseData(
 ): asserts json is AvatarDataResponseData {
   if (
     !(
-      typeof json?.data.avatarBuilderCatalog?.accessories === "object" &&
-      typeof json?.data.avatarBuilderCatalog?.avatar === "object" &&
-      typeof json?.data.avatarBuilderCatalog?.pastAvatars === "object"
+      typeof json?.data?.avatarBuilderCatalog?.accessories === "object" &&
+      typeof json?.data?.avatarBuilderCatalog?.avatar === "object" &&
+      typeof json?.data?.avatarBuilderCatalog?.pastAvatars === "object"
     )
   ) {
     throw new Error(
