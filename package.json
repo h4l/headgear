@@ -11,6 +11,7 @@
   "author": "Hal Blackburn",
   "license": "MIT",
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^3.3.0",
     "@tsconfig/recommended": "^1.0.1",
     "@types/chrome": "^0.0.196",
     "@types/jest": "^29.0.1",
