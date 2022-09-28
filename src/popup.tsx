@@ -1,4 +1,4 @@
-import { render } from "preact";
+import { render, JSX, options } from "preact";
 
 import "./css.css";
 
@@ -42,6 +42,10 @@ hover:bg-gray-100 hover:text-blue-700
 dark:hover:bg-gray-600 dark:hover:text-white
 active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
 dark:active:ring-blue-300 dark:active:text-blue-200
+  disabled:cursor-not-allowed disabled:text-gray-500 disabled:active:ring-0 disabled:active:text-gray-500
+  disabled:hover:text-gray-500
+  peer-disabled:cursor-not-allowed peer-disabled:text-gray-500 peer-disabled:active:ring-0 peer-disabled:active:text-gray-500
+  peer-disabled:hover:text-gray-500
 `}
   />
 ).props.class;
@@ -50,11 +54,13 @@ function imageStyleOption(options: {
   name: string;
   title: string;
   description: string;
+  disabled?: boolean;
 }) {
   return (
     <div>
       <input
         type="radio"
+        disabled={options.disabled}
         id={`image-style-${options.name}`}
         name="image-style"
         value={options.name}
@@ -94,6 +100,21 @@ function imageStyleOption(options: {
   );
 }
 
+function couldNotLoadAvatarMessage(options: {
+  title: string;
+  description: string | JSX.Element | JSX.Element[];
+}): JSX.Element {
+  return (
+    <div class="h-full w-full p-20 bg-white text-gray-800">
+      <svg class="w-1/4" viewBox="0 0 100 100">
+        <use href="../img/avatar-loading-error.svg#root" />
+      </svg>
+      <h2 class="font-bold text-lg my-6">{options.title}</h2>
+      <p>{options.description}</p>
+    </div>
+  );
+}
+
 render(
   <div class="w-[800px] h-[600px] flex flex-row relative text-base">
     <button
@@ -102,11 +123,44 @@ render(
     >
       {iconCross}
     </button>
-    <div class="grow bg-slate-700 p-8">
-      <img
+    <div class="grow bg-slate-700 p-6">
+      {/* <svg
+        class="h-full w-full p-28 animate-pulse bg-white text-gray-200"
+        viewBox="0 0 57.520256 100.00005"
+      >
+        <use href="../img/avatar-loading-skeleton_minimal.svg#skeleton" />
+      </svg> */}
+      {/* {couldNotLoadAvatarMessage({
+        title: "Log in to see your Avatar",
+        description: (
+          <div>
+            <p>
+              You need to be logged in to your Reddit account to see your Avatar
+              here. Log in to Reddit as normal, then come back here.
+            </p>
+          </div>
+        ),
+      })} */}
+      {couldNotLoadAvatarMessage({
+        title: "Something went wrong",
+        description: (
+          <div>
+            <p class="my-2">
+              Headgear could not load your Avatar because it was not able to get
+              the data it needs from Reddit. This is probably a temporary
+              problem.
+            </p>
+            <p class="my-2">
+              If the Reddit is working and this keeps happening, there could be
+              something wrong with Headgear.
+            </p>
+          </div>
+        ),
+      })}
+      {/* <img
         class="object-contain w-full h-full drop-shadow-xl"
         src="../img/h4l_dl-repro.svg"
-      />
+      /> */}
     </div>
     <div class="w-96 h-[100%] flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="px-4 flex my-4">
@@ -122,6 +176,7 @@ render(
           name: "standard",
           title: "Standard",
           description: "The downloadable image from the Reddit avatar builder.",
+          disabled: true,
         })}
         {imageStyleOption({
           name: "background",
@@ -148,6 +203,7 @@ render(
         <div class="flex rounded-md shadow-sm mt-4 mb-4" role="group">
           <button
             type="button"
+            disabled
             class={`
               ml-auto rounded-r-none py-2 px-4 text-sm font-medium
               ${BUTTON_STYLES}
