@@ -14,7 +14,7 @@ const config: Configuration = {
     },
     popup: "./src/popup.tsx",
   },
-  devtool: "cheap-source-map",
+  devtool: "source-map",
   module: {
     rules: [
       {
