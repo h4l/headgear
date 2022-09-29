@@ -3,6 +3,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "types": ["preact", "@types/jest", "@types/chrome"]
+    "types": ["preact", "@types/jest", "@types/chrome"],
+    "sourceMap": true
   }
 }
