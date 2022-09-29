@@ -22,6 +22,7 @@
         "dotjoshjohnson.xml",
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
+        "orta.vscode-jest",
         "streetsidesoftware.code-spell-checker"
       ],
       "settings": {
