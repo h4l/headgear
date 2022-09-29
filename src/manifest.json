@@ -20,5 +20,11 @@
     "72": "img/logo_72.png",
     "128": "img/logo_128.png",
     "512": "img/logo_512.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["*.js.map"],
+      "matches": ["https://www.reddit.com/*"]
+    }
+  ]
 }
