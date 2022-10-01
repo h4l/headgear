@@ -5,7 +5,6 @@ import { Configuration } from "webpack";
 const config: Configuration = {
   entry: {
     reddit: "./src/reddit.ts",
-    main: "./src/main.ts",
     popup: "./src/popup.tsx",
   },
   devtool: "source-map",
