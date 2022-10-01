@@ -1,6 +1,40 @@
-import { render, JSX, options } from "preact";
+import { Signal, signal } from "@preact/signals";
+import { ComponentChildren, JSX, createContext, options } from "preact";
+import { useContext } from "preact/hooks";
 
+import { assert, assertNever } from "./assert";
+import { ResolvedAvatar } from "./avatars";
 import "./css.css";
+import { GetAvatarMessageResponse, MSG_GET_AVATAR } from "./reddit-interaction";
+
+enum HeadgearErrorType {
+  UNKNOWN,
+  NOT_REDDIT_TAB,
+}
+type HeadgearError =
+  | { type: HeadgearErrorType.UNKNOWN; exception: Error }
+  | {
+      type: HeadgearErrorType.NOT_REDDIT_TAB;
+      tab: chrome.tabs.Tab;
+    };
+
+enum HeadgearStateType {
+  LOADING,
+  ERROR,
+  AVATAR_LOADED,
+}
+type HeadgearState =
+  | { type: HeadgearStateType.LOADING }
+  | { type: HeadgearStateType.ERROR; error: HeadgearError }
+  | {
+      type: HeadgearStateType.AVATAR_LOADED;
+      tab: chrome.tabs.Tab;
+      avatar: ResolvedAvatar;
+    };
+
+const HeadgearContext = createContext<Signal<HeadgearState>>(
+  signal({ type: HeadgearStateType.LOADING })
+);
 
 const iconArrowDown = (
   <svg
@@ -50,7 +84,7 @@ dark:active:ring-blue-300 dark:active:text-blue-200
   />
 ).props.class;
 
-function imageStyleOption(options: {
+function ImageStyleOption(props: {
   name: string;
   title: string;
   description: string;
@@ -60,10 +94,10 @@ function imageStyleOption(options: {
     <div>
       <input
         type="radio"
-        disabled={options.disabled}
-        id={`image-style-${options.name}`}
+        disabled={props.disabled}
+        id={`image-style-${props.name}`}
         name="image-style"
-        value={options.name}
+        value={props.name}
         class="sr-only peer"
         required
       />
@@ -91,77 +125,85 @@ function imageStyleOption(options: {
           ${BUTTON_STYLES}
 
         `}
-        for={`image-style-${options.name}`}
+        for={`image-style-${props.name}`}
       >
-        <div class="font-medium">{options.title}</div>
-        <p class="text-xs font-normal">{options.description}</p>
+        <div class="font-medium">{props.title}</div>
+        <p class="text-xs font-normal">{props.description}</p>
       </label>
     </div>
   );
 }
 
-function couldNotLoadAvatarMessage(options: {
+function CouldNotLoadAvatarMessage(props: {
   title: string;
-  description: string | JSX.Element | JSX.Element[];
+  children: ComponentChildren;
 }): JSX.Element {
   return (
     <div class="h-full w-full p-20 bg-white text-gray-800">
       <svg class="w-1/4" viewBox="0 0 100 100">
         <use href="../img/avatar-loading-error.svg#root" />
       </svg>
-      <h2 class="font-bold text-lg my-6">{options.title}</h2>
-      <p>{options.description}</p>
+      <h2 class="font-bold text-lg my-6">{props.title}</h2>
+      <p>{props.children}</p>
     </div>
   );
 }
 
-render(
-  <div class="w-[800px] h-[600px] flex flex-row relative text-base">
-    <button
-      class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600"
-      title="Close"
-    >
-      {iconCross}
-    </button>
-    <div class="grow bg-slate-700 p-6">
-      {/* <svg
+export function DisplayArea() {
+  const headgearState = useContext(HeadgearContext);
+
+  let content: JSX.Element;
+  if (headgearState.value.type === HeadgearStateType.ERROR) {
+    const { type: errorType } = headgearState.value.error;
+    if (errorType === HeadgearErrorType.NOT_REDDIT_TAB) {
+      content = (
+        <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your avatar">
+          <p class="my-2">
+            Headgear needs a Reddit tab open to load your Avatar.
+          </p>
+        </CouldNotLoadAvatarMessage>
+      );
+    } else if (errorType === HeadgearErrorType.UNKNOWN) {
+      content = (
+        <CouldNotLoadAvatarMessage title="Something went wrong">
+          <p class="my-2">
+            Headgear could not load your Avatar because it was not able to get
+            the data it needs from Reddit. This is probably a temporary problem.
+          </p>
+          <p class="my-2">
+            If the Reddit is working and this keeps happening, there could be
+            something wrong with Headgear.
+          </p>
+        </CouldNotLoadAvatarMessage>
+      );
+    } else {
+      assertNever(errorType);
+    }
+  } else if (headgearState.value.type === HeadgearStateType.LOADING) {
+    content = (
+      <svg
         class="h-full w-full p-28 animate-pulse bg-white text-gray-200"
         viewBox="0 0 57.520256 100.00005"
       >
         <use href="../img/avatar-loading-skeleton_minimal.svg#skeleton" />
-      </svg> */}
-      {/* {couldNotLoadAvatarMessage({
-        title: "Log in to see your Avatar",
-        description: (
-          <div>
-            <p>
-              You need to be logged in to your Reddit account to see your Avatar
-              here. Log in to Reddit as normal, then come back here.
-            </p>
-          </div>
-        ),
-      })} */}
-      {couldNotLoadAvatarMessage({
-        title: "Something went wrong",
-        description: (
-          <div>
-            <p class="my-2">
-              Headgear could not load your Avatar because it was not able to get
-              the data it needs from Reddit. This is probably a temporary
-              problem.
-            </p>
-            <p class="my-2">
-              If the Reddit is working and this keeps happening, there could be
-              something wrong with Headgear.
-            </p>
-          </div>
-        ),
-      })}
-      {/* <img
+      </svg>
+    );
+  } else if (headgearState.value.type === HeadgearStateType.AVATAR_LOADED) {
+    content = (
+      <img
         class="object-contain w-full h-full drop-shadow-xl"
         src="../img/h4l_dl-repro.svg"
-      /> */}
-    </div>
+      />
+    );
+  } else {
+    assertNever(headgearState.value);
+  }
+
+  return <div class="grow bg-slate-700 p-6">{content}</div>;
+}
+
+export function Controls() {
+  return (
     <div class="w-96 h-[100%] flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="px-4 flex my-4">
         <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg"></img>
@@ -172,27 +214,27 @@ render(
       </div>
 
       <div class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 flex-grow overflow-y-scroll pl-4 pr-4">
-        {imageStyleOption({
-          name: "standard",
-          title: "Standard",
-          description: "The downloadable image from the Reddit avatar builder.",
-          disabled: true,
-        })}
-        {imageStyleOption({
-          name: "background",
-          title: "Profile page card",
-          description: "The version on your profile page.",
-        })}
-        {imageStyleOption({
-          name: "headshot-hex",
-          title: "Comment thread headshot",
-          description: "The upper half in a hexagon.",
-        })}
-        {imageStyleOption({
-          name: "headshot-circle",
-          title: "UI Headshot",
-          description: "The upper half in a circle.",
-        })}
+        <ImageStyleOption
+          name="standard"
+          title="Standard"
+          description="The downloadable image from the Reddit avatar builder."
+          disabled
+        />
+        <ImageStyleOption
+          name="background"
+          title="Profile page card"
+          description="The version on your profile page."
+        />
+        <ImageStyleOption
+          name="headshot-hex"
+          title="Comment thread headshot"
+          description="The upper half in a hexagon."
+        />
+        <ImageStyleOption
+          name="headshot-circle"
+          title="UI Headshot"
+          description="The upper half in a circle."
+        />
 
         <h3 class="mt-6 mb-2 text-l font-semibold">Avatar Data</h3>
         <p>
@@ -205,18 +247,18 @@ render(
             type="button"
             disabled
             class={`
-              ml-auto rounded-r-none py-2 px-4 text-sm font-medium
-              ${BUTTON_STYLES}
-            `}
+        ml-auto rounded-r-none py-2 px-4 text-sm font-medium
+        ${BUTTON_STYLES}
+      `}
           >
             Copy as JSON
           </button>
           <button
             type="button"
             class={`
-              mr-auto rounded-l-none py-2 px-4 text-sm font-medium
-              ${BUTTON_STYLES}
-            `}
+        mr-auto rounded-l-none py-2 px-4 text-sm font-medium
+        ${BUTTON_STYLES}
+      `}
           >
             Copy <span class="font-mono">data:</span> URI
           </button>
@@ -236,10 +278,10 @@ render(
       </div>
       <a
         class={`\
-          flex text-lg font-medium
-          bg-indigo-600 hover:ring active:ring hover:ring-inset active:ring-inset hover:ring-indigo-500 active:ring-indigo-400
-          text-slate-50 p-3
-          `}
+    flex text-lg font-medium
+    bg-indigo-600 hover:ring active:ring hover:ring-inset active:ring-inset hover:ring-indigo-500 active:ring-indigo-400
+    text-slate-50 p-3
+    `}
         href="data:text/plain;charset=utf-8,Hello%20World!%0A"
         download="hello.txt"
       >
@@ -251,6 +293,82 @@ render(
         </span>
       </a>
     </div>
-  </div>,
-  document.body
-);
+  );
+}
+
+export function ClosePopupButton() {
+  return (
+    <button
+      class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600"
+      title="Close"
+      onClick={window.close.bind(window)}
+    >
+      {iconCross}
+    </button>
+  );
+}
+export function Headgear(props: { rootState: Signal<HeadgearState> }) {
+  return (
+    <HeadgearContext.Provider value={props.rootState}>
+      {/* 800x600 is the current largest size a popup can be. */}
+      <div class="w-[800px] h-[600px] flex flex-row relative text-base">
+        <ClosePopupButton />
+        <DisplayArea />
+        <Controls />
+      </div>
+    </HeadgearContext.Provider>
+  );
+}
+
+export async function getUserCurrentAvatar(
+  tab: chrome.tabs.Tab
+): Promise<ResolvedAvatar> {
+  const tabId = tab.id;
+  assert(typeof tabId === "number");
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ["reddit.js"],
+  });
+  const [err, avatar] = (await chrome.tabs.sendMessage(
+    tabId,
+    MSG_GET_AVATAR
+  )) as GetAvatarMessageResponse;
+  if (err) throw new Error(err.message);
+  return avatar;
+}
+
+export function createRootState(): Signal<HeadgearState> {
+  const rootState = signal<HeadgearState>({ type: HeadgearStateType.LOADING });
+  _loadRootState(rootState);
+  return rootState;
+}
+
+export function _loadRootState(state: Signal<HeadgearState>) {
+  _loadRootStateAsync()
+    .then((newState) => {
+      state.value = newState;
+    })
+    .catch((err) => {
+      console.error(err);
+      const exception = err instanceof Error ? err : new Error(err);
+      state.value = {
+        type: HeadgearStateType.ERROR,
+        error: { type: HeadgearErrorType.UNKNOWN, exception },
+      };
+    });
+}
+
+async function _loadRootStateAsync(): Promise<HeadgearState> {
+  const tabs = await chrome.tabs.query({ currentWindow: true, active: true });
+  const [tab] = tabs;
+  if (!tab.url?.startsWith("https://www.reddit.com/")) {
+    console.log(`this is not a Reddit page`, tab.url);
+    return {
+      type: HeadgearStateType.ERROR,
+      error: { type: HeadgearErrorType.NOT_REDDIT_TAB, tab },
+    };
+  }
+  const avatar = await getUserCurrentAvatar(tab);
+  console.log("avatar:", avatar);
+  return { type: HeadgearStateType.AVATAR_LOADED, tab, avatar };
+}
