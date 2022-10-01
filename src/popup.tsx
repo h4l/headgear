@@ -149,40 +149,47 @@ function CouldNotLoadAvatarMessage(props: {
   );
 }
 
+export function HeadgearError({
+  error,
+}: {
+  error: HeadgearError;
+}): JSX.Element {
+  if (error.type === HeadgearErrorType.NOT_REDDIT_TAB) {
+    return (
+      <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your avatar">
+        <p class="my-2">
+          Headgear needs a Reddit tab open to load your Avatar.
+        </p>
+      </CouldNotLoadAvatarMessage>
+    );
+  } else if (error.type === HeadgearErrorType.UNKNOWN) {
+    return (
+      <CouldNotLoadAvatarMessage title="Something went wrong">
+        <p class="my-2">
+          Headgear could not load your Avatar because it was not able to get the
+          data it needs from Reddit. This is probably a temporary problem.
+        </p>
+        <p class="my-2">
+          If the Reddit is working and this keeps happening, there could be
+          something wrong with Headgear.
+        </p>
+      </CouldNotLoadAvatarMessage>
+    );
+  }
+  assertNever(error);
+}
+
 export function DisplayArea() {
   const headgearState = useContext(HeadgearContext);
 
   let content: JSX.Element;
   if (headgearState.value.type === HeadgearStateType.ERROR) {
-    const { type: errorType } = headgearState.value.error;
-    if (errorType === HeadgearErrorType.NOT_REDDIT_TAB) {
-      content = (
-        <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your avatar">
-          <p class="my-2">
-            Headgear needs a Reddit tab open to load your Avatar.
-          </p>
-        </CouldNotLoadAvatarMessage>
-      );
-    } else if (errorType === HeadgearErrorType.UNKNOWN) {
-      content = (
-        <CouldNotLoadAvatarMessage title="Something went wrong">
-          <p class="my-2">
-            Headgear could not load your Avatar because it was not able to get
-            the data it needs from Reddit. This is probably a temporary problem.
-          </p>
-          <p class="my-2">
-            If the Reddit is working and this keeps happening, there could be
-            something wrong with Headgear.
-          </p>
-        </CouldNotLoadAvatarMessage>
-      );
-    } else {
-      assertNever(errorType);
-    }
+    content = <HeadgearError error={headgearState.value.error} />;
   } else if (headgearState.value.type === HeadgearStateType.LOADING) {
     content = (
       <svg
-        class="h-full w-full p-28 animate-pulse bg-white text-gray-200"
+        class="h-full w-full p-28 animate-pulse bg-white text-gray-200 opacity-0 animate-delayed-fade-in"
+        style="animation-delay: 250ms;"
         viewBox="0 0 57.520256 100.00005"
       >
         <use href="../img/avatar-loading-skeleton_minimal.svg#skeleton" />
@@ -191,7 +198,7 @@ export function DisplayArea() {
   } else if (headgearState.value.type === HeadgearStateType.AVATAR_LOADED) {
     content = (
       <img
-        class="object-contain w-full h-full drop-shadow-xl"
+        class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
         src="../img/h4l_dl-repro.svg"
       />
     );
@@ -204,7 +211,7 @@ export function DisplayArea() {
 
 export function Controls() {
   return (
-    <div class="w-96 h-[100%] flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
+    <div class="grow-0 shrink-0 basis-[350px] h-full flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="px-4 flex my-4">
         <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg"></img>
         <div class="mr-auto flex-shrink">
