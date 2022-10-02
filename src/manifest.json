@@ -7,11 +7,7 @@
   "manifest_version": 3,
   "version": "1.0.0",
   "description": "The Reddit Avatar exporter.",
-  "permissions": [
-    "activeTab",
-    "declarativeContent",
-    "scripting"
-  ],
+  "permissions": ["activeTab", "declarativeContent", "scripting", "storage"],
   "background": {
     "service_worker": "main.js"
   },

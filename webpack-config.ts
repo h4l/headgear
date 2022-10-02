@@ -1,17 +1,11 @@
 import CopyPlugin from "copy-webpack-plugin";
 import * as path from "path";
-import { BannerPlugin, Configuration } from "webpack";
+import { Configuration } from "webpack";
 
 const config: Configuration = {
   entry: {
+    reddit: "./src/reddit.ts",
     main: "./src/main.ts",
-    ["api-token-retriever"]: {
-      import: "./src/api-token-retriever.ts",
-      library: {
-        type: "var",
-        name: "apiTokenRetriever",
-      },
-    },
     popup: "./src/popup.tsx",
   },
   devtool: "source-map",
@@ -37,18 +31,6 @@ const config: Configuration = {
   },
 
   plugins: [
-    new BannerPlugin({
-      // The final statement of api-token-retriever is the "return" value which
-      // is exposed from chrome.scripting.executeScript() when it runs
-      // api-token-retriever in the context of a Reddit page. I can't see a
-      // way to configure Webpack to not wrap the entry module in an IIFE (using
-      // iife: false doesn't work), so the BannerPlugin provides a way to tack
-      // on the final expression we need.
-      banner: "apiTokenRetriever.default();",
-      footer: true,
-      raw: true,
-      include: "api-token-retriever",
-    }),
     new CopyPlugin({
       patterns: [
         { from: "./src/manifest.json", to: "." },

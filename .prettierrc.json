@@ -1,5 +1,5 @@
 {
-  "importOrder": ["^[./]"],
+  "importOrder": ["\\.mock(\\.ts)?$", "^[./]"],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true
 }
