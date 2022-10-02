@@ -1,29 +1,39 @@
-import { Signal, signal } from "@preact/signals";
-import { ComponentChildren, JSX, createContext, options } from "preact";
+import { Signal, effect, signal } from "@preact/signals";
+import { ComponentChildren, JSX, createContext } from "preact";
 import { useContext } from "preact/hooks";
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
-import "./css.css";
+import {
+  ControlsStateObject,
+  ImageStyleType,
+  PORT_IMAGE_CONTROLS_CHANGED,
+  STORAGE_KEY_IMAGE_CONTROLS,
+  isControlsStateObject,
+} from "./popup-state-persistence";
 import { GetAvatarMessageResponse, MSG_GET_AVATAR } from "./reddit-interaction";
 
-enum HeadgearErrorType {
+export enum HeadgearErrorType {
   UNKNOWN,
   NOT_REDDIT_TAB,
+  GET_AVATAR_FAILED,
 }
-type HeadgearError =
+export type HeadgearError =
   | { type: HeadgearErrorType.UNKNOWN; exception: Error }
+  | { type: HeadgearErrorType.GET_AVATAR_FAILED; message: string }
   | {
       type: HeadgearErrorType.NOT_REDDIT_TAB;
       tab: chrome.tabs.Tab;
     };
 
-enum HeadgearStateType {
+export enum HeadgearStateType {
   LOADING,
   ERROR,
   AVATAR_LOADED,
 }
-type HeadgearState =
+
+/** The primary state of the app. */
+export type HeadgearState =
   | { type: HeadgearStateType.LOADING }
   | { type: HeadgearStateType.ERROR; error: HeadgearError }
   | {
@@ -32,8 +42,21 @@ type HeadgearState =
       avatar: ResolvedAvatar;
     };
 
-const HeadgearContext = createContext<Signal<HeadgearState>>(
+// undefined while loading from storage
+export type ControlsState = undefined | ControlsStateObject;
+
+export interface RootState {
+  headgearState: Signal<HeadgearState>;
+  controlsState: Signal<ControlsState>;
+}
+
+class GetAvatarError extends Error {}
+
+export const HeadgearContext = createContext<Signal<HeadgearState>>(
   signal({ type: HeadgearStateType.LOADING })
+);
+export const ControlsContext = createContext<Signal<ControlsState>>(
+  signal(undefined)
 );
 
 const iconArrowDown = (
@@ -84,40 +107,39 @@ dark:active:ring-blue-300 dark:active:text-blue-200
   />
 ).props.class;
 
-function ImageStyleOption(props: {
-  name: string;
+export function ImageStyleOption(props: {
+  name: ImageStyleType;
   title: string;
   description: string;
-  disabled?: boolean;
 }) {
+  const headgearState = useContext(HeadgearContext);
+  const controlsState = useContext(ControlsContext);
+
+  const setImageStyle = () => {
+    controlsState.value = { ...controlsState.value, imageStyle: props.name };
+  };
+
+  const controlsDisabled =
+    headgearState.value.type !== HeadgearStateType.AVATAR_LOADED ||
+    // controlsState is undefined while loading from storage
+    controlsState.value === undefined;
+
   return (
     <div>
       <input
         type="radio"
-        disabled={props.disabled}
+        disabled={controlsDisabled}
         id={`image-style-${props.name}`}
         name="image-style"
         value={props.name}
+        checked={
+          !controlsDisabled && controlsState.value?.imageStyle === props.name
+        }
+        onClick={setImageStyle}
         class="sr-only peer"
         required
       />
-      {/* // inline-flex justify-between items-center p-5 w-full text-gray-500 //
-      bg-white rounded-lg border border-gray-200 cursor-pointer //
-      dark:hover:text-gray-300 dark:border-gray-700
-      dark:peer-checked:text-blue-500 // peer-checked:border-blue-600
-      peer-checked:text-blue-600 // hover:text-gray-600 hover:bg-gray-100
-      dark:text-gray-400 dark:bg-gray-800 // dark:hover:bg-gray-700 */}
       <label
-        // TODO: make consistent with buttons
-        /*
-        py-2 px-4 text-sm font-medium border
-        bg-white text-gray-900  border-gray-200
-        dark:bg-gray-700 dark:text-white dark:border-gray-600
-        hover:bg-gray-100 hover:text-blue-700
-        dark:hover:bg-gray-600 dark:hover:text-white
-        active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
-        dark:active:ring-blue-500 dark:active:text-white
-        */
         class={`
           flex flex-col my-2 p-5
           peer-checked:text-blue-600 peer-checked:border-blue-600
@@ -162,6 +184,8 @@ export function HeadgearError({
         </p>
       </CouldNotLoadAvatarMessage>
     );
+  } else if (error.type === HeadgearErrorType.GET_AVATAR_FAILED) {
+    throw new Error("TODO: implement");
   } else if (error.type === HeadgearErrorType.UNKNOWN) {
     return (
       <CouldNotLoadAvatarMessage title="Something went wrong">
@@ -222,23 +246,22 @@ export function Controls() {
 
       <div class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 flex-grow overflow-y-scroll pl-4 pr-4">
         <ImageStyleOption
-          name="standard"
+          name={ImageStyleType.STANDARD}
           title="Standard"
           description="The downloadable image from the Reddit avatar builder."
-          disabled
         />
         <ImageStyleOption
-          name="background"
+          name={ImageStyleType.BACKGROUND}
           title="Profile page card"
           description="The version on your profile page."
         />
         <ImageStyleOption
-          name="headshot-hex"
+          name={ImageStyleType.HEADSHOT_HEX}
           title="Comment thread headshot"
           description="The upper half in a hexagon."
         />
         <ImageStyleOption
-          name="headshot-circle"
+          name={ImageStyleType.HEADSHOT_CIRCLE}
           title="UI Headshot"
           description="The upper half in a circle."
         />
@@ -306,7 +329,7 @@ export function Controls() {
 export function ClosePopupButton() {
   return (
     <button
-      class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600"
+      class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
       title="Close"
       onClick={window.close.bind(window)}
     >
@@ -314,20 +337,25 @@ export function ClosePopupButton() {
     </button>
   );
 }
-export function Headgear(props: { rootState: Signal<HeadgearState> }) {
+export function Headgear(props: {
+  headgearState: Signal<HeadgearState>;
+  controlsState: Signal<ControlsState>;
+}) {
   return (
-    <HeadgearContext.Provider value={props.rootState}>
-      {/* 800x600 is the current largest size a popup can be. */}
-      <div class="w-[800px] h-[600px] flex flex-row relative text-base">
-        <ClosePopupButton />
-        <DisplayArea />
-        <Controls />
-      </div>
+    <HeadgearContext.Provider value={props.headgearState}>
+      <ControlsContext.Provider value={props.controlsState}>
+        {/* 800x600 is the current largest size a popup can be. */}
+        <div class="w-[800px] h-[600px] flex flex-row relative text-base">
+          <ClosePopupButton />
+          <DisplayArea />
+          <Controls />
+        </div>
+      </ControlsContext.Provider>
     </HeadgearContext.Provider>
   );
 }
 
-export async function getUserCurrentAvatar(
+export async function _getUserCurrentAvatar(
   tab: chrome.tabs.Tab
 ): Promise<ResolvedAvatar> {
   const tabId = tab.id;
@@ -340,42 +368,94 @@ export async function getUserCurrentAvatar(
     tabId,
     MSG_GET_AVATAR
   )) as GetAvatarMessageResponse;
-  if (err) throw new Error(err.message);
+  if (err) throw new GetAvatarError(err.message);
   return avatar;
 }
 
-export function createRootState(): Signal<HeadgearState> {
-  const rootState = signal<HeadgearState>({ type: HeadgearStateType.LOADING });
-  _loadRootState(rootState);
-  return rootState;
+export function createRootState(): RootState {
+  const headgearState = signal<HeadgearState>({
+    type: HeadgearStateType.LOADING,
+  });
+  const controlsState = signal<ControlsState>(undefined);
+  _loadHeadgearState(headgearState);
+  _loadControlsState(controlsState);
+  const port = chrome.runtime.connect({ name: PORT_IMAGE_CONTROLS_CHANGED });
+  _persistControlsState({ state: controlsState, port });
+  return { headgearState, controlsState };
 }
 
-export function _loadRootState(state: Signal<HeadgearState>) {
-  _loadRootStateAsync()
+export function _loadHeadgearState(state: Signal<HeadgearState>) {
+  _loadHeadgearStateAsync()
     .then((newState) => {
       state.value = newState;
     })
     .catch((err) => {
       console.error(err);
       const exception = err instanceof Error ? err : new Error(err);
-      state.value = {
-        type: HeadgearStateType.ERROR,
-        error: { type: HeadgearErrorType.UNKNOWN, exception },
-      };
+      let error: HeadgearError;
+      if (exception instanceof GetAvatarError) {
+        error = {
+          type: HeadgearErrorType.GET_AVATAR_FAILED,
+          message: exception.message,
+        };
+      } else {
+        error = { type: HeadgearErrorType.UNKNOWN, exception };
+      }
+      state.value = { type: HeadgearStateType.ERROR, error };
     });
 }
 
-async function _loadRootStateAsync(): Promise<HeadgearState> {
+async function _loadHeadgearStateAsync(): Promise<HeadgearState> {
   const tabs = await chrome.tabs.query({ currentWindow: true, active: true });
   const [tab] = tabs;
   if (!tab.url?.startsWith("https://www.reddit.com/")) {
-    console.log(`this is not a Reddit page`, tab.url);
     return {
       type: HeadgearStateType.ERROR,
       error: { type: HeadgearErrorType.NOT_REDDIT_TAB, tab },
     };
   }
-  const avatar = await getUserCurrentAvatar(tab);
-  console.log("avatar:", avatar);
+  const avatar = await _getUserCurrentAvatar(tab);
   return { type: HeadgearStateType.AVATAR_LOADED, tab, avatar };
+}
+
+export function _loadControlsState(state: Signal<ControlsState>): void {
+  _loadControlsStateFromStorage()
+    .then((controlsState) => {
+      state.value = controlsState;
+    })
+    // Just use defaults if we can't get a previous state from storage.
+    .catch(() => {
+      state.value = { imageStyle: ImageStyleType.STANDARD };
+    });
+}
+
+export async function _loadControlsStateFromStorage(): Promise<ControlsStateObject> {
+  const controls = (await chrome.storage.sync.get(STORAGE_KEY_IMAGE_CONTROLS))[
+    STORAGE_KEY_IMAGE_CONTROLS
+  ];
+  if (isControlsStateObject(controls)) {
+    return { imageStyle: controls.imageStyle };
+  }
+  throw new Error("storage does not contain a valid ControlsStateObject");
+}
+
+/**
+ * Handle persisting the state of the UI.
+ *
+ * The actual persistence is done by our background service worker, because we
+ * need to debounce the saving, and it won't get saved if the popup is closed
+ * while we're waiting for a debounce to time out.
+ */
+export function _persistControlsState({
+  state,
+  port,
+}: {
+  state: Signal<ControlsState>;
+  port: chrome.runtime.Port;
+}): void {
+  effect(() => {
+    const controlsState = state.value;
+    if (controlsState === undefined) return;
+    port.postMessage(controlsState);
+  });
 }

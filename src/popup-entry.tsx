@@ -1,5 +1,10 @@
 import { render } from "preact";
 
+import "./css.css";
 import { Headgear, createRootState } from "./popup";
 
-render(<Headgear rootState={createRootState()} />, document.body);
+const { headgearState, controlsState } = createRootState();
+render(
+  <Headgear headgearState={headgearState} controlsState={controlsState} />,
+  document.body
+);

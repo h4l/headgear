@@ -9,7 +9,7 @@
   "description": "The Reddit Avatar exporter.",
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {
-    "service_worker": "main.js"
+    "service_worker": "background.js"
   },
   "icons": {
     "32": "img/logo_32.png",

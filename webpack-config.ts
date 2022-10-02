@@ -4,8 +4,9 @@ import { Configuration } from "webpack";
 
 const config: Configuration = {
   entry: {
-    reddit: "./src/reddit.ts",
+    background: "./src/background-entry.ts",
     popup: "./src/popup-entry.tsx",
+    reddit: "./src/reddit.ts",
   },
   devtool: "source-map",
   module: {
