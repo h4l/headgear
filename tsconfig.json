@@ -4,6 +4,8 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "types": ["preact", "@types/jest", "@types/chrome"],
-    "sourceMap": true
+    "sourceMap": true,
+    "target": "ES6",
+    "lib": ["es2016", "dom"]
   }
 }
