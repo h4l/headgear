@@ -1,3 +1,4 @@
+import * as css from "css";
 import {
   CssSelectorParser,
   Rule,
@@ -5,7 +6,7 @@ import {
   Selectors,
 } from "css-selector-parser";
 
-import { assertNever } from "./assert";
+import { assert, assertNever } from "./assert";
 
 const cssSelectors = new CssSelectorParser();
 cssSelectors.registerAttrEqualityMods("~");
@@ -69,6 +70,73 @@ export function addPrefixesToCSSSelectorClasses({
   visitNode(ast);
   return {
     cssSelector: cssSelectors.render(ast),
+    classes,
+  };
+}
+
+function _isStylesheet(node: css.Node): node is css.Stylesheet {
+  return node.type === "stylesheet";
+}
+function _isRule(node: css.Node): node is css.Rule {
+  return node.type === "rule";
+}
+
+interface ParentNode extends css.Node {
+  rules?: Array<css.Node> | undefined;
+}
+
+function _isParentNode(node: css.Node): node is ParentNode {
+  return "rules" in node;
+}
+
+/**
+ * Rewrite any `.class` selector rules in a CSS stylesheet by adding a prefix to
+ * them.
+ *
+ * The returned object contains the rewritten stylesheet and the Set of class
+ * names found in the stylesheet's selectors (prior to prefixing and without the
+ * leading `.`). i.e. the returned cssStylesheet has prefixes added, the
+ * returned Set does not have prefixes added.
+ */
+export function addPrefixesToCSSStylesheetSelectorClasses({
+  cssStylesheet,
+  prefix,
+}: {
+  cssStylesheet: string;
+  prefix: string;
+}): PrefixedCSSStylesheet {
+  const ast = css.parse(cssStylesheet);
+
+  const classes = new Set<string>();
+  const visitNode = (node: css.Node): void => {
+    if (_isStylesheet(node)) {
+      node.stylesheet && node.stylesheet.rules.forEach(visitNode);
+    } else {
+      // Only process rules which have declarations, as css.stringify() strips
+      // out rules without declarations.
+      if (_isRule(node) && node.selectors && node.declarations?.length) {
+        node.selectors = node.selectors.map((selector) => {
+          const { cssSelector, classes: selectorClasses } =
+            addPrefixesToCSSSelectorClasses({
+              cssSelector: selector,
+              prefix,
+            });
+          for (const cls of selectorClasses) classes.add(cls);
+          return cssSelector;
+        });
+      }
+      if (_isParentNode(node) && node.rules) {
+        node.rules.forEach(visitNode);
+      }
+    }
+  };
+  visitNode(ast);
+  return {
+    cssStylesheet: css.stringify(ast, {
+      // stringify() pretty prints the output if compress is not enabled.
+      compress: true,
+      inputSourcemaps: false,
+    }),
     classes,
   };
 }
