@@ -21,6 +21,11 @@ export interface PrefixedCSSStylesheet {
   classes: Set<string>;
 }
 
+export interface PrefixedSVG {
+  svg: SVGElement;
+  classes: Set<string>;
+}
+
 /**
  * Rewrite any `.class` rules in a CSS selector by adding a prefix to them.
  *
@@ -139,4 +144,39 @@ export function addPrefixesToCSSStylesheetSelectorClasses({
     }),
     classes,
   };
+}
+
+export function addPrefixesToElementClassAttribute({
+  classAttribute,
+  classes,
+  prefix,
+}: {
+  classAttribute: string;
+  classes: Set<string>;
+  prefix: string;
+}): string {
+  return classAttribute
+    .trim()
+    .split(/\s+/)
+    .map((cls) => (classes.has(cls) ? `${prefix}${cls}` : cls))
+    .join(" ");
+}
+
+export function addPrefixesToSVGClassAttributes({
+  svg,
+  prefix,
+  classes,
+}: {
+  svg: SVGElement;
+  prefix: string;
+  classes: Set<string>;
+}): void {
+  svg.querySelectorAll("[class]").forEach((el) => {
+    const classAttribute = el.getAttribute("class");
+    classAttribute &&
+      el.setAttribute(
+        "class",
+        addPrefixesToElementClassAttribute({ classAttribute, classes, prefix })
+      );
+  });
 }
