@@ -9,6 +9,7 @@ import {
 import { assert, assertNever } from "./assert";
 import { ResolvedAccessory, ResolvedAvatar, SVGStyle } from "./avatars";
 
+const SVGNS = "http://www.w3.org/2000/svg";
 const cssSelectors = new CssSelectorParser();
 cssSelectors.registerAttrEqualityMods("~");
 
@@ -203,4 +204,156 @@ export function createAccessoryCustomisedCSSRules({
       return `.${cls}{fill:${style?.fill}}`;
     })
     .join("");
+}
+
+export class SVGParseError extends Error {
+  readonly parseError: string;
+  constructor({
+    message,
+    parseError,
+  }: {
+    message: string;
+    parseError: string;
+  }) {
+    super(message);
+    this.parseError = parseError;
+  }
+}
+
+function _parseAccessorySVG(accessory: ResolvedAccessory): SVGElement {
+  const svgDoc = new DOMParser().parseFromString(
+    accessory.svgData,
+    "image/svg+xml"
+  );
+  const error = svgDoc.querySelector("parsererror");
+  if (error)
+    throw new SVGParseError({
+      message: `Accessory ${JSON.stringify(
+        accessory.id
+      )}'s SVG failed to parse`,
+      parseError: error.textContent || "",
+    });
+  const svg = svgDoc.firstElementChild;
+  assert(svg instanceof SVGElement);
+  stripWhitespaceAndComments(svg);
+  return svg;
+}
+
+export function stripWhitespaceAndComments(node: Node): void {
+  for (let i = node.childNodes.length - 1; i >= 0; i--) {
+    const child = node.childNodes[i];
+    if (
+      child.nodeType === Node.COMMENT_NODE ||
+      (child.nodeType === Node.TEXT_NODE &&
+        /^\s*$/.test(child.textContent || ""))
+    ) {
+      child.remove();
+    } else if (child.hasChildNodes()) {
+      stripWhitespaceAndComments(child);
+    }
+  }
+}
+
+export function safeId({ id, index }: { id: string; index: number }): string {
+  return /^[\w-]+$/.test(id) ? id : `accessory${index}`;
+}
+
+/**
+ * Transform an accessory's SVG for merging with other accessories.
+ *
+ * The SVG's <style> elements are removed, merged into one stylesheet and
+ * classes used in rule selectors are given a unique prefix. Element class
+ * attributes using these classes are also rewritten to use these prefixed
+ * classes.
+ */
+export function prepareAccessorySVG({
+  accessory,
+  styles,
+  index,
+}: {
+  accessory: ResolvedAccessory;
+  styles: SVGStyle[];
+  index: number;
+}): { svg: SVGGElement; stylesheet: string } {
+  const id = safeId({ id: accessory.id, index });
+  const prefix = `${id}-`;
+  const svg = _parseAccessorySVG(accessory);
+
+  const stylesheets: string[] = [];
+  svg.querySelectorAll("style").forEach((style) => {
+    const stylesheet = style.textContent;
+    style.remove();
+    if (stylesheet?.trim()) stylesheets.push(stylesheet);
+  });
+  stylesheets.push(createAccessoryCustomisedCSSRules({ accessory, styles }));
+  const { cssStylesheet, classes } = addPrefixesToCSSStylesheetSelectorClasses({
+    cssStylesheet: stylesheets.join("\n"),
+    prefix,
+  });
+
+  addPrefixesToSVGClassAttributes({ svg, classes, prefix });
+
+  const accessoryGroup = svg.ownerDocument.createElementNS(
+    SVGNS,
+    "g"
+  ) as SVGGElement;
+  accessoryGroup.setAttribute("id", id);
+  Array.from(svg.childNodes).forEach((node) => {
+    node.remove();
+    accessoryGroup.appendChild(node);
+  });
+
+  return { svg: accessoryGroup, stylesheet: cssStylesheet };
+}
+
+export function composeAvatarSVG({
+  avatar,
+}: {
+  avatar: ResolvedAvatar;
+}): SVGElement {
+  const accessories = [...avatar.accessories];
+  const styles = avatar.styles;
+  // In the SVG, accessories are layered by slotNumber, lowest to highest
+  accessories.sort((a, b) => a.slotNumber - b.slotNumber);
+  // Each accessory has its own SVG doc, with its own CSS styles and class
+  // names. We need to merge these into a single SVG doc, so we need to ensure
+  // styles in one doc can't affect another. This could be done by scoping CSS
+  // rules (#accessory-1 .some-class { ... }). While manually-creating merged
+  // docs, I've found that Inkscape has rather primitive CSS support — it only
+  // recognises the first style element in a doc, and it only supports matching
+  // CSS rules using a single class, not scoped rules. Browsers are fine, but
+  // it seems possible that other editors have poor support for CSS in SVG, and
+  // I personally value having Inkscape support, so Inkscape is going to be the
+  // "IE6" of this project.
+  //
+  // Long story short, we need a single style element, with rule selectors using
+  // only one class. To do that we rewrite class names in each SVG document with
+  // a unique prefix to guarantee uniqueness. Then we just merge the
+  // stylesheets.
+
+  const preparedAccessories = accessories.map((accessory, index) =>
+    prepareAccessorySVG({ accessory, index, styles })
+  );
+
+  const doc = new DOMParser().parseFromString(
+    // All the accessories use the viewBox 0 0 380 600
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 600"><style></style><g id="avatar"></g></svg>`,
+    "image/svg+xml"
+  );
+  const rootSvg = doc.firstElementChild;
+  const style = rootSvg?.querySelector("style");
+  const avatarGroup = rootSvg?.querySelector("#avatar");
+  assert(rootSvg instanceof SVGElement && style && avatarGroup);
+
+  style.textContent = preparedAccessories
+    .map(({ stylesheet }, i) => {
+      return `\
+/* ${accessories[i].id} */
+${stylesheet}`;
+    })
+    .join("\n");
+  preparedAccessories.forEach(({ svg }) => {
+    avatarGroup.appendChild(doc.importNode(svg, true));
+  });
+  return rootSvg;
 }

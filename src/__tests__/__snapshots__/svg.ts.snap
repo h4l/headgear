@@ -1,0 +1,103 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`composeAvatarSVG() merges avatar accessories into single SVG doc 1`] = `
+<svg
+  viewBox="0 0 380 600"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <style>
+    /* acc_a */
+.acc_a-baz{stroke:orange;}.acc_a-boz{stroke:blue;}.acc_a-bar{fill:#aabbcc;}.acc_a-baz{fill:#123;}
+/* acc_d */
+.acc_d-foo{stroke:red;}.acc_d-boz{stroke:blue;}.acc_d-foo{fill:red;}.acc_d-bar{fill:#aabbcc;}
+  </style>
+  <g
+    id="avatar"
+  >
+    <g
+      id="acc_a"
+    >
+      <rect
+        class="acc_a-baz acc_a-boz"
+        height="16"
+        width="15"
+      />
+      <defs />
+      <g>
+        <circle
+          class="acc_a-baz acc_a-boz"
+          cx="15"
+          cy="16"
+          r="11"
+        />
+      </g>
+      <circle
+        class="acc_a-baz"
+        cx="12"
+        cy="13"
+        r="14"
+      />
+    </g>
+    <g
+      id="acc_d"
+    >
+      <rect
+        class="acc_d-foo acc_d-bar baz acc_d-boz"
+        height="6"
+        width="5"
+      />
+      <defs />
+      <g>
+        <circle
+          class="acc_d-bar acc_d-boz"
+          cx="5"
+          cy="6"
+          r="1"
+        />
+      </g>
+      <circle
+        class="acc_d-foo"
+        cx="2"
+        cy="3"
+        r="4"
+      />
+    </g>
+  </g>
+</svg>
+`;
+
+exports[`prepareAccessorySVG() extracts and namespaces SVG elements and CSS 2`] = `
+<g
+  id="example"
+>
+  <g
+    class="example-foo"
+  >
+    <rect
+      class="example-foo example-bar example-baz boz"
+      height="6"
+      width="5"
+    />
+    <defs>
+      <circle
+        class=""
+        cx="0"
+        cy="0"
+        r="2"
+      />
+      <circle
+        class="boz"
+        cx="5"
+        cy="6"
+        r="1"
+      />
+      <circle
+        class="example-foo"
+        cx="2"
+        cy="3"
+        r="4"
+      />
+    </defs>
+  </g>
+</g>
+`;
