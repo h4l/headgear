@@ -1,4 +1,5 @@
 import { assert } from "../assert";
+import { ResolvedAccessory, SVGStyle } from "../avatars";
 import {
   PrefixedCSSSelector,
   PrefixedCSSStylesheet,
@@ -6,6 +7,7 @@ import {
   addPrefixesToCSSStylesheetSelectorClasses,
   addPrefixesToElementClassAttribute,
   addPrefixesToSVGClassAttributes,
+  createAccessoryCustomisedCSSRules,
 } from "../svg";
 
 test.each([
@@ -37,19 +39,19 @@ test.each([
 
 test.each([
   [
-    { cssStylesheet: ".foo {fill:#000;}", prefix: "ns-" },
+    { cssStylesheet: ".foo {fill:#000}", prefix: "ns-" },
     { cssStylesheet: ".ns-foo{fill:#000;}", classes: new Set(["foo"]) },
   ],
   [
     {
       cssStylesheet: `\
 g#abc.foo, .baz.boz, g .foo .bar {
- fill: #000;
+ fill: #000
 }
 /* rules without declarations get removed by css.stringify() */
 .removed {}
 .xxx.yyy {
-  fill: #fff;
+  fill: #fff
 }
 `,
       prefix: "ns-",
@@ -127,4 +129,30 @@ test("addPrefixesToSVGClassAttributes()", () => {
       </g>
     </svg>"
   `);
+});
+
+const accessory: ResolvedAccessory = {
+  id: "example",
+  customizableClasses: ["foo", "bar"],
+  slotNumber: 0,
+  svgData: '<svg xmlns="http://www.w3.org/2000/svg"/>',
+};
+const styles: SVGStyle[] = [
+  { className: "foo", fill: "red" },
+  { className: "bar", fill: "#aabbcc" },
+  { className: "other", fill: "#fff" },
+];
+
+test("createAccessoryCustomisedCSSRules()", () => {
+  expect(createAccessoryCustomisedCSSRules({ accessory, styles })).toBe(
+    `.foo{fill:red}.bar{fill:#aabbcc}`
+  );
+  expect(() =>
+    createAccessoryCustomisedCSSRules({
+      accessory: { ...accessory, customizableClasses: ["missing"] },
+      styles,
+    })
+  ).toThrowError(
+    `Accessory "example" has a customisable class "missing" but no style value exists for it.`
+  );
 });

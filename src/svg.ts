@@ -7,6 +7,7 @@ import {
 } from "css-selector-parser";
 
 import { assert, assertNever } from "./assert";
+import { ResolvedAccessory, ResolvedAvatar, SVGStyle } from "./avatars";
 
 const cssSelectors = new CssSelectorParser();
 cssSelectors.registerAttrEqualityMods("~");
@@ -179,4 +180,27 @@ export function addPrefixesToSVGClassAttributes({
         addPrefixesToElementClassAttribute({ classAttribute, classes, prefix })
       );
   });
+}
+
+export function createAccessoryCustomisedCSSRules({
+  accessory,
+  styles,
+}: {
+  accessory: ResolvedAccessory;
+  styles: SVGStyle[];
+}): string {
+  return accessory.customizableClasses
+    .map((cls) => {
+      const style = styles.find((s) => s.className === cls);
+      if (!style)
+        throw new Error(
+          `Accessory ${JSON.stringify(
+            accessory.id
+          )} has a customisable class ${JSON.stringify(
+            cls
+          )} but no style value exists for it.`
+        );
+      return `.${cls}{fill:${style?.fill}}`;
+    })
+    .join("");
 }
