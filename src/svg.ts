@@ -8,6 +8,7 @@ import {
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAccessory, ResolvedAvatar, SVGStyle } from "./avatars";
+import { default as redditLogoLight } from "./img/avatar-svg/reddit-logo-light.svg";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const cssSelectors = new CssSelectorParser();
@@ -254,23 +255,33 @@ export class SVGParseError extends Error {
   }
 }
 
-function _parseAccessorySVG(accessory: ResolvedAccessory): SVGElement {
-  const svgDoc = new DOMParser().parseFromString(
-    accessory.svgData,
-    "image/svg+xml"
-  );
+function _parseSVG({
+  svgSource,
+  parseErrorMessage,
+}: {
+  svgSource: string;
+  parseErrorMessage?: string;
+}): SVGElement {
+  const svgDoc = new DOMParser().parseFromString(svgSource, "image/svg+xml");
   const error = svgDoc.querySelector("parsererror");
   if (error)
     throw new SVGParseError({
-      message: `Accessory ${JSON.stringify(
-        accessory.id
-      )}'s SVG failed to parse`,
+      message: parseErrorMessage || "Failed to parse SVG XML.",
       parseError: error.textContent || "",
     });
   const svg = svgDoc.firstElementChild;
   assert(svg instanceof SVGElement);
   stripWhitespaceAndComments(svg);
   return svg;
+}
+
+function _parseAccessorySVG(accessory: ResolvedAccessory): SVGElement {
+  return _parseSVG({
+    svgSource: accessory.svgData,
+    parseErrorMessage: `Accessory ${JSON.stringify(
+      accessory.id
+    )}'s SVG failed to parse`,
+  });
 }
 
 export function stripWhitespaceAndComments(node: Node): void {
@@ -337,6 +348,9 @@ export function prepareAccessorySVG({
   return { svg: accessoryGroup, stylesheet: cssStylesheet };
 }
 
+const ACC_W = 380;
+const ACC_H = 600;
+
 export function composeAvatarSVG({
   avatar,
 }: {
@@ -369,7 +383,7 @@ export function composeAvatarSVG({
 
   const doc = new DOMParser().parseFromString(
     // All the accessories use the viewBox 0 0 380 600
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 600"><style></style><g id="avatar"></g></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ACC_W} ${ACC_H}"><style></style><g id="avatar"></g></svg>`,
     "image/svg+xml"
   );
   const rootSvg = doc.firstElementChild;
@@ -392,4 +406,54 @@ ${stylesheet}`;
     avatarGroup.appendChild(doc.importNode(svg, true));
   });
   return rootSvg;
+}
+
+function redditLogoSVG(): SVGGElement {
+  const redditLogo = _parseSVG({ svgSource: redditLogoLight });
+  const group = redditLogo.ownerDocument.createElementNS(SVGNS, "g");
+  group.id = "reddit-logo";
+  redditLogo.querySelectorAll("svg > *").forEach((el) => {
+    group.appendChild(el);
+  });
+  return group;
+}
+
+const STD_W = 587;
+const STD_H = 718;
+
+export function createStandardAvatarSVG({
+  composedAvatar,
+}: {
+  composedAvatar: SVGElement;
+}): SVGElement {
+  const doc = new DOMParser().parseFromString(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${STD_W} ${STD_H}" width="100%" height="100%"></svg>`,
+    "image/svg+xml"
+  );
+  let redditLogo = redditLogoSVG();
+
+  const svg = doc.firstElementChild;
+  assert(svg && svg instanceof SVGElement);
+  let style = composedAvatar.querySelector("svg > style");
+  let avatar = composedAvatar.querySelector("svg > g");
+  assert(svg?.nodeName === "svg" && style && avatar?.id === "avatar");
+  style = doc.importNode(style, true);
+  avatar = doc.importNode(avatar, true);
+  redditLogo = doc.importNode(redditLogo, true);
+
+  svg.appendChild(style);
+  const bg = svg.appendChild(doc.createElementNS(SVGNS, "rect"));
+  bg.setAttribute("width", `${STD_W}`);
+  bg.setAttribute("height", `${STD_H}`);
+  bg.setAttribute("fill", "white");
+  svg.appendChild(avatar);
+  svg.appendChild(redditLogo);
+
+  avatar.setAttribute(
+    "transform",
+    `translate(${((STD_W - ACC_W) / 2).toFixed(1)},35)`
+  );
+  redditLogo.setAttribute("transform", "translate(11.5,674) scale(0.978)");
+
+  return svg;
 }

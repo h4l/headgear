@@ -10,6 +10,7 @@ import {
   addPrefixesToSVGClassAttributes,
   composeAvatarSVG,
   createAccessoryCustomisationCSSRules,
+  createStandardAvatarSVG,
   prepareAccessorySVG,
   safeId,
   stripWhitespaceAndComments,
@@ -265,57 +266,60 @@ describe("prepareAccessorySVG()", () => {
   });
 });
 
+function avatar(): ResolvedAvatar {
+  return {
+    accessories: [
+      {
+        id: "accessory-b",
+        slotNumber: 30,
+        customizableClasses: ["xxx", "yyy"],
+        svgData: `\
+<svg xmlns="http://www.w3.org/2000/svg">
+<rect width="5" height="6" class="foo bar baz color-xxx" />
+<defs>
+  <style>
+    .foo { stroke: red }
+    .boz { stroke: blue }
+  </style>
+</defs>
+<g>
+  <circle class="bar color-yyy" cx="5" cy="6" r="1"/>
+</g>
+<circle class="foo" cx="2" cy="3" r="4"/>
+</svg>`,
+      },
+      {
+        id: "accessory-a",
+        slotNumber: 20,
+        customizableClasses: ["yyy"],
+        svgData: `\
+<svg xmlns="http://www.w3.org/2000/svg">
+<rect width="15" height="16" class="baz boz" />
+<defs>
+  <style>
+    .baz { stroke: orange }
+    .boz { stroke: blue }
+  </style>
+</defs>
+<g>
+  <circle class="foo baz boz color-yyy" cx="15" cy="16" r="11"/>
+</g>
+<circle class="baz" cx="12" cy="13" r="14"/>
+</svg>`,
+      },
+    ],
+    styles: [
+      { className: "xxx", fill: "red" },
+      { className: "yyy", fill: "#aabbcc" },
+      // styles that aren't used by accessories can exist
+      { className: "zzz", fill: "#111111" },
+    ],
+  };
+}
+
 describe("composeAvatarSVG()", () => {
   test("merges avatar accessories into single SVG doc", () => {
-    const avatar: ResolvedAvatar = {
-      accessories: [
-        {
-          id: "accessory-b",
-          slotNumber: 30,
-          customizableClasses: ["xxx", "yyy"],
-          svgData: `\
-<svg xmlns="http://www.w3.org/2000/svg">
-  <rect width="5" height="6" class="foo bar baz color-xxx" />
-  <defs>
-    <style>
-      .foo { stroke: red }
-      .boz { stroke: blue }
-    </style>
-  </defs>
-  <g>
-    <circle class="bar color-yyy" cx="5" cy="6" r="1"/>
-  </g>
-  <circle class="foo" cx="2" cy="3" r="4"/>
-</svg>`,
-        },
-        {
-          id: "accessory-a",
-          slotNumber: 20,
-          customizableClasses: ["yyy"],
-          svgData: `\
-<svg xmlns="http://www.w3.org/2000/svg">
-  <rect width="15" height="16" class="baz boz" />
-  <defs>
-    <style>
-      .baz { stroke: orange }
-      .boz { stroke: blue }
-    </style>
-  </defs>
-  <g>
-    <circle class="foo baz boz color-yyy" cx="15" cy="16" r="11"/>
-  </g>
-  <circle class="baz" cx="12" cy="13" r="14"/>
-</svg>`,
-        },
-      ],
-      styles: [
-        { className: "xxx", fill: "red" },
-        { className: "yyy", fill: "#aabbcc" },
-        // styles that aren't used by accessories can exist
-        { className: "zzz", fill: "#111111" },
-      ],
-    };
-    const svg = composeAvatarSVG({ avatar });
+    const svg = composeAvatarSVG({ avatar: avatar() });
     // The baz class in "accessory-b" is not referenced by any CSS rule, so it's
     // not rewritten.
     expect(svg.querySelectorAll(".baz").length).toBe(1);
@@ -353,4 +357,16 @@ test("stripWhitespaceAndComments()", () => {
       fill: red
     }
   </style><g/></svg>`);
+});
+
+describe("Avatar SVG", () => {
+  describe("Standard Layout - createStandardAvatarSVG()", () => {
+    test("renders avatar in styled container", () => {
+      const composedAvatar = composeAvatarSVG({ avatar: avatar() });
+      const standardLayout = createStandardAvatarSVG({ composedAvatar });
+      expect(standardLayout.querySelector("#avatar")).toBeTruthy();
+      expect(standardLayout.querySelector("#reddit-logo")).toBeTruthy();
+      expect(standardLayout).toMatchSnapshot();
+    });
+  });
 });
