@@ -14,4 +14,7 @@ module.exports = {
   maxWorkers: 1,
   testPathIgnorePatterns: ["/node_modules/", ".mock."],
   setupFilesAfterEnv: ["<rootDir>/jest-setup.ts"],
+  transform: {
+    "\\.svg$": "<rootDir>/jest-webpack-asset-source-transformer",
+  },
 };

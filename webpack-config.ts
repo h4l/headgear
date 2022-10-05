@@ -20,6 +20,10 @@ const config: Configuration = {
         test: /\.css$/,
         use: ["style-loader", "css-loader", "postcss-loader"],
       },
+      {
+        test: /\.svg$/,
+        type: "asset/source",
+      },
     ],
   },
   resolve: {
