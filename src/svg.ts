@@ -408,14 +408,10 @@ ${stylesheet}`;
   return rootSvg;
 }
 
-function redditLogoSVG(): SVGGElement {
+function redditLogoSVG(): SVGElement {
   const redditLogo = _parseSVG({ svgSource: redditLogoLight });
-  const group = redditLogo.ownerDocument.createElementNS(SVGNS, "g");
-  group.id = "reddit-logo";
-  redditLogo.querySelectorAll("svg > *").forEach((el) => {
-    group.appendChild(el);
-  });
-  return group;
+  redditLogo.id = "reddit-logo";
+  return redditLogo;
 }
 
 const STD_W = 587;
@@ -434,26 +430,23 @@ export function createStandardAvatarSVG({
 
   const svg = doc.firstElementChild;
   assert(svg && svg instanceof SVGElement);
-  let style = composedAvatar.querySelector("svg > style");
-  let avatar = composedAvatar.querySelector("svg > g");
-  assert(svg?.nodeName === "svg" && style && avatar?.id === "avatar");
-  style = doc.importNode(style, true);
-  avatar = doc.importNode(avatar, true);
+  composedAvatar = doc.importNode(composedAvatar, true);
   redditLogo = doc.importNode(redditLogo, true);
 
-  svg.appendChild(style);
   const bg = svg.appendChild(doc.createElementNS(SVGNS, "rect"));
-  bg.setAttribute("width", `${STD_W}`);
-  bg.setAttribute("height", `${STD_H}`);
+  bg.setAttribute("width", "100%");
+  bg.setAttribute("height", "100%");
   bg.setAttribute("fill", "white");
-  svg.appendChild(avatar);
+
+  svg.appendChild(composedAvatar);
   svg.appendChild(redditLogo);
 
-  avatar.setAttribute(
-    "transform",
-    `translate(${((STD_W - ACC_W) / 2).toFixed(1)},35)`
-  );
-  redditLogo.setAttribute("transform", "translate(11.5,674) scale(0.978)");
+  composedAvatar.setAttribute("y", "35");
+  composedAvatar.setAttribute("height", `${ACC_H}`);
+  redditLogo.setAttribute("width", "94.5");
+  redditLogo.setAttribute("preserveAspectRatio", "xMinYMax");
+  redditLogo.setAttribute("x", "11.5");
+  redditLogo.setAttribute("y", "-11.5");
 
   return svg;
 }

@@ -7,75 +7,86 @@ exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar i
   width="100%"
   xmlns="http://www.w3.org/2000/svg"
 >
-  <style>
-    /* accessory-a */
+  <rect
+    fill="white"
+    height="100%"
+    width="100%"
+  />
+  <svg
+    height="600"
+    viewBox="0 0 380 600"
+    xmlns="http://www.w3.org/2000/svg"
+    y="35"
+  >
+    <style>
+      /* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
 .accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
-  </style>
-  <rect
-    fill="white"
-    height="718"
-    width="587"
-  />
-  <g
-    id="avatar"
-    transform="translate(103.5,35)"
-  >
+    </style>
     <g
-      id="accessory-a"
+      id="avatar"
     >
-      <rect
-        class="accessory-a-baz accessory-a-boz"
-        height="16"
-        width="15"
-      />
-      <defs />
-      <g>
+      <g
+        id="accessory-a"
+      >
+        <rect
+          class="accessory-a-baz accessory-a-boz"
+          height="16"
+          width="15"
+        />
+        <defs />
+        <g>
+          <circle
+            class="foo accessory-a-baz accessory-a-boz color-yyy"
+            cx="15"
+            cy="16"
+            r="11"
+          />
+        </g>
         <circle
-          class="foo accessory-a-baz accessory-a-boz color-yyy"
-          cx="15"
-          cy="16"
-          r="11"
+          class="accessory-a-baz"
+          cx="12"
+          cy="13"
+          r="14"
         />
       </g>
-      <circle
-        class="accessory-a-baz"
-        cx="12"
-        cy="13"
-        r="14"
-      />
-    </g>
-    <g
-      id="accessory-b"
-    >
-      <rect
-        class="accessory-b-foo bar baz color-xxx"
-        height="6"
-        width="5"
-      />
-      <defs />
-      <g>
+      <g
+        id="accessory-b"
+      >
+        <rect
+          class="accessory-b-foo bar baz color-xxx"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="bar color-yyy"
+            cx="5"
+            cy="6"
+            r="1"
+          />
+        </g>
         <circle
-          class="bar color-yyy"
-          cx="5"
-          cy="6"
-          r="1"
+          class="accessory-b-foo"
+          cx="2"
+          cy="3"
+          r="4"
         />
       </g>
-      <circle
-        class="accessory-b-foo"
-        cx="2"
-        cy="3"
-        r="4"
-      />
     </g>
-  </g>
-  <g
+  </svg>
+  <svg
     id="reddit-logo"
-    transform="translate(11.5,674) scale(0.978)"
+    preserveAspectRatio="xMinYMax"
+    viewBox="0 0 97 32"
+    width="94.5"
+    x="11.5"
+    xmlns="http://www.w3.org/2000/svg"
+    y="-11.5"
   >
     <g
       transform="scale(1.6)"
@@ -120,7 +131,7 @@ exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar i
         d="M7.68,6.53a1.19,1.19,0,0,0-1-1.18A4.56,4.56,0,0,0,2.39,6.91V6.75A1.2,1.2,0,0,0,0,6.75v9.77a1.23,1.23,0,0,0,1.12,1.24,1.19,1.19,0,0,0,1.26-1.1.66.66,0,0,0,0-.14v-5A3.62,3.62,0,0,1,5.81,7.7a4.87,4.87,0,0,1,.54,0h.24A1.18,1.18,0,0,0,7.68,6.53Z"
       />
     </g>
-  </g>
+  </svg>
 </svg>
 `;
 
