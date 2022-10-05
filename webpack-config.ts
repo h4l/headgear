@@ -1,6 +1,6 @@
 import CopyPlugin from "copy-webpack-plugin";
 import * as path from "path";
-import { Configuration } from "webpack";
+import { Configuration, IgnorePlugin } from "webpack";
 
 const config: Configuration = {
   entry: {
@@ -41,6 +41,12 @@ const config: Configuration = {
         { from: "./src/html/*.html", to: "html/[name].html" },
         { from: "./src/img/*", to: "img/[name][ext]" },
       ],
+    }),
+    // This is a conditional import that we don't trigger, and if it's included
+    // it requires polyfills for node modules like fs.
+    new IgnorePlugin({
+      contextRegExp: /css\/lib\/stringify/,
+      resourceRegExp: /source-map-support/,
     }),
   ],
 };
