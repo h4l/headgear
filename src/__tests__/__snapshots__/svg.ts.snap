@@ -6,57 +6,59 @@ exports[`composeAvatarSVG() merges avatar accessories into single SVG doc 1`] = 
   xmlns="http://www.w3.org/2000/svg"
 >
   <style>
-    /* acc_a */
-.acc_a-baz{stroke:orange;}.acc_a-boz{stroke:blue;}.acc_a-bar{fill:#aabbcc;}.acc_a-baz{fill:#123;}
-/* acc_d */
-.acc_d-foo{stroke:red;}.acc_d-boz{stroke:blue;}.acc_d-foo{fill:red;}.acc_d-bar{fill:#aabbcc;}
+    /* accessory-a */
+.accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
+/* accessory-b */
+.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+/* customisation styles */
+.color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
   </style>
   <g
     id="avatar"
   >
     <g
-      id="acc_a"
+      id="accessory-a"
     >
       <rect
-        class="acc_a-baz acc_a-boz"
+        class="accessory-a-baz accessory-a-boz"
         height="16"
         width="15"
       />
       <defs />
       <g>
         <circle
-          class="acc_a-baz acc_a-boz"
+          class="foo accessory-a-baz accessory-a-boz color-yyy"
           cx="15"
           cy="16"
           r="11"
         />
       </g>
       <circle
-        class="acc_a-baz"
+        class="accessory-a-baz"
         cx="12"
         cy="13"
         r="14"
       />
     </g>
     <g
-      id="acc_d"
+      id="accessory-b"
     >
       <rect
-        class="acc_d-foo acc_d-bar baz acc_d-boz"
+        class="accessory-b-foo bar baz color-xxx"
         height="6"
         width="5"
       />
       <defs />
       <g>
         <circle
-          class="acc_d-bar acc_d-boz"
+          class="bar color-yyy"
           cx="5"
           cy="6"
           r="1"
         />
       </g>
       <circle
-        class="acc_d-foo"
+        class="accessory-b-foo"
         cx="2"
         cy="3"
         r="4"
@@ -74,7 +76,7 @@ exports[`prepareAccessorySVG() extracts and namespaces SVG elements and CSS 2`] 
     class="example-foo"
   >
     <rect
-      class="example-foo example-bar example-baz boz"
+      class="example-foo example-bar example-baz color-boz"
       height="6"
       width="5"
     />
@@ -86,7 +88,7 @@ exports[`prepareAccessorySVG() extracts and namespaces SVG elements and CSS 2`] 
         r="2"
       />
       <circle
-        class="boz"
+        class="color-boz"
         cx="5"
         cy="6"
         r="1"

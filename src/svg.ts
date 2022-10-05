@@ -183,26 +183,60 @@ export function addPrefixesToSVGClassAttributes({
   });
 }
 
-export function createAccessoryCustomisedCSSRules({
-  accessory,
-  styles,
-}: {
-  accessory: ResolvedAccessory;
-  styles: SVGStyle[];
-}): string {
-  return accessory.customizableClasses
-    .map((cls) => {
-      const style = styles.find((s) => s.className === cls);
-      if (!style)
-        throw new Error(
-          `Accessory ${JSON.stringify(
-            accessory.id
-          )} has a customisable class ${JSON.stringify(
-            cls
-          )} but no style value exists for it.`
-        );
-      return `.${cls}{fill:${style?.fill}}`;
-    })
+/**
+ * Fail if the accessories require a customisation class that does not
+ * have a style value provided.
+ *
+ * This may be overly-strict, but I'd rather blow up with an error than render
+ * an avatar incorrectly.
+ */
+function _validateAvatarCustomClasses(avatar: ResolvedAvatar): void {
+  const accessoryClasses = new Set(
+    avatar.accessories.flatMap((acc) => acc.customizableClasses)
+  );
+  const styleClasses = new Set(avatar.styles.map((style) => style.className));
+
+  accessoryClasses.forEach((cls) => {
+    if (!styleClasses.has(cls)) {
+      throw new Error(
+        `Customisation class "${cls}" is used by an avatar accessory but has no \
+style value.`
+      );
+    }
+  });
+}
+
+/**
+ * Fail if an avatar's customisation style objects have any unexpected
+ * properties.
+ *
+ * If new accessories are released that customise something other than fill
+ * color then this should fail, preventing us from rendering the avatar
+ * incorrectly, and alerting us of the need to support the new property.
+ */
+function _validateAvatarStyleValues(avatar: ResolvedAvatar): void {
+  avatar.styles.forEach((style) => {
+    const props = Object.getOwnPropertyNames(style);
+    if (!(props.length === 2 && "className" in style && "fill" in style)) {
+      throw new Error(
+        `Customisation style object contains unsupported properties: ${JSON.stringify(
+          style
+        )}`
+      );
+    }
+  });
+}
+
+export function createAccessoryCustomisationCSSRules(
+  avatar: ResolvedAvatar
+): string {
+  _validateAvatarCustomClasses(avatar);
+  _validateAvatarStyleValues(avatar);
+
+  // The fill value is applied to a "color-$NAME" class, not the literal
+  // className as specified.
+  return avatar.styles
+    .map((style) => `.color-${style.className}{fill:${style?.fill}}`)
     .join("");
 }
 
@@ -268,11 +302,9 @@ export function safeId({ id, index }: { id: string; index: number }): string {
  */
 export function prepareAccessorySVG({
   accessory,
-  styles,
   index,
 }: {
   accessory: ResolvedAccessory;
-  styles: SVGStyle[];
   index: number;
 }): { svg: SVGGElement; stylesheet: string } {
   const id = safeId({ id: accessory.id, index });
@@ -285,7 +317,6 @@ export function prepareAccessorySVG({
     style.remove();
     if (stylesheet?.trim()) stylesheets.push(stylesheet);
   });
-  stylesheets.push(createAccessoryCustomisedCSSRules({ accessory, styles }));
   const { cssStylesheet, classes } = addPrefixesToCSSStylesheetSelectorClasses({
     cssStylesheet: stylesheets.join("\n"),
     prefix,
@@ -332,8 +363,9 @@ export function composeAvatarSVG({
   // stylesheets.
 
   const preparedAccessories = accessories.map((accessory, index) =>
-    prepareAccessorySVG({ accessory, index, styles })
+    prepareAccessorySVG({ accessory, index })
   );
+  const customisationStyles = createAccessoryCustomisationCSSRules(avatar);
 
   const doc = new DOMParser().parseFromString(
     // All the accessories use the viewBox 0 0 380 600
@@ -345,13 +377,17 @@ export function composeAvatarSVG({
   const avatarGroup = rootSvg?.querySelector("#avatar");
   assert(rootSvg instanceof SVGElement && style && avatarGroup);
 
-  style.textContent = preparedAccessories
-    .map(({ stylesheet }, i) => {
-      return `\
+  style.textContent =
+    preparedAccessories
+      .map(({ stylesheet }, i) => {
+        return `\
 /* ${accessories[i].id} */
 ${stylesheet}`;
-    })
-    .join("\n");
+      })
+      .join("\n") +
+    "\n/* customisation styles */\n" +
+    customisationStyles;
+
   preparedAccessories.forEach(({ svg }) => {
     avatarGroup.appendChild(doc.importNode(svg, true));
   });
