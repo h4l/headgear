@@ -199,14 +199,28 @@ describe("createAccessoryCustomisationCSSRules()", () => {
     ).toBe(".color-foo{fill:#fff}.color-bar{fill:#aaa}.color-baz{fill:#000}");
   });
 
-  test("throws if accessories use customisation class not provided in styles", () => {
+  test("allows accessories to use customisation class not provided in styles", () => {
     expect(() =>
+      // When using the randomise feature in the Reddit avatar builder, style
+      // values are not always set.
       createAccessoryCustomisationCSSRules({
         accessories: [{ ...accessory, customizableClasses: ["foo", "bar"] }],
         styles: [{ className: "foo", fill: "#fff" }],
       })
-    ).toThrowError(`Customisation class "bar" is used by an avatar accessory \
-but has no style value.`);
+    ).not.toThrowError();
+  });
+
+  test("allows customisation styles not used in accessories", () => {
+    expect(() =>
+      // Customised colours can remain when no active accessories use them.
+      createAccessoryCustomisationCSSRules({
+        accessories: [{ ...accessory, customizableClasses: ["foo"] }],
+        styles: [
+          { className: "foo", fill: "#fff" },
+          { className: "bar", fill: "#fff" },
+        ],
+      })
+    ).not.toThrowError();
   });
 
   test("throws if styles use unexpected properties", () => {

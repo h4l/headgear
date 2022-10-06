@@ -190,29 +190,6 @@ export function addPrefixesToSVGClassAttributes({
 }
 
 /**
- * Fail if the accessories require a customisation class that does not
- * have a style value provided.
- *
- * This may be overly-strict, but I'd rather blow up with an error than render
- * an avatar incorrectly.
- */
-function _validateAvatarCustomClasses(avatar: ResolvedAvatar): void {
-  const accessoryClasses = new Set(
-    avatar.accessories.flatMap((acc) => acc.customizableClasses)
-  );
-  const styleClasses = new Set(avatar.styles.map((style) => style.className));
-
-  accessoryClasses.forEach((cls) => {
-    if (!styleClasses.has(cls)) {
-      throw new Error(
-        `Customisation class "${cls}" is used by an avatar accessory but has no \
-style value.`
-      );
-    }
-  });
-}
-
-/**
  * Fail if an avatar's customisation style objects have any unexpected
  * properties.
  *
@@ -236,7 +213,6 @@ function _validateAvatarStyleValues(avatar: ResolvedAvatar): void {
 export function createAccessoryCustomisationCSSRules(
   avatar: ResolvedAvatar
 ): string {
-  _validateAvatarCustomClasses(avatar);
   _validateAvatarStyleValues(avatar);
 
   // The fill value is applied to a "color-$NAME" class, not the literal
