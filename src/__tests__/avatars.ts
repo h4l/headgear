@@ -5,7 +5,9 @@ import { resolve } from "path";
 import { assert } from "../assert";
 import {
   AvatarDataResponseData,
+  AvatarNFTInfoResponseData,
   _fetchAvatarData,
+  _fetchAvatarNFTData,
   _validateSVGStyle,
   getCurrentAvatar,
 } from "../avatars";
@@ -56,36 +58,101 @@ async function exampleNonNftAvatarDataResponseJSON(): Promise<AvatarDataResponse
   ) as AvatarDataResponseData;
 }
 
-test("_fetchAvatarData() throws on failed API call", async () => {
-  fetchMock.post("https://gql.reddit.com/", {
-    status: 500,
-    body: "Server is on fire.",
+async function exampleAvatarNFTInfoResponseDataJSON(): Promise<AvatarNFTInfoResponseData> {
+  return JSON.parse(
+    await readFile(resolve(__dirname, "nft-info-response.json"), {
+      encoding: "utf-8",
+    })
+  ) as AvatarNFTInfoResponseData;
+}
+
+describe("_fetchAvatarData()", () => {
+  test("throws on failed API call", async () => {
+    fetchMock.post("https://gql.reddit.com/", {
+      status: 500,
+      body: "Server is on fire.",
+    });
+    await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
+      `Avatar Data API request failed: 500 Internal Server Error: Server is on fire.`
+    );
   });
-  await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
-    `Avatar Data API request failed: 500 Internal Server Error: Server is on fire.`
-  );
+
+  test("throws on unexpected API response data", async () => {
+    fetchMock.post("https://gql.reddit.com/", { body: {} });
+    await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
+      `Avatar Data API response JSON is not structured as expected`
+    );
+  });
+
+  test("returns API response data", async () => {
+    fetchMock.post("https://gql.reddit.com/", {
+      body: await exampleAvatarDataResponseJSON(),
+    });
+    await expect(_fetchAvatarData({ apiToken: "123" })).resolves.toEqual(
+      (
+        await exampleAvatarDataResponseJSON()
+      ).data
+    );
+    expect(fetchMock).toHaveFetched("https://gql.reddit.com/", {
+      headers: { authorization: "Bearer 123" },
+      body: { id: "d78e4dc3c12e" },
+      matchPartialBody: true,
+    });
+  });
 });
 
-test("_fetchAvatarData() throws on unexpected API response data", async () => {
-  fetchMock.post("https://gql.reddit.com/", { body: {} });
-  await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
-    `Avatar Data API response JSON is not structured as expected`
-  );
-});
-
-test("_fetchAvatarData() returns API response data", async () => {
-  fetchMock.post("https://gql.reddit.com/", {
-    body: await exampleAvatarDataResponseJSON(),
+describe("_fetchAvatarNFTData()", () => {
+  test("throws on failed API call", async () => {
+    fetchMock.post("https://gql.reddit.com/", {
+      status: 500,
+      body: "Server is on fire.",
+    });
+    await expect(
+      _fetchAvatarNFTData({
+        apiToken: "123",
+        nftId: "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
+      })
+    ).rejects.toThrow(
+      `Avatar Data API request failed: 500 Internal Server Error: Server is on fire.`
+    );
   });
-  await expect(_fetchAvatarData({ apiToken: "123" })).resolves.toEqual(
-    (
-      await exampleAvatarDataResponseJSON()
-    ).data
-  );
-  expect(fetchMock).toHaveFetched("https://gql.reddit.com/", {
-    headers: { authorization: "Bearer 123" },
-    body: { id: "d78e4dc3c12e" },
-    matchPartialBody: true,
+
+  test("throws on unexpected API response data", async () => {
+    fetchMock.post("https://gql.reddit.com/", { body: {} });
+    await expect(
+      _fetchAvatarNFTData({
+        apiToken: "123",
+        nftId: "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
+      })
+    ).rejects.toThrow(
+      `Avatar NFT Info API response JSON is not structured as expected`
+    );
+  });
+
+  test("returns API response data", async () => {
+    fetchMock.post("https://gql.reddit.com/", {
+      body: await exampleAvatarNFTInfoResponseDataJSON(),
+    });
+    await expect(
+      _fetchAvatarNFTData({
+        apiToken: "123",
+        nftId: "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
+      })
+    ).resolves.toEqual(
+      (
+        await exampleAvatarNFTInfoResponseDataJSON()
+      ).data.inventoryItems.edges[0].node
+    );
+    expect(fetchMock).toHaveFetched("https://gql.reddit.com/", {
+      headers: { authorization: "Bearer 123" },
+      body: {
+        id: "e9865cc4d93d",
+        variables: {
+          ids: ["nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477"],
+        },
+      },
+      matchPartialBody: true,
+    });
   });
 });
 

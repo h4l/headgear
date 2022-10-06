@@ -1,0 +1,61 @@
+{
+  "data": {
+    "inventoryItems": {
+      "edges": [
+        {
+          "node": {
+            "__typename": "InventoryItem",
+            "id": "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
+            "name": "Les Rock #478",
+            "tags": ["MINTED"],
+            "serialNumber": "478",
+            "benefits": {
+              "avatarOutfit": {
+                "id": "dubbl3bee_1",
+                "backgroundImage": {
+                  "url": "https://i.redd.it/snoovatar/snoo_assets/UI4W3ys3XdI_BGC_les_rock_001.png"
+                }
+              }
+            },
+            "artist": {
+              "redditorInfo": {
+                "id": "t2_mxf1h8cd",
+                "displayName": "dubbl3bee",
+                "__typename": "Redditor",
+                "prefixedName": "u/dubbl3bee",
+                "icon": {
+                  "url": "https://styles.redditmedia.com/t5_6cjyzq/styles/profileIcon_snoo-nftv2_bmZ0X2VpcDE1NToxMzdfNDI1YmYwNTRlZjdiYWQ2NWI3YmRkOGU2NTg3YjFjMzUwMGU0ZjRjYV8yNDAw_rare_02fe8693-c8fc-42d8-821e-1ce694fd1721-headshot.png"
+                },
+                "profile": {
+                  "title": "dubbl3bee",
+                  "isNsfw": false,
+                  "publicDescriptionText": "UK based Freelance Designer, loves the 80's, Sci-Fi and 80's Sci-fi.\n------------------------------------------------\n+ Illustrator, Photoshop, Procreate, Figma, After Effects"
+                }
+              }
+            },
+            "drop": { "size": 1000, "rarity": null },
+            "images": [
+              {
+                "url": "https://i.redd.it/snoovatar/avatars/basic/31ba02dc-48e8-4dce-9862-41439740b9b4.png"
+              }
+            ],
+            "nft": {
+              "title": "Les Rock #478",
+              "series": "Avatar Rock Out",
+              "description": "1980's Glam Rocker outfit complete with; Big hair, face paints, earring, tattoo & animal print leggings. This outfit includes exclusive \"Ax\" guitar and Reddit branded amplifier. \u2014 by u/dubbl3bee",
+              "vendor": "Reddit",
+              "imageUrl": "https://reddit.infura-ipfs.io/ipfs/QmcXrktTfmw1ffWUjNbZ674bSLLYk1mmiNYdbAeMnNRjq5",
+              "tokenUrl": "https://reddit.infura-ipfs.io/ipfs/QmeUMom8ctRS2RF3sQTwdZczVrH1b2HVVu8eHSFA2NgNm4/477.json",
+              "externalUrls": [
+                "https://polygonscan.com/token/0x425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca?a=477"
+              ],
+              "contractAddress": "425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca",
+              "tokenId": "477",
+              "mintedAt": "2022-09-07T18:30:43.000000+0000"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

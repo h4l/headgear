@@ -105,6 +105,49 @@ export interface SVGStyle {
   fill: string;
 }
 
+export interface AvatarNFTInfoResponseData {
+  data: {
+    inventoryItems: {
+      edges: [
+        {
+          node: NFTInfoResponse;
+        }
+      ];
+    };
+  };
+}
+interface NFTInfoResponse {
+  name: string;
+  drop: {
+    size: null | number;
+  };
+  benefits: {
+    avatarOutfit: {
+      backgroundImage: {
+        url: string;
+      };
+    };
+  };
+}
+
+function validateAvatarNFTInfoResponseData(
+  json: any
+): asserts json is AvatarNFTInfoResponseData {
+  const size = json?.data?.inventoryItems?.edges?.[0]?.node?.drop?.size;
+  if (
+    !(
+      typeof json?.data?.inventoryItems?.edges?.[0]?.node?.name === "string" &&
+      (size === null || typeof size === "number") &&
+      typeof json?.data?.inventoryItems?.edges?.[0]?.node?.benefits
+        ?.avatarOutfit?.backgroundImage?.url === "string"
+    )
+  ) {
+    throw new Error(
+      "Avatar NFT Info API response JSON is not structured as expected"
+    );
+  }
+}
+
 function validateAvatarDataResponseData(
   json: any
 ): asserts json is AvatarDataResponseData {
@@ -140,11 +183,13 @@ async function _failedResponseSummary(resp: Response): Promise<string> {
   return `${resp.status} ${resp.statusText}: ${await resp.text()}`;
 }
 
-export async function _fetchAvatarData({
+async function _graphqlJsonApiRequest<T>({
   apiToken,
+  bodyJSON,
 }: {
   apiToken: string;
-}): Promise<AvatarData> {
+  bodyJSON: string;
+}): Promise<T> {
   const resp = await fetch("https://gql.reddit.com/", {
     headers: {
       authorization: `Bearer ${apiToken}`,
@@ -152,7 +197,7 @@ export async function _fetchAvatarData({
     },
     referrer: "https://www.reddit.com/",
     referrerPolicy: "origin-when-cross-origin",
-    body: '{"variables":{},"id":"d78e4dc3c12e"}',
+    body: bodyJSON,
     method: "POST",
     mode: "cors",
     credentials: "omit",
@@ -162,9 +207,40 @@ export async function _fetchAvatarData({
       `Avatar Data API request failed: ${await _failedResponseSummary(resp)}`
     );
   }
-  const json = await resp.json();
+  return await resp.json();
+}
+
+export async function _fetchAvatarData({
+  apiToken,
+}: {
+  apiToken: string;
+}): Promise<AvatarData> {
+  const json = await _graphqlJsonApiRequest({
+    apiToken,
+    bodyJSON: '{"variables":{},"id":"d78e4dc3c12e"}',
+  });
   validateAvatarDataResponseData(json);
   return json.data;
+}
+
+export async function _fetchAvatarNFTData({
+  apiToken,
+  nftId,
+}: {
+  apiToken: string;
+  nftId: string;
+}): Promise<NFTInfoResponse> {
+  const json = await _graphqlJsonApiRequest({
+    apiToken,
+    bodyJSON: JSON.stringify({
+      variables: {
+        ids: [nftId],
+      },
+      id: "e9865cc4d93d",
+    }),
+  });
+  validateAvatarNFTInfoResponseData(json);
+  return json.data.inventoryItems.edges[0].node;
 }
 
 export interface ResolvedAccessory {
