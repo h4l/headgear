@@ -1,15 +1,22 @@
 import { assert } from "../assert";
-import { ResolvedAccessory, ResolvedAvatar, SVGStyle } from "../avatars";
+import {
+  NFTInfo,
+  ResolvedAccessory,
+  ResolvedAvatar,
+  SVGStyle,
+} from "../avatars";
 import {
   PrefixedCSSSelector,
   PrefixedCSSStylesheet,
   SVGParseError,
+  _nftNameSVG,
   addPrefixesToCSSSelectorClasses,
   addPrefixesToCSSStylesheetSelectorClasses,
   addPrefixesToElementClassAttribute,
   addPrefixesToSVGClassAttributes,
   composeAvatarSVG,
   createAccessoryCustomisationCSSRules,
+  createNFTCardAvatarSVG,
   createStandardAvatarSVG,
   prepareAccessorySVG,
   safeId,
@@ -314,6 +321,15 @@ function avatar(): ResolvedAvatar {
       // styles that aren't used by accessories can exist
       { className: "zzz", fill: "#111111" },
     ],
+    nftInfo: {
+      serialNumber: "123",
+      seriesSize: 600,
+      name: "Example Avatar",
+      backgroundImage: {
+        httpUrl: "https://example.com/foo.png",
+        dataUrl: "data:image/png;base64,cG5nCg",
+      },
+    },
   };
 }
 
@@ -368,5 +384,76 @@ describe("Avatar SVG", () => {
       expect(standardLayout.querySelector("#reddit-logo")).toBeTruthy();
       expect(standardLayout).toMatchSnapshot();
     });
+  });
+
+  describe("NFT Card Layout - createNFTCardAvatarSVG()", () => {
+    test.each`
+      seriesSize | renderedSeriesSize | nftType
+      ${null}    | ${null}            | ${"free"}
+      ${1000}    | ${"1k"}            | ${"regular"}
+    `(
+      "renders $nftType NFT avatar in styled container (seriesSize $seriesSize)",
+      ({
+        seriesSize,
+        renderedSeriesSize,
+      }: {
+        seriesSize: null | number;
+        renderedSeriesSize: null | string;
+      }) => {
+        const _avatar = avatar();
+        assert(_avatar.nftInfo);
+        const composedAvatar = composeAvatarSVG({ avatar: _avatar });
+        const nftCard = createNFTCardAvatarSVG({
+          composedAvatar,
+          nftInfo: {
+            ..._avatar.nftInfo,
+            seriesSize: seriesSize,
+          },
+        });
+
+        if (renderedSeriesSize === null) {
+          expect(nftCard.querySelector("#series-size")).toBeFalsy();
+        } else {
+          expect(nftCard.querySelector("#series-size")?.textContent).toEqual(
+            renderedSeriesSize
+          );
+        }
+        expect(nftCard).toMatchSnapshot();
+      }
+    );
+
+    test.each`
+      seriesSize | renderedSeriesSize
+      ${null}    | ${null}
+      ${600}     | ${"600"}
+      ${1000}    | ${"1k"}
+      ${1200}    | ${"1.2k"}
+      ${1289}    | ${"1.3k"}
+    `(
+      "nftNameSVG() renders seriesSize $seriesSize",
+      ({
+        seriesSize,
+        renderedSeriesSize,
+      }: {
+        seriesSize: null | number;
+        renderedSeriesSize: null | string;
+      }) => {
+        const _avatar = avatar();
+        assert(_avatar.nftInfo);
+        const nftInfo: NFTInfo = {
+          ..._avatar.nftInfo,
+          seriesSize: seriesSize,
+        };
+        const nftName = _nftNameSVG(nftInfo);
+
+        if (renderedSeriesSize === null) {
+          expect(nftName.querySelector("#series-size")).toBeFalsy();
+        } else {
+          expect(nftName.querySelector("#series-size")?.textContent).toEqual(
+            renderedSeriesSize
+          );
+        }
+      }
+    );
   });
 });

@@ -7,10 +7,15 @@ import {
 } from "css-selector-parser";
 
 import { assert, assertNever } from "./assert";
-import { ResolvedAccessory, ResolvedAvatar, SVGStyle } from "./avatars";
-import { default as redditLogoLight } from "./img/avatar-svg/reddit-logo-light.svg";
+import { NFTInfo, ResolvedAccessory, ResolvedAvatar } from "./avatars";
+import { default as nftCardTemplateSrc } from "./img/avatar-svg/nft-card-template.svg";
+import { default as nftIconSrc } from "./img/avatar-svg/nft-icon.svg";
+import { default as nftNameWithCountSrc } from "./img/avatar-svg/nft-name-with-count.svg";
+import { default as nftNameSrc } from "./img/avatar-svg/nft-name.svg";
+import { default as redditLogoLightSrc } from "./img/avatar-svg/reddit-logo-light.svg";
 
 const SVGNS = "http://www.w3.org/2000/svg";
+const XLINKNS = "http://www.w3.org/1999/xlink";
 const cssSelectors = new CssSelectorParser();
 cssSelectors.registerAttrEqualityMods("~");
 
@@ -409,7 +414,7 @@ ${stylesheet}`;
 }
 
 function redditLogoSVG(): SVGElement {
-  const redditLogo = _parseSVG({ svgSource: redditLogoLight });
+  const redditLogo = _parseSVG({ svgSource: redditLogoLightSrc });
   redditLogo.id = "reddit-logo";
   return redditLogo;
 }
@@ -447,6 +452,73 @@ export function createStandardAvatarSVG({
   redditLogo.setAttribute("preserveAspectRatio", "xMinYMax");
   redditLogo.setAttribute("x", "11.5");
   redditLogo.setAttribute("y", "-11.5");
+
+  return svg;
+}
+
+const CARD_W = 552;
+const CARD_H = 736;
+
+export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
+  let svg;
+  if (nftInfo.seriesSize === null) {
+    svg = _parseSVG({ svgSource: nftNameSrc });
+  } else {
+    svg = _parseSVG({ svgSource: nftNameWithCountSrc });
+    const seriesSize = svg.querySelector("#series-size");
+    assert(seriesSize);
+    seriesSize.textContent =
+      nftInfo.seriesSize < 1000
+        ? nftInfo.seriesSize.toFixed(0)
+        : (nftInfo.seriesSize / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  }
+  const name = svg.querySelector("#nft-name");
+  assert(name);
+  name.textContent = `${nftInfo.name} #${nftInfo.serialNumber}`;
+  svg.querySelector("style")?.remove();
+  return svg;
+}
+
+export function createNFTCardAvatarSVG({
+  composedAvatar,
+  nftInfo,
+}: {
+  composedAvatar: SVGElement;
+  nftInfo: NFTInfo;
+}): SVGElement {
+  const svg = _parseSVG({ svgSource: nftCardTemplateSrc });
+  const doc = svg.ownerDocument;
+
+  composedAvatar = svg.appendChild(doc.importNode(composedAvatar, true));
+  const nftName = svg.appendChild(doc.importNode(_nftNameSVG(nftInfo), true));
+  const nftIcon = svg.appendChild(
+    doc.importNode(_parseSVG({ svgSource: nftIconSrc }), true)
+  );
+
+  // Use only 1 style element to help Inkscape.
+  const style = svg.querySelector("style");
+  const avatarStyle = composedAvatar.querySelector("style");
+  assert(style && avatarStyle);
+  style.textContent =
+    (style.textContent || "") + (avatarStyle.textContent || "");
+  avatarStyle.remove();
+
+  nftName.setAttribute("preserveAspectRatio", "xMidYMin");
+  composedAvatar.setAttribute("y", "63");
+  composedAvatar.setAttribute("height", `${ACC_H}`);
+
+  nftIcon.setAttribute("preserveAspectRatio", "xMaxYMin");
+  nftIcon.removeAttribute("width");
+  nftIcon.setAttribute("height", "52");
+  nftIcon.setAttribute("x", "-31");
+  nftIcon.setAttribute("y", "32");
+
+  nftName.setAttribute("preserveAspectRatio", "xMinYMin");
+  nftName.setAttribute("y", "610");
+
+  const cardBgImg = svg.querySelector("#nft-card-bg") as SVGImageElement;
+  assert(cardBgImg);
+  cardBgImg.setAttributeNS(XLINKNS, "href", nftInfo.backgroundImage.dataUrl);
 
   return svg;
 }
