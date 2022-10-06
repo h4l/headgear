@@ -2,6 +2,7 @@ import fetchMock from "fetch-mock-jest";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 
+import { assert } from "../assert";
 import {
   AvatarDataResponseData,
   _fetchAvatarData,
@@ -13,9 +14,43 @@ afterEach(() => {
   fetchMock.restore();
 });
 
+beforeAll(() => {
+  const _origReadAsDataURL = FileReader.prototype.readAsDataURL;
+  jest
+    .spyOn(FileReader.prototype, "readAsDataURL")
+    .mockImplementation(function (this: FileReader, blob: Blob) {
+      // fetch-mock and jsdom don't use the same Blob implementation, and jsdom
+      // only accepts its own Blob objects. We only use mock ascii text data, so
+      // we can just mediate between them with strings...
+      // See https://github.com/jsdom/jsdom/issues/2555
+      blob
+        .text()
+        .then((text) => {
+          _origReadAsDataURL.call(this, new Blob([text], { type: blob.type }));
+        })
+        .catch((err) => {
+          console.error(
+            `Failed to read Blob.text() while wrapping FileReader.readAsDataURL()`,
+            err
+          );
+        });
+    });
+});
+afterAll(() => {
+  jest.mocked(FileReader.prototype.readAsDataURL).mockReset();
+});
+
 async function exampleAvatarDataResponseJSON(): Promise<AvatarDataResponseData> {
   return JSON.parse(
     await readFile(resolve(__dirname, "avatar-data-response.json"), {
+      encoding: "utf-8",
+    })
+  ) as AvatarDataResponseData;
+}
+
+async function exampleNonNftAvatarDataResponseJSON(): Promise<AvatarDataResponseData> {
+  return JSON.parse(
+    await readFile(resolve(__dirname, "non-nft-avatar-data-response.json"), {
       encoding: "utf-8",
     })
   ) as AvatarDataResponseData;
@@ -70,7 +105,7 @@ test("getCurrentAvatar() throws on non SVG asset image", async () => {
   fetchMock.get("glob:https://i.redd.it/snoovatar/*", (url) => {
     return {
       headers: { ["content-type"]: "image/png" },
-      body: Buffer.alloc(0),
+      body: Buffer.alloc(8, "fakedata"),
     };
   });
 
@@ -79,7 +114,7 @@ test("getCurrentAvatar() throws on non SVG asset image", async () => {
   );
 });
 
-test("getCurrentAvatar()", async () => {
+test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () => {
   fetchMock.post("https://gql.reddit.com/", {
     body: await exampleAvatarDataResponseJSON(),
   });
@@ -87,6 +122,12 @@ test("getCurrentAvatar()", async () => {
     return {
       headers: { ["content-type"]: "image/svg+xml" },
       body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
+    };
+  });
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*", (url) => {
+    return {
+      headers: { ["content-type"]: "image/png" },
+      body: "fakedata",
     };
   });
 
@@ -108,7 +149,7 @@ test("getCurrentAvatar()", async () => {
   ).toBeTruthy();
   expect(
     new Set(resolvedAvatar.accessories.map((acc) => acc.svgData)).size
-  ).toBe(8);
+  ).toBe(avatar.accessoryIds.length);
 
   expect(
     resolvedAvatar.accessories.find(
@@ -120,4 +161,61 @@ test("getCurrentAvatar()", async () => {
     slotNumber: 30,
     svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/accessory_assets/vO5m6xr_4KQ_gaming_body_bottom_006.svg --></svg>`,
   });
+
+  // This is an NFT avatar
+  const nftInfo = resolvedAvatar.nftInfo;
+  assert(nftInfo);
+  expect(nftInfo.backgroundImage.httpUrl).toBe(
+    "https://i.redd.it/snoovatar/snoo_assets/UI4W3ys3XdI_BGC_les_rock_001.png"
+  );
+  expect(nftInfo.backgroundImage.dataUrl).toEqual(
+    "data:image/png;base64,ZmFrZWRhdGE="
+  );
+  expect(nftInfo.name).toEqual("Les Rock");
+  expect(nftInfo.serialNumber).toEqual("478");
+  expect(nftInfo.seriesSize).toEqual(1000);
+});
+
+test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
+  fetchMock.post("https://gql.reddit.com/", {
+    body: await exampleNonNftAvatarDataResponseJSON(),
+  });
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
+    return {
+      headers: { ["content-type"]: "image/svg+xml" },
+      body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
+    };
+  });
+
+  const avatarData = await exampleNonNftAvatarDataResponseJSON();
+  const avatar = avatarData.data.avatarBuilderCatalog.avatar;
+  const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
+
+  expect(resolvedAvatar.styles).toEqual(avatar.styles);
+  expect(resolvedAvatar.accessories.map((acc) => acc.id)).toEqual(
+    avatar.accessoryIds
+  );
+  expect(
+    resolvedAvatar.accessories.every(
+      (acc) => typeof acc.slotNumber === "number"
+    )
+  ).toBeTruthy();
+  expect(
+    resolvedAvatar.accessories.every((acc) => /<svg\b/.test(acc.svgData))
+  ).toBeTruthy();
+  expect(
+    new Set(resolvedAvatar.accessories.map((acc) => acc.svgData)).size
+  ).toBe(avatar.accessoryIds.length);
+
+  expect(
+    resolvedAvatar.accessories.find(
+      (acc) => acc.id === "premium_cricket_helmet"
+    )
+  ).toEqual({
+    customizableClasses: ["hat"],
+    id: "premium_cricket_helmet",
+    slotNumber: 80,
+    svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/accessory_assets/_9an0Q3Akvo_cricket_helmet.svg --></svg>`,
+  });
+  expect(resolvedAvatar.nftInfo).toBeFalsy();
 });

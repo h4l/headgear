@@ -1,4 +1,8 @@
-import { ResolvedAvatar, getCurrentAvatar } from "./avatars";
+import {
+  GET_CURRENT_AVATAR_BEHAVIOUR_ID,
+  ResolvedAvatar,
+  getCurrentAvatar,
+} from "./avatars";
 import { fetchPageData } from "./page-data";
 
 export const MSG_GET_AVATAR = "get-avatar";
@@ -12,7 +16,9 @@ export async function _avatarVersionTag(): Promise<string | undefined> {
     document.querySelectorAll('img[alt="User avatar"]')
   ).map((img) => (img as HTMLImageElement).src);
   if (avatarUrl === undefined) return;
-  return await _sha256(new URL(avatarUrl).pathname);
+  return await _sha256(
+    `${GET_CURRENT_AVATAR_BEHAVIOUR_ID}:${new URL(avatarUrl).pathname}`
+  );
 }
 
 export async function _sha256(text: string): Promise<string> {

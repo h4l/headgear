@@ -168,6 +168,23 @@
           ]
         }
       ],
+      "outfits": [
+        {
+          "id": "some_non_nft_outfit"
+        },
+        {
+          "id": "dubbl3bee_1",
+          "title": "Les Rock",
+          "backgroundImage": {
+            "url": "https://i.redd.it/snoovatar/snoo_assets/UI4W3ys3XdI_BGC_les_rock_001.png"
+          },
+          "inventoryItem": {
+            "id": "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477"
+          },
+          "contractAddress": "425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca",
+          "tokenId": "477"
+        }
+      ],
       "avatar": {
         "__typename": "UserAvatar",
         "accessoryIds": [
@@ -183,7 +200,7 @@
         "accountId": "t2_37r42",
         "id": "81090756",
         "fullImage": {
-          "url": "https://i.redd.it/snoovatar/avatars/nftv2_bmZ0X2VpcDE1NToxMzdfNDY2YTMzMDg4N2JkZjYyZDUzZjk2OGVhODI0NzkzMTUwZjA3NzYyZV8xMw_rare_0659ab1c-ebdf-4f63-b993-77036cb4f860.png"
+          "url": "https://i.redd.it/snoovatar/avatars/nftv2_bmZ0X2VpcDE1NToxMzdfNDI1YmYwNTRlZjdiYWQ2NWI3YmRkOGU2NTg3YjFjMzUwMGU0ZjRjYV80Nzc_rare_0659ab1c-ebdf-4f63-b993-77036cb4f860.png"
         },
         "styles": [
           {
@@ -252,6 +269,95 @@
       ]
     },
     "globalProductOffers": {},
-    "avatarStorefront": {}
+    "avatarStorefront": {
+      "listings": {
+        "edges": [
+          {
+            "node": {
+              "id": "storefront_nft_dubbl3bee_1",
+              "totalQuantity": 1000,
+              "soldQuantity": 563,
+              "expiresAt": null,
+              "status": "AVAILABLE",
+              "productOffer": {
+                "id": "storefront_nft_dubbl3bee_1",
+                "name": "Les Rock",
+                "description": "1980's Glam Rocker outfit complete with; Big hair, face paints, earring, tattoo & animal print leggings. This outfit includes exclusive \"Ax\" guitar and Reddit branded amplifier. — by u/dubbl3bee",
+                "pricePackages": [
+                  {
+                    "id": "0",
+                    "quantity": "1",
+                    "price": "999",
+                    "currency": "USD"
+                  }
+                ]
+              },
+              "artist": {
+                "redditorInfo": {
+                  "id": "t2_mxf1h8cd",
+                  "prefixedName": "u/dubbl3bee",
+                  "icon": {
+                    "url": "https://styles.redditmedia.com/t5_6cjyzq/styles/profileIcon_snoo-nftv2_bmZ0X2VpcDE1NToxMzdfNDI1YmYwNTRlZjdiYWQ2NWI3YmRkOGU2NTg3YjFjMzUwMGU0ZjRjYV8xMDI_rare_c6b204bb-7fb9-4d9d-ac39-1a59ad84c199-headshot.png"
+                  },
+                  "profile": {
+                    "title": "dubbl3bee",
+                    "isNsfw": false,
+                    "publicDescriptionText": "UK based Freelance Designer, loves the 80's, Sci-Fi and 80's Sci-fi.\n------------------------------------------------\n+ Illustrator, Photoshop, Procreate, Figma, After Effects"
+                  }
+                }
+              },
+              "item": {
+                "id": "nft_template_dubbl3bee_1",
+                "name": "Les Rock",
+                "images": [
+                  {
+                    "url": "https://i.redd.it/snoovatar/avatars/basic/31ba02dc-48e8-4dce-9862-41439740b9b4.png"
+                  }
+                ],
+                "drop": {
+                  "rarity": null,
+                  "size": 1000
+                },
+                "owner": null,
+                "benefits": {
+                  "avatarOutfit": {
+                    "id": "dubbl3bee_1",
+                    "accessoryIds": [
+                      "dubbl3bee_face_lower_001",
+                      "dubbl3bee_face_upper_001",
+                      "dubbl3bee_body_001",
+                      "dubbl3bee_body_bottom_001",
+                      "dubbl3bee_accessory_back_001",
+                      "dubbl3bee_accessory_001",
+                      "dubbl3bee_hair_001"
+                    ],
+                    "backgroundImage": {
+                      "url": "https://i.redd.it/snoovatar/snoo_assets/UI4W3ys3XdI_BGC_les_rock_001.png"
+                    },
+                    "preRenderImage": {
+                      "url": "https://i.redd.it/snoovatar/avatars/basic/31ba02dc-48e8-4dce-9862-41439740b9b4.png"
+                    }
+                  }
+                },
+                "nft": {
+                  "title": "Les Rock",
+                  "description": "1980's Glam Rocker outfit complete with; Big hair, face paints, earring, tattoo & animal print leggings. This outfit includes exclusive \"Ax\" guitar and Reddit branded amplifier. — by u/dubbl3bee",
+                  "series": "Avatar Rock Out",
+                  "contractAddress": "425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca",
+                  "tokenId": "",
+                  "externalUrls": [
+                    "https://polygonscan.com/token/0x425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca?a=0"
+                  ],
+                  "imageUrl": "",
+                  "tokenUrl": "",
+                  "mintedAt": null,
+                  "vendor": ""
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
   }
 }

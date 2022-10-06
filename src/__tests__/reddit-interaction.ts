@@ -1,7 +1,11 @@
 import { mockChrome } from "./chrome.mock";
 import "./webapis.mock";
 
-import { ResolvedAvatar, getCurrentAvatar } from "../avatars";
+import {
+  GET_CURRENT_AVATAR_BEHAVIOUR_ID,
+  ResolvedAvatar,
+  getCurrentAvatar,
+} from "../avatars";
 import { fetchPageData } from "../page-data";
 import {
   MSG_GET_AVATAR,
@@ -57,7 +61,8 @@ test.each`
   }) => {
     document.body.innerHTML = bodyHtml;
     await expect(_avatarVersionTag()).resolves.toEqual(
-      expected && (await _sha256(expected))
+      expected &&
+        (await _sha256(`${GET_CURRENT_AVATAR_BEHAVIOUR_ID}:${expected}`))
     );
   }
 );
