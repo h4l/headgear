@@ -92,10 +92,10 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
     </g>
   </svg>
   <svg
-    preserveAspectRatio="xMinYMin"
-    viewBox="0 0 552 94"
+    preserveAspectRatio="xMinYMax"
+    viewBox="0 0 552 58"
     xmlns="http://www.w3.org/2000/svg"
-    y="610"
+    y="-32.5"
   >
     <defs>
       <filter
@@ -151,13 +151,13 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
     </defs>
     <text
       filter="url(#shadow)"
-      font-size="37"
+      font-size="29.1"
       id="nft-name"
       mask="url(#mask)"
       style="font-family:'Reddit Sans';font-weight:bold;fill:#f1f3f5;stroke:black;stroke-opacity:0.4;stroke-width:2;paint-order:stroke fill;"
       text-anchor="left"
-      x="44.5"
-      y="60"
+      x="32.5"
+      y="68%"
     >
       Example Avatar #123
     </text>
@@ -166,9 +166,9 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
     height="52"
     preserveAspectRatio="xMaxYMin"
     viewBox="0 0 32 32"
-    x="-31"
+    x="-25.5"
     xmlns="http://www.w3.org/2000/svg"
-    y="32"
+    y="26"
   >
     <path
       d="M16.0822 8.96002H3.28223V23.04H16.0822V8.96002Z"
@@ -294,10 +294,10 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
     </g>
   </svg>
   <svg
-    preserveAspectRatio="xMinYMin"
-    viewBox="0 0 552 94"
+    preserveAspectRatio="xMinYMax"
+    viewBox="0 0 552 58"
     xmlns="http://www.w3.org/2000/svg"
-    y="610"
+    y="-32.5"
   >
     <defs>
       <filter
@@ -411,13 +411,13 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
     </svg>
     <text
       filter="url(#shadow)"
-      font-size="37"
+      font-size="29.1"
       id="nft-name"
       mask="url(#mask)"
       style="font-family:'Reddit Sans';font-weight:bold;fill:#f1f3f5;stroke:black;stroke-opacity:0.4;stroke-width:2;paint-order:stroke fill;"
       text-anchor="left"
-      x="120"
-      y="60"
+      x="87"
+      y="68%"
     >
       Example Avatar #123
     </text>
@@ -426,9 +426,9 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
     height="52"
     preserveAspectRatio="xMaxYMin"
     viewBox="0 0 32 32"
-    x="-31"
+    x="-25.5"
     xmlns="http://www.w3.org/2000/svg"
-    y="32"
+    y="26"
   >
     <path
       d="M16.0822 8.96002H3.28223V23.04H16.0822V8.96002Z"

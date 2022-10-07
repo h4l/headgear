@@ -455,12 +455,19 @@ export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
   return svg;
 }
 
+export enum NFTCardVariant {
+  PROFILE_PAGE,
+  SHOP_INVENTORY,
+}
+
 export function createNFTCardAvatarSVG({
   composedAvatar,
   nftInfo,
+  variant,
 }: {
   composedAvatar: SVGElement;
   nftInfo: NFTInfo;
+  variant: NFTCardVariant;
 }): SVGElement {
   const svg = _parseSVG({ svgSource: nftCardTemplateSrc });
   const doc = svg.ownerDocument;
@@ -486,11 +493,25 @@ export function createNFTCardAvatarSVG({
   nftIcon.setAttribute("preserveAspectRatio", "xMaxYMin");
   nftIcon.removeAttribute("width");
   nftIcon.setAttribute("height", "52");
-  nftIcon.setAttribute("x", "-31");
-  nftIcon.setAttribute("y", "32");
+  if (variant === NFTCardVariant.PROFILE_PAGE) {
+    nftIcon.setAttribute("x", "-31");
+    nftIcon.setAttribute("y", "32");
+  } else {
+    assert(variant === NFTCardVariant.SHOP_INVENTORY);
+    nftIcon.setAttribute("x", "-25.5");
+    nftIcon.setAttribute("y", "26");
+  }
 
-  nftName.setAttribute("preserveAspectRatio", "xMinYMin");
-  nftName.setAttribute("y", "610");
+  nftName.setAttribute("preserveAspectRatio", "xMinYMax");
+  nftName.setAttribute("y", "-32.5");
+  if (variant === NFTCardVariant.SHOP_INVENTORY) {
+    nftName.setAttribute("viewBox", "0 0 552 58");
+    const name = nftName.querySelector("#nft-name");
+    assert(name);
+    name.setAttribute("x", nftInfo.seriesSize === null ? "32.5" : "87");
+    name.setAttribute("y", "68%");
+    name.setAttribute("font-size", "29.1");
+  }
 
   const cardBgImg = svg.querySelector("#nft-card-bg") as SVGImageElement;
   assert(cardBgImg);

@@ -6,6 +6,7 @@ import {
   SVGStyle,
 } from "../avatars";
 import {
+  NFTCardVariant,
   PrefixedCSSSelector,
   PrefixedCSSStylesheet,
   SVGParseError,
@@ -422,6 +423,7 @@ describe("Avatar SVG", () => {
             ..._avatar.nftInfo,
             seriesSize: seriesSize,
           },
+          variant: NFTCardVariant.PROFILE_PAGE,
         });
 
         if (renderedSeriesSize === null) {
