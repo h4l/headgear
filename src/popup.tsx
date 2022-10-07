@@ -85,7 +85,8 @@ const iconArrowDown = (
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="w-7 h-7 inline m-1 drop-shadow-lg"
+    className="w-7 h-7 inline m-1"
+    style="filter: drop-shadow(0px 0px 3px rgb(0 0 0 / 0.3));"
   >
     <path
       fillRule="evenodd"
@@ -385,23 +386,68 @@ export function Controls() {
           </a>
         </p>
       </div>
-      <a
-        class={`\
+      <DownloadSVGButton />
+    </div>
+  );
+}
+
+const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
+  [ImageStyleType.STANDARD, "Standard"],
+  [ImageStyleType.NFT_CARD, "NFT Card"],
+  [ImageStyleType.NO_BG, "No Background"],
+]);
+
+export function DownloadSVGButton(): JSX.Element {
+  const controlsState = useContext(ControlsContext).value;
+  const avatarSvgState = useContext(AvatarSvgContext).value;
+
+  const downloadUri = useMemo(() => {
+    if (avatarSvgState === undefined) return "#";
+    const b64Svg = btoa(avatarSvgState);
+    return `data:image/svg+xml;base64,${b64Svg}`;
+  }, [avatarSvgState]);
+  const disabled = avatarSvgState === undefined;
+
+  let filename: string | undefined = undefined;
+  if (controlsState) {
+    const imgStyleName = IMAGE_STYLE_NAMES.get(controlsState?.imageStyle);
+    assert(imgStyleName);
+    filename = `Reddit Avatar ${imgStyleName}.svg`;
+  }
+
+  return (
+    <a
+      role="button"
+      aria-disabled={disabled || undefined}
+      class={`\
+    ${
+      disabled
+        ? "cursor-not-allowed"
+        : "hover:ring active:ring hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600"
+    }
+    bg-indigo-600 hover:text-white hover:ring-indigo-500 active:ring-indigo-400
     flex text-lg font-medium
-    bg-indigo-600 hover:ring active:ring hover:ring-inset active:ring-inset hover:ring-indigo-500 active:ring-indigo-400
     text-slate-50 p-3
     `}
-        href="data:text/plain;charset=utf-8,Hello%20World!%0A"
-        download="hello.txt"
+      onClick={disabled ? () => false : undefined}
+      href={downloadUri}
+      download={disabled ? undefined : filename}
+    >
+      <span
+        class={`\
+      ${disabled ? "" : "hover:scale-105"}
+      m-auto hover:motion-reduce:scale-100  transition-transform ease-in
+      `}
       >
-        <span class="m-auto">
-          {iconArrowDown}{" "}
-          <span class="m-1 drop-shadow-lg shadow-white">
-            Download SVG Image
-          </span>
+        {iconArrowDown}{" "}
+        <span
+          class="text-inherit m-1 drop-shadow-lg shadow-slate-900"
+          style="text-shadow: 0px 0px 3px rgb(0 0 0 / 0.3)"
+        >
+          Download SVG Image
         </span>
-      </a>
-    </div>
+      </span>
+    </a>
   );
 }
 

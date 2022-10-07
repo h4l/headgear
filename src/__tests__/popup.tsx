@@ -13,6 +13,7 @@ import {
   ControlsContext,
   ControlsState,
   DataStateType,
+  DownloadSVGButton,
   ImageStyleOption,
   _createAvatarSvgState,
   _loadAvatarDataState,
@@ -434,4 +435,34 @@ test("<AvatarSVG>", async () => {
   render(<AvatarSVG svg={`<svg xmlns="${SVGNS}" data-testid="foo"/>`} />);
   const insertedSvg = await screen.findByTestId("foo");
   expect(insertedSvg).toBeTruthy();
+});
+
+describe("<DownloadSVGButton>", () => {
+  test("is disabled until state is available", async () => {
+    const controlsState = signal<ControlsState>(undefined);
+    const avatarSvgState = signal<AvatarSVGState>(undefined);
+    render(
+      <ControlsContext.Provider value={controlsState}>
+        <AvatarSvgContext.Provider value={avatarSvgState}>
+          <DownloadSVGButton />
+        </AvatarSvgContext.Provider>
+      </ControlsContext.Provider>
+    );
+    let button = await screen.findByRole("button");
+    expect(button).toHaveAttribute("aria-disabled");
+    expect(button).toHaveAttribute("href", "#");
+    expect(button).not.toHaveAttribute("download");
+
+    controlsState.value = { imageStyle: ImageStyleType.STANDARD };
+    avatarSvgState.value = "<svg/>";
+
+    await waitFor(async () => {
+      button = await screen.findByRole("button");
+      expect(button).not.toHaveAttribute("aria-disabled");
+      expect(button).toHaveAttribute("download", "Reddit Avatar Standard.svg");
+      expect(button.getAttribute("href")).toBe(
+        `data:image/svg+xml;base64,${btoa("<svg/>")}`
+      );
+    });
+  });
 });
