@@ -1,3 +1,4 @@
+import { MockOptionsMethodPost } from "fetch-mock";
 import fetchMock from "fetch-mock-jest";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
@@ -6,13 +7,28 @@ import { assert } from "../assert";
 import {
   AvatarDataResponseData,
   AvatarNFTInfoResponseData,
+  _GQL_QUERY_ID_AVATAR_DATA,
+  _GQL_QUERY_ID_NFT_INFO,
   _fetchAvatarData,
   _fetchAvatarNFTData,
   _validateSVGStyle,
   getCurrentAvatar,
 } from "../avatars";
 
-afterEach(() => {
+const AVATAR_DATA_REQUEST: MockOptionsMethodPost = {
+  name: "avatar-data",
+  url: "https://gql.reddit.com/",
+  matchPartialBody: true,
+  body: { id: _GQL_QUERY_ID_AVATAR_DATA },
+};
+const NFT_INFO_REQUEST: MockOptionsMethodPost = {
+  name: "nft-info",
+  url: "https://gql.reddit.com/",
+  matchPartialBody: true,
+  body: { id: _GQL_QUERY_ID_NFT_INFO },
+};
+
+beforeEach(() => {
   fetchMock.restore();
 });
 
@@ -68,7 +84,7 @@ async function exampleAvatarNFTInfoResponseDataJSON(): Promise<AvatarNFTInfoResp
 
 describe("_fetchAvatarData()", () => {
   test("throws on failed API call", async () => {
-    fetchMock.post("https://gql.reddit.com/", {
+    fetchMock.post(AVATAR_DATA_REQUEST, {
       status: 500,
       body: "Server is on fire.",
     });
@@ -78,14 +94,14 @@ describe("_fetchAvatarData()", () => {
   });
 
   test("throws on unexpected API response data", async () => {
-    fetchMock.post("https://gql.reddit.com/", { body: {} });
+    fetchMock.post(AVATAR_DATA_REQUEST, { body: {} });
     await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
       `Avatar Data API response JSON is not structured as expected`
     );
   });
 
   test("returns API response data", async () => {
-    fetchMock.post("https://gql.reddit.com/", {
+    fetchMock.post(AVATAR_DATA_REQUEST, {
       body: await exampleAvatarDataResponseJSON(),
     });
     await expect(_fetchAvatarData({ apiToken: "123" })).resolves.toEqual(
@@ -103,7 +119,7 @@ describe("_fetchAvatarData()", () => {
 
 describe("_fetchAvatarNFTData()", () => {
   test("throws on failed API call", async () => {
-    fetchMock.post("https://gql.reddit.com/", {
+    fetchMock.post(NFT_INFO_REQUEST, {
       status: 500,
       body: "Server is on fire.",
     });
@@ -118,7 +134,7 @@ describe("_fetchAvatarNFTData()", () => {
   });
 
   test("throws on unexpected API response data", async () => {
-    fetchMock.post("https://gql.reddit.com/", { body: {} });
+    fetchMock.post(NFT_INFO_REQUEST, { body: {} });
     await expect(
       _fetchAvatarNFTData({
         apiToken: "123",
@@ -130,7 +146,7 @@ describe("_fetchAvatarNFTData()", () => {
   });
 
   test("returns API response data", async () => {
-    fetchMock.post("https://gql.reddit.com/", {
+    fetchMock.post(NFT_INFO_REQUEST, {
       body: await exampleAvatarNFTInfoResponseDataJSON(),
     });
     await expect(
@@ -166,8 +182,8 @@ test.each([[{}], [{ className: "foo", fill: "#fff", unsupported: "foo" }]])(
 );
 
 test("getCurrentAvatar() throws on non SVG asset image", async () => {
-  fetchMock.post("https://gql.reddit.com/", {
-    body: await exampleAvatarDataResponseJSON(),
+  fetchMock.post(AVATAR_DATA_REQUEST, {
+    body: await exampleNonNftAvatarDataResponseJSON(),
   });
   fetchMock.get("glob:https://i.redd.it/snoovatar/*", (url) => {
     return {
@@ -182,8 +198,11 @@ test("getCurrentAvatar() throws on non SVG asset image", async () => {
 });
 
 test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () => {
-  fetchMock.post("https://gql.reddit.com/", {
+  fetchMock.post(AVATAR_DATA_REQUEST, {
     body: await exampleAvatarDataResponseJSON(),
+  });
+  fetchMock.post(NFT_INFO_REQUEST, {
+    body: await exampleAvatarNFTInfoResponseDataJSON(),
   });
   fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
     return {
@@ -238,13 +257,12 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
   expect(nftInfo.backgroundImage.dataUrl).toEqual(
     "data:image/png;base64,ZmFrZWRhdGE="
   );
-  expect(nftInfo.name).toEqual("Les Rock");
-  expect(nftInfo.serialNumber).toEqual("478");
+  expect(nftInfo.name).toEqual("Les Rock #478");
   expect(nftInfo.seriesSize).toEqual(1000);
 });
 
 test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
-  fetchMock.post("https://gql.reddit.com/", {
+  fetchMock.post(AVATAR_DATA_REQUEST, {
     body: await exampleNonNftAvatarDataResponseJSON(),
   });
   fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {

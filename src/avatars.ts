@@ -1,43 +1,9 @@
-import { assert } from "./assert";
-
 export interface AvatarDataResponseData {
   data: AvatarData;
 }
-const FREE_NFT_CONTRACT_ADDRESSES = Object.freeze([
-  // The Singularity
-  "466a330887bdf62d53f968ea824793150f07762e",
-  // Drip Squad
-  "bfd670667053e517a97afe56c91e4f83f1160bd3",
-  // Aww Friends
-  "6acb8fb82880d39c2b8446f8778a14d34ee6cfb7",
-  // Meme Team
-  "b9c042c3275bc49799688eea1a29b1405d02946b",
-]);
 
 interface AvatarData {
   avatarBuilderCatalog: AvatarBuilderCatalog;
-  avatarStorefront: AvatarStorefront;
-}
-
-interface AvatarStorefront {
-  listings: {
-    edges: StoreItem[];
-  };
-}
-
-interface StoreItem {
-  node: {
-    item: {
-      drop: {
-        size: number;
-      };
-      benefits: {
-        avatarOutfit: {
-          id: string;
-        };
-      };
-    };
-  };
 }
 
 interface AvatarBuilderCatalog {
@@ -158,8 +124,7 @@ function validateAvatarDataResponseData(
       typeof json?.data?.avatarBuilderCatalog?.avatar === "object" &&
       Array.isArray(json?.data?.avatarBuilderCatalog?.avatar?.styles) &&
       typeof json?.data?.avatarBuilderCatalog?.pastAvatars === "object" &&
-      Array.isArray(json?.data?.avatarBuilderCatalog?.outfits) &&
-      Array.isArray(json?.data?.avatarStorefront?.listings?.edges)
+      Array.isArray(json?.data?.avatarBuilderCatalog?.outfits)
     )
   ) {
     throw new Error(msg);
@@ -210,6 +175,9 @@ async function _graphqlJsonApiRequest<T>({
   return await resp.json();
 }
 
+export const _GQL_QUERY_ID_AVATAR_DATA = "d78e4dc3c12e";
+export const _GQL_QUERY_ID_NFT_INFO = "e9865cc4d93d";
+
 export async function _fetchAvatarData({
   apiToken,
 }: {
@@ -217,7 +185,7 @@ export async function _fetchAvatarData({
 }): Promise<AvatarData> {
   const json = await _graphqlJsonApiRequest({
     apiToken,
-    bodyJSON: '{"variables":{},"id":"d78e4dc3c12e"}',
+    bodyJSON: JSON.stringify({ variables: {}, id: _GQL_QUERY_ID_AVATAR_DATA }),
   });
   validateAvatarDataResponseData(json);
   return json.data;
@@ -236,7 +204,7 @@ export async function _fetchAvatarNFTData({
       variables: {
         ids: [nftId],
       },
-      id: "e9865cc4d93d",
+      id: _GQL_QUERY_ID_NFT_INFO,
     }),
   });
   validateAvatarNFTInfoResponseData(json);
@@ -257,8 +225,8 @@ export interface ResolvedAvatar {
 }
 
 export interface NFTInfo {
+  /** NFT Avatar name, including serial number, e.g. "Les Rock #478" */
   name: string;
-  serialNumber: string;
   /**
    * The stated number of items in the series. `null` for unlimited series (e.g.
    * free NFTs).
@@ -337,60 +305,22 @@ export function _getNftId(avatar: UserAvatar): string | null {
   return null;
 }
 
-function _isNftAvatarOutfit(
-  avatarOutfit: AvatarOutfit | NftAvatarOutfit
-): avatarOutfit is NftAvatarOutfit {
-  return !!(avatarOutfit as Partial<NftAvatarOutfit>)?.backgroundImage;
-}
-
 export async function _resolveNftInfo({
-  avatarData,
+  apiToken,
   nftId,
 }: {
-  avatarData: AvatarData;
+  apiToken: string;
   nftId: string;
 }): Promise<NFTInfo> {
-  const nftOutfit = avatarData.avatarBuilderCatalog.outfits.find(
-    (outfit) => _isNftAvatarOutfit(outfit) && outfit.inventoryItem.id === nftId
-  );
-  if (!nftOutfit)
-    throw new Error(`No outfit data is available for NFT ID: ${nftId}`);
-  assert(_isNftAvatarOutfit(nftOutfit));
-
-  let seriesSize;
-  // The store data doesn't include the free NFTs so we hardcode their series
-  // size (no stated limit).
-  if (
-    FREE_NFT_CONTRACT_ADDRESSES.includes(
-      nftOutfit.contractAddress?.toLowerCase()
-    )
-  ) {
-    seriesSize = null;
-  } else {
-    const nftStoreItem = avatarData.avatarStorefront.listings.edges.find(
-      (storeItem) =>
-        storeItem.node.item.benefits.avatarOutfit.id === nftOutfit.id
-    );
-    if (!nftStoreItem)
-      throw new Error(
-        `No store item data is available for NFT Outfit ID: ${nftOutfit.id}`
-      );
-    seriesSize = nftStoreItem.node.item.drop.size;
-  }
-
-  const tokenId = Number.parseInt(nftOutfit.tokenId);
-  if (Number.isNaN(tokenId))
-    throw new Error(`Outfit tokenId is not an integer: ${nftOutfit.tokenId}`);
+  const nftInfoResponse = await _fetchAvatarNFTData({ apiToken, nftId });
 
   return {
-    name: nftOutfit.title,
-    // tokenId is 0-based, serial starts at 1
-    serialNumber: `${tokenId + 1}`,
-    seriesSize,
+    name: nftInfoResponse.name,
+    seriesSize: nftInfoResponse.drop.size,
     backgroundImage: {
-      httpUrl: nftOutfit.backgroundImage.url,
+      httpUrl: nftInfoResponse.benefits.avatarOutfit.backgroundImage.url,
       dataUrl: await _resolveHttpImageUrlToDataUrl(
-        nftOutfit.backgroundImage.url
+        nftInfoResponse.benefits.avatarOutfit.backgroundImage.url
       ),
     },
   };
@@ -425,22 +355,26 @@ export async function _resolveHttpImageUrlToDataUrl(
  *
  * The result contains everything needed to render the Avatar as an SVG image.
  */
-export async function _resolveAvatar(
-  avatarData: AvatarData
-): Promise<ResolvedAvatar> {
+export async function _resolveAvatar({
+  apiToken,
+  avatarData,
+}: {
+  apiToken: string;
+  avatarData: AvatarData;
+}): Promise<ResolvedAvatar> {
   const userAvatar = avatarData.avatarBuilderCatalog.avatar;
   const accessories = new Map<string, AvatarAccessory>(
     avatarData.avatarBuilderCatalog.accessories.map((acc) => [acc.id, acc])
   );
   const nftId = _getNftId(userAvatar);
   const futureNftInfo = nftId
-    ? _resolveNftInfo({ avatarData, nftId })
+    ? _resolveNftInfo({ apiToken, nftId })
     : undefined;
   const futureAccessories = userAvatar.accessoryIds.map((accessoryId) =>
     _resolveAccessory({ accessoryId, accessories })
   );
   // Fetch everything concurrently
-  await Promise.all([...futureAccessories, nftId]);
+  await Promise.allSettled([...futureAccessories, nftId]);
 
   return {
     accessories: await Promise.all(futureAccessories),
@@ -455,7 +389,7 @@ export async function _resolveAvatar(
  * Include this in cache keys that hold avatar data to invalidate the cache when
  * getCurrentAvatar() could return a different result.
  */
-export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 2;
+export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 3;
 
 export async function getCurrentAvatar({
   apiToken,
@@ -463,5 +397,5 @@ export async function getCurrentAvatar({
   apiToken: string;
 }): Promise<ResolvedAvatar> {
   const avatarData = await _fetchAvatarData({ apiToken });
-  return await _resolveAvatar(avatarData);
+  return _resolveAvatar({ apiToken, avatarData });
 }

@@ -450,7 +450,7 @@ export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
   }
   const name = svg.querySelector("#nft-name");
   assert(name);
-  name.textContent = `${nftInfo.name} #${nftInfo.serialNumber}`;
+  name.textContent = nftInfo.name;
   svg.querySelector("style")?.remove();
   return svg;
 }

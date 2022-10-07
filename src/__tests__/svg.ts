@@ -336,9 +336,8 @@ function avatar(): ResolvedAvatar {
       { className: "zzz", fill: "#111111" },
     ],
     nftInfo: {
-      serialNumber: "123",
       seriesSize: 600,
-      name: "Example Avatar",
+      name: "Example Avatar #123",
       backgroundImage: {
         httpUrl: "https://example.com/foo.png",
         dataUrl: "data:image/png;base64,cG5nCg",
