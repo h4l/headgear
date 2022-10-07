@@ -346,33 +346,7 @@ export function Controls() {
           disabledReason="Not available yet 🫤"
         />
 
-        <h3 class="mt-6 mb-2 text-l font-semibold">Avatar Data</h3>
-        <p>
-          This data records the accessories and colors you chose when
-          customizing your Avatar. Currently it can't (directly) be used for
-          anything, but may be interesting to some people.
-        </p>
-        <div class="flex rounded-md shadow-sm mt-4 mb-4" role="group">
-          <button
-            type="button"
-            disabled
-            class={`
-        ml-auto rounded-r-none py-2 px-4 text-sm font-medium
-        ${BUTTON_STYLES}
-      `}
-          >
-            Copy as JSON
-          </button>
-          <button
-            type="button"
-            class={`
-        mr-auto rounded-l-none py-2 px-4 text-sm font-medium
-        ${BUTTON_STYLES}
-      `}
-          >
-            Copy <span class="font-mono">data:</span> URI
-          </button>
-        </div>
+        {/* {<AvatarData />} */}
       </div>
       <div class="pl-4 pr-4 pt-2 pb-2 text-xs text-center">
         <p>Support this project if you found it useful.</p>
@@ -387,6 +361,40 @@ export function Controls() {
         </p>
       </div>
       <DownloadSVGButton />
+    </div>
+  );
+}
+
+function AvatarData(): JSX.Element {
+  return (
+    <div>
+      <h3 class="mt-6 mb-2 text-l font-semibold">Avatar Data</h3>
+      <p>
+        This data records the accessories and colors you chose when customizing
+        your Avatar. Currently it can't (directly) be used for anything, but may
+        be interesting to some people.
+      </p>
+      <div class="flex rounded-md shadow-sm mt-4 mb-4" role="group">
+        <button
+          type="button"
+          disabled
+          class={`
+        ml-auto rounded-r-none py-2 px-4 text-sm font-medium
+        ${BUTTON_STYLES}
+      `}
+        >
+          Copy as JSON
+        </button>
+        <button
+          type="button"
+          class={`
+        mr-auto rounded-l-none py-2 px-4 text-sm font-medium
+        ${BUTTON_STYLES}
+      `}
+        >
+          Copy <span class="font-mono">data:</span> URI
+        </button>
+      </div>
     </div>
   );
 }
