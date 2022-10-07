@@ -26,7 +26,7 @@ describe("_persistImageControlsOnChange()", () => {
     const syncStorage = chrome.storage.sync as MockSyncStorageArea;
     const port = new MockPort(PORT_IMAGE_CONTROLS_CHANGED);
     const controlsState1: ControlsStateObject = {
-      imageStyle: ImageStyleType.BACKGROUND,
+      imageStyle: ImageStyleType.NFT_CARD,
     };
     const controlsState2: ControlsStateObject = {
       imageStyle: ImageStyleType.HEADSHOT_HEX,
@@ -57,7 +57,7 @@ describe("_persistImageControlsOnChange()", () => {
     const syncStorage = chrome.storage.sync as MockSyncStorageArea;
     const port = new MockPort(PORT_IMAGE_CONTROLS_CHANGED);
     const controlsState: ControlsStateObject = {
-      imageStyle: ImageStyleType.BACKGROUND,
+      imageStyle: ImageStyleType.NFT_CARD,
     };
 
     _persistImageControlsOnChange();

@@ -3,7 +3,8 @@ export const PORT_IMAGE_CONTROLS_CHANGED = "image-controls-changed";
 
 export enum ImageStyleType {
   STANDARD = "standard",
-  BACKGROUND = "background",
+  NFT_CARD = "nft-card",
+  NO_BG = "no-background",
   HEADSHOT_HEX = "headshot-hex",
   HEADSHOT_CIRCLE = "headshot-circle",
 }

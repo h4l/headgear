@@ -17,7 +17,6 @@ import {
   createRootState,
 } from "../popup";
 import {
-  ControlsStateObject,
   ImageStyleType,
   PORT_IMAGE_CONTROLS_CHANGED,
 } from "../popup-state-persistence";
@@ -46,7 +45,7 @@ describe("createRootState()", () => {
   });
 
   test("controlsState changes trigger messages on image-controls-changed channel", () => {
-    const state1 = { imageStyle: ImageStyleType.BACKGROUND };
+    const state1 = { imageStyle: ImageStyleType.NFT_CARD };
     const state2 = { imageStyle: ImageStyleType.HEADSHOT_HEX };
     let port: chrome.runtime.Port | undefined = undefined;
     chrome.runtime.onConnect.addListener((_port) => {
@@ -177,7 +176,7 @@ describe("ClosePopupButton", () => {
 describe("ImageStyleOption", () => {
   test("sets imageStyle when clicked", async () => {
     const controlsState: Signal<ControlsState> = signal({
-      imageStyle: ImageStyleType.BACKGROUND,
+      imageStyle: ImageStyleType.NFT_CARD,
     });
     render(
       <ControlsContext.Provider value={controlsState}>

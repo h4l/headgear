@@ -1,6 +1,6 @@
 import { Signal, effect, signal } from "@preact/signals";
 import { ComponentChildren, JSX, createContext } from "preact";
-import { useContext } from "preact/hooks";
+import { useContext, useMemo } from "preact/hooks";
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
@@ -12,6 +12,12 @@ import {
   isControlsStateObject,
 } from "./popup-state-persistence";
 import { GetAvatarMessageResponse, MSG_GET_AVATAR } from "./reddit-interaction";
+import {
+  NFTCardVariant,
+  composeAvatarSVG,
+  createNFTCardAvatarSVG,
+  createStandardAvatarSVG,
+} from "./svg";
 
 export enum HeadgearErrorType {
   UNKNOWN,
@@ -111,6 +117,7 @@ export function ImageStyleOption(props: {
   name: ImageStyleType;
   title: string;
   description: string;
+  disabled?: boolean;
 }) {
   const headgearState = useContext(HeadgearContext);
   const controlsState = useContext(ControlsContext);
@@ -128,7 +135,7 @@ export function ImageStyleOption(props: {
     <div>
       <input
         type="radio"
-        disabled={controlsDisabled}
+        disabled={props.disabled || controlsDisabled}
         id={`image-style-${props.name}`}
         name="image-style"
         value={props.name}
@@ -203,13 +210,53 @@ export function HeadgearError({
   assertNever(error);
 }
 
+export function AvatarSVG({
+  avatar,
+  controlsState,
+}: {
+  avatar: ResolvedAvatar;
+  controlsState: ControlsStateObject;
+}) {
+  const composedAvatar = useMemo(() => composeAvatarSVG({ avatar }), [avatar]);
+  // TODO: render all different types
+  const avatarSVG = useMemo(() => {
+    let svg: SVGElement;
+    if (
+      controlsState.imageStyle === ImageStyleType.NFT_CARD &&
+      avatar.nftInfo
+    ) {
+      // FIXME: disable background radio option for non-NFT avatars
+      svg = createNFTCardAvatarSVG({
+        composedAvatar,
+        nftInfo: avatar.nftInfo,
+        variant: NFTCardVariant.SHOP_INVENTORY,
+      });
+    } else if (controlsState.imageStyle === ImageStyleType.NO_BG) {
+      svg = composedAvatar;
+    } else {
+      svg = createStandardAvatarSVG({ composedAvatar });
+    }
+    return new XMLSerializer().serializeToString(svg);
+  }, [controlsState.imageStyle, composedAvatar]);
+  return (
+    <div
+      class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
+      dangerouslySetInnerHTML={{ __html: avatarSVG }}
+    ></div>
+  );
+}
+
 export function DisplayArea() {
   const headgearState = useContext(HeadgearContext);
+  const controlsState = useContext(ControlsContext);
 
   let content: JSX.Element;
   if (headgearState.value.type === HeadgearStateType.ERROR) {
     content = <HeadgearError error={headgearState.value.error} />;
-  } else if (headgearState.value.type === HeadgearStateType.LOADING) {
+  } else if (
+    headgearState.value.type === HeadgearStateType.LOADING ||
+    controlsState.value === undefined
+  ) {
     content = (
       <svg
         class="h-full w-full p-28 animate-pulse bg-white text-gray-200 opacity-0 animate-delayed-fade-in"
@@ -221,11 +268,17 @@ export function DisplayArea() {
     );
   } else if (headgearState.value.type === HeadgearStateType.AVATAR_LOADED) {
     content = (
-      <img
-        class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
-        src="../img/h4l_dl-repro.svg"
+      <AvatarSVG
+        avatar={headgearState.value.avatar}
+        controlsState={controlsState.value}
       />
     );
+    // content = (
+    //   <img
+    //     class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
+    //     src="../img/h4l_dl-repro.svg"
+    //   />
+    // );
   } else {
     assertNever(headgearState.value);
   }
@@ -251,19 +304,26 @@ export function Controls() {
           description="The downloadable image from the Reddit avatar builder."
         />
         <ImageStyleOption
-          name={ImageStyleType.BACKGROUND}
-          title="Profile page card"
-          description="The version on your profile page."
+          name={ImageStyleType.NFT_CARD}
+          title="NFT Card"
+          description="Avatar with its NFT background &amp; name."
+        />
+        <ImageStyleOption
+          name={ImageStyleType.NO_BG}
+          title="No Background"
+          description="Just the Avatar."
         />
         <ImageStyleOption
           name={ImageStyleType.HEADSHOT_HEX}
           title="Comment thread headshot"
           description="The upper half in a hexagon."
+          disabled={true}
         />
         <ImageStyleOption
           name={ImageStyleType.HEADSHOT_CIRCLE}
           title="UI Headshot"
           description="The upper half in a circle."
+          disabled={true}
         />
 
         <h3 class="mt-6 mb-2 text-l font-semibold">Avatar Data</h3>
