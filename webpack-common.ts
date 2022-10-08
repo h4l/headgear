@@ -50,6 +50,18 @@ const config: Configuration = {
         use: "ts-loader",
         exclude: [/node_modules/, /\.test\.ts$/],
       },
+      // Include source maps from the various Preact dependencies. Preact ships
+      // minified code, so if we don't load their source maps we can't really
+      // debug their modules.
+      {
+        use: "source-map-loader",
+        enforce: "pre",
+        test: /\.js$/,
+        include: [
+          // path.resolve(__dirname, "node_modules/@preact/signals-core")
+          /\/node_modules\/.*(?<=\/)@?preact\b/,
+        ],
+      },
       {
         test: /\.css$/,
         use: ["style-loader", "css-loader", "postcss-loader"],
