@@ -5,7 +5,7 @@
     "default_popup": "html/popup.html"
   },
   "manifest_version": 3,
-  "version": "1.0.0",
+  "version": "__generated_in_webpack_build__",
   "description": "The Reddit Avatar exporter.",
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {

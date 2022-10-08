@@ -1,6 +1,40 @@
 import CopyPlugin from "copy-webpack-plugin";
+import { readFile } from "fs/promises";
 import * as path from "path";
-import { Configuration, IgnorePlugin } from "webpack";
+import {
+  Compilation,
+  Compiler,
+  Configuration,
+  IgnorePlugin,
+  sources,
+} from "webpack";
+
+/** Generate manifest.json */
+class GenerateManifestPlugin {
+  apply(compiler: Compiler): void {
+    compiler.hooks.compilation.tap("GenerateManifestPlugin", (compilation) => {
+      compilation.hooks.processAssets.tapPromise(
+        {
+          name: "GenerateManifestPlugin",
+          stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+        },
+        async (assets) => {
+          assets["manifest.json"] = await this.generateManifest();
+        }
+      );
+    });
+  }
+  async generateManifest(): Promise<sources.RawSource> {
+    const packageConfig = JSON.parse(
+      await readFile(path.resolve(__dirname, "package.json"), "utf-8")
+    );
+    const manifest = JSON.parse(
+      await readFile(path.resolve(__dirname, "src/manifest.json"), "utf-8")
+    );
+    manifest.version = packageConfig.version;
+    return new sources.RawSource(JSON.stringify(manifest, undefined, 2));
+  }
+}
 
 const config: Configuration = {
   entry: {
@@ -35,9 +69,9 @@ const config: Configuration = {
   },
 
   plugins: [
+    new GenerateManifestPlugin(),
     new CopyPlugin({
       patterns: [
-        { from: "./src/manifest.json", to: "." },
         { from: "./src/html/*.html", to: "html/[name].html" },
         { from: "./src/img/*", to: "img/[name][ext]" },
       ],
