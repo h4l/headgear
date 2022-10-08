@@ -6,7 +6,7 @@
   },
   "manifest_version": 3,
   "version": "__generated_in_webpack_build__",
-  "description": "The Reddit Avatar exporter.",
+  "description": "Unleash your Reddit Avatar.",
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {
     "service_worker": "background.js"
