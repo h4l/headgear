@@ -1,7 +1,13 @@
-import { Signal, computed, effect, signal } from "@preact/signals";
+import { Signal, computed, effect, signal, useSignal } from "@preact/signals";
 import memoizeOne from "memoize-one";
-import { ComponentChildren, JSX, createContext } from "preact";
-import { useContext, useMemo } from "preact/hooks";
+import { ComponentChildren, Fragment, JSX, createContext } from "preact";
+import {
+  useContext,
+  useEffect,
+  useErrorBoundary,
+  useMemo,
+  useState,
+} from "preact/hooks";
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
@@ -34,6 +40,7 @@ export type AvatarDataError =
     };
 
 export enum DataStateType {
+  BEFORE_LOAD,
   LOADING,
   ERROR,
   LOADED,
@@ -44,6 +51,7 @@ export enum DataStateType {
  * with).
  */
 export type AvatarDataState =
+  | { type: DataStateType.BEFORE_LOAD }
   | { type: DataStateType.LOADING }
   | { type: DataStateType.ERROR; error: AvatarDataError }
   | {
@@ -71,7 +79,7 @@ export interface RootState {
 class GetAvatarError extends Error {}
 
 export const AvatarDataContext = createContext<Signal<AvatarDataState>>(
-  signal({ type: DataStateType.LOADING })
+  signal({ type: DataStateType.BEFORE_LOAD })
 );
 export const ControlsContext = createContext<Signal<ControlsState>>(
   signal(undefined)
@@ -161,7 +169,7 @@ export function ImageStyleOption(props: {
         checked={
           !controlsDisabled && controlsState.value?.imageStyle === props.name
         }
-        onClick={setImageStyle}
+        onClick={props.disabled ? undefined : setImageStyle}
         class="sr-only peer"
         required
       />
@@ -190,17 +198,35 @@ export function ImageStyleOption(props: {
   );
 }
 
-function CouldNotLoadAvatarMessage(props: {
+export function CouldNotLoadAvatarMessage(props: {
   title: string;
+  logErrorContextMessage?: string;
+  logError?: Error | string;
   children: ComponentChildren;
 }): JSX.Element {
+  useEffect(() => {
+    if (props.logError) {
+      console.error(
+        "Headgear hit an error: ",
+        ...[
+          props.logErrorContextMessage,
+          props.logError,
+          props.logError instanceof Error ? props.logError.stack : undefined,
+        ].filter((x) => x)
+      );
+    }
+  }, [props.logError]);
+
   return (
-    <div class="h-full w-full p-20 bg-white text-gray-800">
+    <div
+      data-testid="error"
+      class="h-full w-full p-16 bg-white text-gray-800 prose"
+    >
       <svg class="w-1/4" viewBox="0 0 100 100">
         <use href="../img/avatar-loading-error.svg#root" />
       </svg>
-      <h2 class="font-bold text-lg my-6">{props.title}</h2>
-      <p>{props.children}</p>
+      <h2 class="_font-bold _text-lg _my-6 mt-8">{props.title}</h2>
+      {props.children}
     </div>
   );
 }
@@ -213,33 +239,65 @@ export function AvatarDataError({
   if (error.type === AvatarDataErrorType.NOT_REDDIT_TAB) {
     return (
       <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your avatar">
-        <p class="my-2">
-          Headgear needs a Reddit tab open to load your Avatar.
-        </p>
+        <p>Headgear needs a Reddit tab open to load your Avatar.</p>
       </CouldNotLoadAvatarMessage>
     );
   } else if (error.type === AvatarDataErrorType.GET_AVATAR_FAILED) {
-    throw new Error("TODO: implement");
-  } else if (error.type === AvatarDataErrorType.UNKNOWN) {
     return (
-      <CouldNotLoadAvatarMessage title="Something went wrong">
-        <p class="my-2">
+      <CouldNotLoadAvatarMessage
+        title="Something went wrong"
+        logErrorContextMessage="Reddit-side Avatar Data fetcher reported failure: "
+        logError={error.message}
+      >
+        <p>
           Headgear could not load your Avatar because it was not able to get the
           data it needs from Reddit. This is probably a temporary problem.
         </p>
-        <p class="my-2">
-          If the Reddit is working and this keeps happening, there could be
-          something wrong with Headgear.
+        <p>
+          If Reddit is working and this keeps happening, there could be
+          something wrong with Headgear. Let{" "}
+          <a href="https://www.reddit.com/user/h4l" target="_blank">
+            /u/h4l
+          </a>{" "}
+          know about this if it keeps happening.
         </p>
+      </CouldNotLoadAvatarMessage>
+    );
+  } else if (error.type === AvatarDataErrorType.UNKNOWN) {
+    return (
+      <CouldNotLoadAvatarMessage
+        title="Something went wrong"
+        logErrorContextMessage="UI-side Avatar Data fetcher reported failure: "
+        logError={error.exception}
+      >
+        <p>
+          Headgear could not load your Avatar because an unexpected error
+          happened while getting Avatar data from Reddit.
+        </p>
+        <RequestBugReport />
       </CouldNotLoadAvatarMessage>
     );
   }
   assertNever(error);
 }
 
+function RequestBugReport() {
+  return (
+    <p>
+      This probably means you found a bug in Headgear that needs fixing. If you
+      could let{" "}
+      <a href="https://www.reddit.com/user/h4l" target="_blank">
+        /u/h4l
+      </a>{" "}
+      know about this, they should be able to fix it. Sorry!
+    </p>
+  );
+}
+
 export function AvatarSVG({ svg }: { svg: string }) {
   return (
     <svg
+      data-testid="avatar"
       class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
       dangerouslySetInnerHTML={{ __html: svg }}
     ></svg>
@@ -251,17 +309,32 @@ export function DisplayArea() {
   const controlsState = useContext(ControlsContext);
   const avatarSvgState = useContext(AvatarSvgContext);
 
-  const avatarSvg = avatarSvgState.value;
   let content: JSX.Element;
   if (avatarDataState.value.type === DataStateType.ERROR) {
     content = <AvatarDataError error={avatarDataState.value.error} />;
+  } else if (avatarSvgState.value instanceof Error) {
+    content = (
+      <CouldNotLoadAvatarMessage
+        title="Something went wrong"
+        logErrorContextMessage="Failed to generate Avatar SVG: "
+        logError={avatarSvgState.value}
+      >
+        <p>
+          Headgear could not load your Avatar because it was not able to
+          generate an SVG image from Reddit's Avatar data.
+        </p>
+        <RequestBugReport />
+      </CouldNotLoadAvatarMessage>
+    );
   } else if (
+    avatarDataState.value.type === DataStateType.BEFORE_LOAD ||
     avatarDataState.value.type === DataStateType.LOADING ||
     controlsState.value === undefined ||
-    avatarSvg === undefined
+    avatarSvgState.value === undefined
   ) {
     content = (
       <svg
+        role="progressbar"
         class="h-full w-full p-28 animate-pulse bg-white text-gray-200 opacity-0 animate-delayed-fade-in"
         style="animation-delay: 250ms;"
         viewBox="0 0 57.520256 100.00005"
@@ -270,16 +343,7 @@ export function DisplayArea() {
       </svg>
     );
   } else if (avatarDataState.value.type === DataStateType.LOADED) {
-    if (avatarSvg instanceof Error) {
-      throw new Error("TODO: handle SVG generation error");
-    }
-    content = <AvatarSVG svg={avatarSvg} />;
-    // content = (
-    //   <img
-    //     class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
-    //     src="../img/h4l_dl-repro.svg"
-    //   />
-    // );
+    content = <AvatarSVG svg={avatarSvgState.value} />;
   } else {
     assertNever(avatarDataState.value);
   }
@@ -346,6 +410,7 @@ export function Controls() {
           disabledReason="Not available yet 🫤"
         />
 
+        {/* TODO: decide what we're doing with exposing avatar data... */}
         {/* {<AvatarData />} */}
       </div>
       <div class="pl-4 pr-4 pt-2 pb-2 text-xs text-center">
@@ -410,11 +475,10 @@ export function DownloadSVGButton(): JSX.Element {
   const avatarSvgState = useContext(AvatarSvgContext).value;
 
   const downloadUri = useMemo(() => {
-    if (avatarSvgState === undefined) return "#";
+    if (typeof avatarSvgState !== "string") return "#";
     const b64Svg = btoa(avatarSvgState);
     return `data:image/svg+xml;base64,${b64Svg}`;
   }, [avatarSvgState]);
-  const disabled = avatarSvgState === undefined;
 
   let filename: string | undefined = undefined;
   if (controlsState) {
@@ -422,6 +486,7 @@ export function DownloadSVGButton(): JSX.Element {
     assert(imgStyleName);
     filename = `Reddit Avatar ${imgStyleName}.svg`;
   }
+  const disabled = typeof avatarSvgState !== "string" || filename === undefined;
 
   return (
     <a
@@ -470,21 +535,89 @@ export function ClosePopupButton() {
     </button>
   );
 }
-export function Headgear(props: {
-  avatarDataState: Signal<AvatarDataState>;
-  controlsState: Signal<ControlsState>;
-  avatarSvgState: Signal<AvatarSVGState>;
-}) {
+export function Headgear() {
   return (
-    <AvatarDataContext.Provider value={props.avatarDataState}>
-      <ControlsContext.Provider value={props.controlsState}>
-        <AvatarSvgContext.Provider value={props.avatarSvgState}>
-          {/* 800x600 is the current largest size a popup can be. */}
-          <div class="w-[800px] h-[600px] flex flex-row relative text-base">
-            <ClosePopupButton />
-            <DisplayArea />
-            <Controls />
-          </div>
+    // 800x600 is the current largest size a popup can be.
+    <div class="w-[800px] h-[600px] flex flex-row relative text-base">
+      <ClosePopupButton />
+      <DisplayArea />
+      <Controls />
+    </div>
+  );
+}
+
+export function ErrorBoundary(props: {
+  errorState: Signal<Error | undefined>;
+  children: ComponentChildren;
+}) {
+  const { children, errorState } = props;
+  const [error, resetError] = useErrorBoundary();
+
+  if (error && errorState.value) {
+    throw new Error(
+      `An error occurred while handling a previous error. Initial error: ${errorState.value}, New error: ${error}`
+    );
+  }
+  if (error) {
+    errorState.value = error instanceof Error ? error : new Error(`${error}`);
+    resetError();
+  }
+
+  return <Fragment>{children}</Fragment>;
+}
+
+export function HeadgearIsVeryBrokenMessage() {
+  return (
+    <main class="prose m-12">
+      <h1>Headgear is broken</h1>
+      <p>
+        An unrecoverable error occurred. If you could let
+        <a href="https://www.reddit.com/user/h4l" target="_blank">
+          /u/h4l
+        </a>
+        know about this, they should be able to fix it. Sorry!
+      </p>
+    </main>
+  );
+}
+
+export function App() {
+  // Our error handling strategy has two parts — things that are expected to
+  // fail, and unexpected errors. The ErrorBoundary here is only to handle
+  // unexpected errors thrown from the app. It shouldn't get triggered unless
+  // the code has a bug, so it doesn't attempt to retain any app functionality
+  // after failure. Things that are expected to fail have errors represented
+  // in their state types, and error messages are shown in the regular UI as
+  // part of the normal logic.
+  const [error] = useState<Signal<Error | undefined>>(() => signal(undefined));
+  useEffect(() => {
+    if (error.value) {
+      console.error(
+        "Headgear failed with an unhandled error: ",
+        error.value,
+        error.value.stack
+      );
+    }
+  }, [error.value]);
+  if (error.value) {
+    return <HeadgearIsVeryBrokenMessage />;
+  }
+
+  const [rootState] = useState<RootState>(() => createRootState());
+
+  useEffect(() => {
+    if (rootState.avatarDataState.value.type === DataStateType.BEFORE_LOAD) {
+      _initialiseRootState(rootState);
+    }
+  }, [rootState.avatarDataState.value.type]);
+
+  return (
+    <AvatarDataContext.Provider value={rootState.avatarDataState}>
+      <ControlsContext.Provider value={rootState.controlsState}>
+        <AvatarSvgContext.Provider value={rootState.avatarSvgState}>
+          <ErrorBoundary errorState={error}>
+            <Headgear />
+          </ErrorBoundary>
         </AvatarSvgContext.Provider>
       </ControlsContext.Provider>
     </AvatarDataContext.Provider>
@@ -509,19 +642,29 @@ export async function _getUserCurrentAvatar(
 }
 
 export function createRootState(): RootState {
-  const avatarDataState = signal<AvatarDataState>({
-    type: DataStateType.LOADING,
+  const avatarDataState: Signal<AvatarDataState> = signal({
+    type: DataStateType.BEFORE_LOAD,
   });
-  const controlsState = signal<ControlsState>(undefined);
-  _loadAvatarDataState(avatarDataState);
-  _loadControlsState(controlsState);
+  const controlsState: Signal<ControlsState> = signal(undefined);
   const avatarSvgState = _createAvatarSvgState({
     avatarDataState,
     controlsState,
   });
+  return {
+    avatarDataState,
+    controlsState,
+    avatarSvgState,
+  };
+}
+
+export function _initialiseRootState({
+  avatarDataState,
+  controlsState,
+}: Pick<RootState, "avatarDataState" | "controlsState">) {
+  _loadAvatarDataState(avatarDataState);
+  _loadControlsState(controlsState);
   const port = chrome.runtime.connect({ name: PORT_IMAGE_CONTROLS_CHANGED });
   _persistControlsState({ state: controlsState, port });
-  return { avatarDataState: avatarDataState, controlsState, avatarSvgState };
 }
 
 export function _loadAvatarDataState(state: Signal<AvatarDataState>) {
@@ -530,7 +673,6 @@ export function _loadAvatarDataState(state: Signal<AvatarDataState>) {
       state.value = newState;
     })
     .catch((err) => {
-      console.error(err);
       const exception = err instanceof Error ? err : new Error(err);
       let error: AvatarDataError;
       if (exception instanceof GetAvatarError) {

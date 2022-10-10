@@ -14,6 +14,7 @@
   "license": "MIT",
   "devDependencies": {
     "@preact/signals": "^1.1.1",
+    "@tailwindcss/typography": "^0.5.7",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/preact": "^3.2.2",
     "@trivago/prettier-plugin-sort-imports": "^3.3.0",
