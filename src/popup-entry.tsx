@@ -3,8 +3,16 @@ import { render } from "preact";
 import "./css.css";
 import { Headgear, createRootState } from "./popup";
 
-const { headgearState, controlsState } = createRootState();
+const {
+  avatarDataState: headgearState,
+  controlsState,
+  avatarSvgState,
+} = createRootState();
 render(
-  <Headgear headgearState={headgearState} controlsState={controlsState} />,
+  <Headgear
+    avatarDataState={headgearState}
+    controlsState={controlsState}
+    avatarSvgState={avatarSvgState}
+  />,
   document.body
 );

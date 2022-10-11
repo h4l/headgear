@@ -17,6 +17,9 @@ module.exports = {
         "delayed-fade-in":
           "hide 0s, fade-in 2s ease-in 250ms 1 normal forwards",
       },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+      },
     },
   },
   plugins: [],

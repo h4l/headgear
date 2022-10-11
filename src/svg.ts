@@ -14,7 +14,7 @@ import { default as nftNameWithCountSrc } from "./img/avatar-svg/nft-name-with-c
 import { default as nftNameSrc } from "./img/avatar-svg/nft-name.svg";
 import { default as redditLogoLightSrc } from "./img/avatar-svg/reddit-logo-light.svg";
 
-const SVGNS = "http://www.w3.org/2000/svg";
+export const SVGNS = "http://www.w3.org/2000/svg";
 const XLINKNS = "http://www.w3.org/1999/xlink";
 const cssSelectors = new CssSelectorParser();
 cssSelectors.registerAttrEqualityMods("~");

@@ -1,4 +1,5 @@
-import { Signal, effect, signal } from "@preact/signals";
+import { Signal, computed, effect, signal } from "@preact/signals";
+import memoizeOne from "memoize-one";
 import { ComponentChildren, JSX, createContext } from "preact";
 import { useContext, useMemo } from "preact/hooks";
 
@@ -19,49 +20,63 @@ import {
   createStandardAvatarSVG,
 } from "./svg";
 
-export enum HeadgearErrorType {
+export enum AvatarDataErrorType {
   UNKNOWN,
   NOT_REDDIT_TAB,
   GET_AVATAR_FAILED,
 }
-export type HeadgearError =
-  | { type: HeadgearErrorType.UNKNOWN; exception: Error }
-  | { type: HeadgearErrorType.GET_AVATAR_FAILED; message: string }
+export type AvatarDataError =
+  | { type: AvatarDataErrorType.UNKNOWN; exception: Error }
+  | { type: AvatarDataErrorType.GET_AVATAR_FAILED; message: string }
   | {
-      type: HeadgearErrorType.NOT_REDDIT_TAB;
+      type: AvatarDataErrorType.NOT_REDDIT_TAB;
       tab: chrome.tabs.Tab;
     };
 
-export enum HeadgearStateType {
+export enum DataStateType {
   LOADING,
   ERROR,
-  AVATAR_LOADED,
+  LOADED,
 }
 
-/** The primary state of the app. */
-export type HeadgearState =
-  | { type: HeadgearStateType.LOADING }
-  | { type: HeadgearStateType.ERROR; error: HeadgearError }
+/**
+ * The state of Avatar data (obtained from the Reddit tab we're associated
+ * with).
+ */
+export type AvatarDataState =
+  | { type: DataStateType.LOADING }
+  | { type: DataStateType.ERROR; error: AvatarDataError }
   | {
-      type: HeadgearStateType.AVATAR_LOADED;
+      type: DataStateType.LOADED;
       tab: chrome.tabs.Tab;
       avatar: ResolvedAvatar;
     };
+
+/**
+ * The Avatar SVG image (serialised as an XML string), created from the Avatar
+ * data, depending on the UI controls state. `undefined` while data or UI
+ * controls are loading, or if an error occurs.
+ */
+export type AvatarSVGState = Error | string | undefined;
 
 // undefined while loading from storage
 export type ControlsState = undefined | ControlsStateObject;
 
 export interface RootState {
-  headgearState: Signal<HeadgearState>;
+  avatarDataState: Signal<AvatarDataState>;
+  avatarSvgState: Signal<AvatarSVGState>;
   controlsState: Signal<ControlsState>;
 }
 
 class GetAvatarError extends Error {}
 
-export const HeadgearContext = createContext<Signal<HeadgearState>>(
-  signal({ type: HeadgearStateType.LOADING })
+export const AvatarDataContext = createContext<Signal<AvatarDataState>>(
+  signal({ type: DataStateType.LOADING })
 );
 export const ControlsContext = createContext<Signal<ControlsState>>(
+  signal(undefined)
+);
+export const AvatarSvgContext = createContext<Signal<AvatarSVGState>>(
   signal(undefined)
 );
 
@@ -118,8 +133,9 @@ export function ImageStyleOption(props: {
   title: string;
   description: string;
   disabled?: boolean;
+  disabledReason?: string;
 }) {
-  const headgearState = useContext(HeadgearContext);
+  const avatarDataState = useContext(AvatarDataContext);
   const controlsState = useContext(ControlsContext);
 
   const setImageStyle = () => {
@@ -127,12 +143,14 @@ export function ImageStyleOption(props: {
   };
 
   const controlsDisabled =
-    headgearState.value.type !== HeadgearStateType.AVATAR_LOADED ||
+    props.disabled ||
+    avatarDataState.value.type !== DataStateType.LOADED ||
     // controlsState is undefined while loading from storage
     controlsState.value === undefined;
+  let disabledReason = props.disabledReason;
 
   return (
-    <div>
+    <div class="group relative">
       <input
         type="radio"
         disabled={props.disabled || controlsDisabled}
@@ -159,6 +177,14 @@ export function ImageStyleOption(props: {
         <div class="font-medium">{props.title}</div>
         <p class="text-xs font-normal">{props.description}</p>
       </label>
+      {controlsDisabled && disabledReason && (
+        <div
+          role="tooltip"
+          class="inline-block absolute top-4 left-4 cursor-not-allowed _invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:bg-gray-700"
+        >
+          {disabledReason}
+        </div>
+      )}
     </div>
   );
 }
@@ -178,12 +204,12 @@ function CouldNotLoadAvatarMessage(props: {
   );
 }
 
-export function HeadgearError({
+export function AvatarDataError({
   error,
 }: {
-  error: HeadgearError;
+  error: AvatarDataError;
 }): JSX.Element {
-  if (error.type === HeadgearErrorType.NOT_REDDIT_TAB) {
+  if (error.type === AvatarDataErrorType.NOT_REDDIT_TAB) {
     return (
       <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your avatar">
         <p class="my-2">
@@ -191,9 +217,9 @@ export function HeadgearError({
         </p>
       </CouldNotLoadAvatarMessage>
     );
-  } else if (error.type === HeadgearErrorType.GET_AVATAR_FAILED) {
+  } else if (error.type === AvatarDataErrorType.GET_AVATAR_FAILED) {
     throw new Error("TODO: implement");
-  } else if (error.type === HeadgearErrorType.UNKNOWN) {
+  } else if (error.type === AvatarDataErrorType.UNKNOWN) {
     return (
       <CouldNotLoadAvatarMessage title="Something went wrong">
         <p class="my-2">
@@ -210,52 +236,28 @@ export function HeadgearError({
   assertNever(error);
 }
 
-export function AvatarSVG({
-  avatar,
-  controlsState,
-}: {
-  avatar: ResolvedAvatar;
-  controlsState: ControlsStateObject;
-}) {
-  const composedAvatar = useMemo(() => composeAvatarSVG({ avatar }), [avatar]);
-  // TODO: render all different types
-  const avatarSVG = useMemo(() => {
-    let svg: SVGElement;
-    if (
-      controlsState.imageStyle === ImageStyleType.NFT_CARD &&
-      avatar.nftInfo
-    ) {
-      // FIXME: disable background radio option for non-NFT avatars
-      svg = createNFTCardAvatarSVG({
-        composedAvatar,
-        nftInfo: avatar.nftInfo,
-        variant: NFTCardVariant.SHOP_INVENTORY,
-      });
-    } else if (controlsState.imageStyle === ImageStyleType.NO_BG) {
-      svg = composedAvatar;
-    } else {
-      svg = createStandardAvatarSVG({ composedAvatar });
-    }
-    return new XMLSerializer().serializeToString(svg);
-  }, [controlsState.imageStyle, composedAvatar]);
+export function AvatarSVG({ svg }: { svg: string }) {
   return (
-    <div
+    <svg
       class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
-      dangerouslySetInnerHTML={{ __html: avatarSVG }}
-    ></div>
+      dangerouslySetInnerHTML={{ __html: svg }}
+    ></svg>
   );
 }
 
 export function DisplayArea() {
-  const headgearState = useContext(HeadgearContext);
+  const avatarDataState = useContext(AvatarDataContext);
   const controlsState = useContext(ControlsContext);
+  const avatarSvgState = useContext(AvatarSvgContext);
 
+  const avatarSvg = avatarSvgState.value;
   let content: JSX.Element;
-  if (headgearState.value.type === HeadgearStateType.ERROR) {
-    content = <HeadgearError error={headgearState.value.error} />;
+  if (avatarDataState.value.type === DataStateType.ERROR) {
+    content = <AvatarDataError error={avatarDataState.value.error} />;
   } else if (
-    headgearState.value.type === HeadgearStateType.LOADING ||
-    controlsState.value === undefined
+    avatarDataState.value.type === DataStateType.LOADING ||
+    controlsState.value === undefined ||
+    avatarSvg === undefined
   ) {
     content = (
       <svg
@@ -266,13 +268,11 @@ export function DisplayArea() {
         <use href="../img/avatar-loading-skeleton_minimal.svg#skeleton" />
       </svg>
     );
-  } else if (headgearState.value.type === HeadgearStateType.AVATAR_LOADED) {
-    content = (
-      <AvatarSVG
-        avatar={headgearState.value.avatar}
-        controlsState={controlsState.value}
-      />
-    );
+  } else if (avatarDataState.value.type === DataStateType.LOADED) {
+    if (avatarSvg instanceof Error) {
+      throw new Error("TODO: handle SVG generation error");
+    }
+    content = <AvatarSVG svg={avatarSvg} />;
     // content = (
     //   <img
     //     class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
@@ -280,13 +280,28 @@ export function DisplayArea() {
     //   />
     // );
   } else {
-    assertNever(headgearState.value);
+    assertNever(avatarDataState.value);
   }
 
-  return <div class="grow bg-slate-700 p-6">{content}</div>;
+  return (
+    <div class="grow _bg-slate-700 _bg-gradient-to-br bg-gradient-radial from-slate-600 to-slate-800 p-6">
+      {content}
+    </div>
+  );
 }
 
 export function Controls() {
+  const avatarDataState = useContext(AvatarDataContext);
+  let nftOptionsDisabled = false;
+  let nftOptionsDisabledReason: string | undefined = undefined;
+  if (
+    avatarDataState.value.type === DataStateType.LOADED &&
+    !avatarDataState.value.avatar.nftInfo
+  ) {
+    nftOptionsDisabled = true;
+    nftOptionsDisabledReason = "Only for NFT avatars";
+  }
+
   return (
     <div class="grow-0 shrink-0 basis-[350px] h-full flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="px-4 flex my-4">
@@ -307,6 +322,8 @@ export function Controls() {
           name={ImageStyleType.NFT_CARD}
           title="NFT Card"
           description="Avatar with its NFT background &amp; name."
+          disabled={nftOptionsDisabled}
+          disabledReason={nftOptionsDisabledReason}
         />
         <ImageStyleOption
           name={ImageStyleType.NO_BG}
@@ -318,12 +335,14 @@ export function Controls() {
           title="Comment thread headshot"
           description="The upper half in a hexagon."
           disabled={true}
+          disabledReason="Not available yet 🫤"
         />
         <ImageStyleOption
           name={ImageStyleType.HEADSHOT_CIRCLE}
           title="UI Headshot"
           description="The upper half in a circle."
           disabled={true}
+          disabledReason="Not available yet 🫤"
         />
 
         <h3 class="mt-6 mb-2 text-l font-semibold">Avatar Data</h3>
@@ -398,20 +417,23 @@ export function ClosePopupButton() {
   );
 }
 export function Headgear(props: {
-  headgearState: Signal<HeadgearState>;
+  avatarDataState: Signal<AvatarDataState>;
   controlsState: Signal<ControlsState>;
+  avatarSvgState: Signal<AvatarSVGState>;
 }) {
   return (
-    <HeadgearContext.Provider value={props.headgearState}>
+    <AvatarDataContext.Provider value={props.avatarDataState}>
       <ControlsContext.Provider value={props.controlsState}>
-        {/* 800x600 is the current largest size a popup can be. */}
-        <div class="w-[800px] h-[600px] flex flex-row relative text-base">
-          <ClosePopupButton />
-          <DisplayArea />
-          <Controls />
-        </div>
+        <AvatarSvgContext.Provider value={props.avatarSvgState}>
+          {/* 800x600 is the current largest size a popup can be. */}
+          <div class="w-[800px] h-[600px] flex flex-row relative text-base">
+            <ClosePopupButton />
+            <DisplayArea />
+            <Controls />
+          </div>
+        </AvatarSvgContext.Provider>
       </ControlsContext.Provider>
-    </HeadgearContext.Provider>
+    </AvatarDataContext.Provider>
   );
 }
 
@@ -433,49 +455,53 @@ export async function _getUserCurrentAvatar(
 }
 
 export function createRootState(): RootState {
-  const headgearState = signal<HeadgearState>({
-    type: HeadgearStateType.LOADING,
+  const avatarDataState = signal<AvatarDataState>({
+    type: DataStateType.LOADING,
   });
   const controlsState = signal<ControlsState>(undefined);
-  _loadHeadgearState(headgearState);
+  _loadAvatarDataState(avatarDataState);
   _loadControlsState(controlsState);
+  const avatarSvgState = _createAvatarSvgState({
+    avatarDataState,
+    controlsState,
+  });
   const port = chrome.runtime.connect({ name: PORT_IMAGE_CONTROLS_CHANGED });
   _persistControlsState({ state: controlsState, port });
-  return { headgearState, controlsState };
+  return { avatarDataState: avatarDataState, controlsState, avatarSvgState };
 }
 
-export function _loadHeadgearState(state: Signal<HeadgearState>) {
-  _loadHeadgearStateAsync()
+export function _loadAvatarDataState(state: Signal<AvatarDataState>) {
+  _loadAvatarDataStateAsync()
     .then((newState) => {
       state.value = newState;
     })
     .catch((err) => {
       console.error(err);
       const exception = err instanceof Error ? err : new Error(err);
-      let error: HeadgearError;
+      let error: AvatarDataError;
       if (exception instanceof GetAvatarError) {
         error = {
-          type: HeadgearErrorType.GET_AVATAR_FAILED,
+          type: AvatarDataErrorType.GET_AVATAR_FAILED,
           message: exception.message,
         };
       } else {
-        error = { type: HeadgearErrorType.UNKNOWN, exception };
+        error = { type: AvatarDataErrorType.UNKNOWN, exception };
       }
-      state.value = { type: HeadgearStateType.ERROR, error };
+      state.value = { type: DataStateType.ERROR, error };
     });
 }
 
-async function _loadHeadgearStateAsync(): Promise<HeadgearState> {
+async function _loadAvatarDataStateAsync(): Promise<AvatarDataState> {
   const tabs = await chrome.tabs.query({ currentWindow: true, active: true });
   const [tab] = tabs;
   if (!tab.url?.startsWith("https://www.reddit.com/")) {
     return {
-      type: HeadgearStateType.ERROR,
-      error: { type: HeadgearErrorType.NOT_REDDIT_TAB, tab },
+      type: DataStateType.ERROR,
+      error: { type: AvatarDataErrorType.NOT_REDDIT_TAB, tab },
     };
   }
   const avatar = await _getUserCurrentAvatar(tab);
-  return { type: HeadgearStateType.AVATAR_LOADED, tab, avatar };
+  return { type: DataStateType.LOADED, tab, avatar };
 }
 
 export function _loadControlsState(state: Signal<ControlsState>): void {
@@ -517,5 +543,60 @@ export function _persistControlsState({
     const controlsState = state.value;
     if (controlsState === undefined) return;
     port.postMessage(controlsState);
+  });
+}
+
+export function _createAvatarSvgState({
+  avatarDataState,
+  controlsState,
+}: {
+  avatarDataState: Signal<AvatarDataState>;
+  controlsState: Signal<ControlsState>;
+}): Signal<AvatarSVGState> {
+  const _composeAvatarSVGMemo = memoizeOne(
+    (avatar: ResolvedAvatar): SVGElement => composeAvatarSVG({ avatar })
+  );
+  const _createAvatarSVGMemo = memoizeOne(
+    (
+      imageStyle: ImageStyleType,
+      avatar: ResolvedAvatar,
+      composedAvatar: SVGElement
+    ): string => {
+      let svg: SVGElement;
+      if (imageStyle === ImageStyleType.NFT_CARD) {
+        if (!avatar.nftInfo)
+          throw new TypeError(
+            "Cannot create ImageStyleType.NFT_CARD image: avatar has no nftInfo"
+          );
+        svg = createNFTCardAvatarSVG({
+          composedAvatar,
+          nftInfo: avatar.nftInfo,
+          variant: NFTCardVariant.SHOP_INVENTORY,
+        });
+      } else if (imageStyle === ImageStyleType.NO_BG) {
+        svg = composedAvatar;
+      } else {
+        svg = createStandardAvatarSVG({ composedAvatar });
+      }
+      return new XMLSerializer().serializeToString(svg);
+    }
+  );
+
+  return computed(() => {
+    const avatarData = avatarDataState.value;
+    const controls = controlsState.value;
+    if (avatarData.type !== DataStateType.LOADED || controls === undefined) {
+      return undefined;
+    }
+
+    const avatar = avatarData.avatar;
+    try {
+      // useMemo() doesn't work outside a component context, and this can get
+      // run asynchronously.
+      const composedAvatar = _composeAvatarSVGMemo(avatar);
+      return _createAvatarSVGMemo(controls.imageStyle, avatar, composedAvatar);
+    } catch (e) {
+      return e instanceof Error ? e : new Error(`${e}`);
+    }
   });
 }

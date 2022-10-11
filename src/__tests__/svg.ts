@@ -423,7 +423,7 @@ describe("Avatar SVG", () => {
             ..._avatar.nftInfo,
             seriesSize: seriesSize,
           },
-          variant: NFTCardVariant.PROFILE_PAGE,
+          variant: NFTCardVariant.SHOP_INVENTORY,
         });
 
         if (renderedSeriesSize === null) {
