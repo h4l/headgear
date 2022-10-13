@@ -8,7 +8,7 @@
     "webpack-dev": "webpack --config webpack-config-dev.ts",
     "webpack-watch": "webpack --watch --config webpack-config-dev.ts",
     "test": "jest",
-    "watch-test": "jest --watch"
+    "test-watch": "jest --watch"
   },
   "author": "Hal Blackburn",
   "license": "MIT",
