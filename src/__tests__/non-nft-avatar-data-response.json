@@ -113,6 +113,28 @@
           "sectionId": "face_eyes",
           "state": "ENABLED",
           "tags": ["stranger_thingspt2", "section:eyes"]
+        },
+        {
+          "assets": [
+            {
+              "accessoryId": "outfits_1_hair_006",
+              "imageUrl": "https://i.redd.it/snoovatar/accessory_assets/cz68kLLyVAA_outfits_1_hair_back_006.svg",
+              "slotNumber": 20
+            },
+            {
+              "accessoryId": "outfits_1_hair_006",
+              "imageUrl": "https://i.redd.it/snoovatar/accessory_assets/hmM-hxGzwXY_outfits_1_hair_006.svg",
+              "slotNumber": 70
+            }
+          ],
+          "isAvailableForCloset": true,
+          "capabilityRequired": null,
+          "customizableClasses": ["hair"],
+          "defaultAccessoryId": null,
+          "id": "outfits_1_hair_006",
+          "sectionId": "head_hair",
+          "state": "ENABLED",
+          "tags": ["section:hair"]
         }
       ],
       "outfits": [],
@@ -125,7 +147,8 @@
           "premium_cricket_helmet",
           "premium_fashion-2_body_bottom_005",
           "premium_hockey_accessory_006",
-          "stranger_thingspt2_face_upper_001"
+          "stranger_thingspt2_face_upper_001",
+          "outfits_1_hair_006"
         ],
         "accountId": "t2_37r42",
         "id": "85163988",

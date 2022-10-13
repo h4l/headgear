@@ -280,44 +280,52 @@ export function _validateSVGStyle(obj: object): asserts obj is SVGStyle {
   );
 }
 
-async function _resolveAccessory({
+function _resolveAccessory({
   accessoryId,
   accessories,
 }: {
   accessoryId: string;
   accessories: Map<string, AvatarAccessory>;
-}): Promise<ResolvedAccessory> {
+}): Promise<ResolvedAccessory>[] {
   const accessory = accessories.get(accessoryId);
   if (accessory === undefined) {
     throw new Error(
       `No accessory data is available for Accessory ID: ${accessoryId}`
     );
   }
-  const [asset] = accessory.assets;
-  if (asset === undefined)
+
+  const resolvedAssets = accessory.assets.map(async (asset) => {
+    let svgData: string;
+    try {
+      const svgResp = await fetch(asset.imageUrl, { credentials: "omit" });
+      if (!svgResp.ok)
+        throw new Error(`Request failed: ${_failedResponseSummary(svgResp)}`);
+      if (
+        !/\bimage\/svg\+xml\b/.test(svgResp.headers.get("content-type") || "")
+      )
+        throw new Error(`Response is not an image in SVG format`);
+      svgData = await svgResp.text();
+    } catch (e) {
+      if (!(e instanceof Error)) throw e;
+      throw new Error(
+        `Failed to fetch SVG data for Accessory ID ${accessoryId}: ${e.message}`
+      );
+    }
+
+    return {
+      id: accessory.id,
+      slotNumber: asset.slotNumber,
+      customizableClasses: accessory.customizableClasses,
+      svgData,
+    };
+  });
+
+  if (resolvedAssets.length === 0) {
     throw new Error(
       `Accessory ID ${accessoryId} has no asset: ${JSON.stringify(accessory)}`
     );
-  let svgData: string;
-  try {
-    const svgResp = await fetch(asset.imageUrl, { credentials: "omit" });
-    if (!svgResp.ok)
-      throw new Error(`Request failed: ${_failedResponseSummary(svgResp)}`);
-    if (!/\bimage\/svg\+xml\b/.test(svgResp.headers.get("content-type") || ""))
-      throw new Error(`Response is not an image in SVG format`);
-    svgData = await svgResp.text();
-  } catch (e) {
-    if (!(e instanceof Error)) throw e;
-    throw new Error(
-      `Failed to fetch SVG data for Accessory ID ${accessoryId}: ${e.message}`
-    );
   }
-  return {
-    id: accessory.id,
-    slotNumber: asset.slotNumber,
-    customizableClasses: accessory.customizableClasses,
-    svgData,
-  };
+  return resolvedAssets;
 }
 
 export function _getNftId(avatar: UserAvatar): string | null {
@@ -393,7 +401,7 @@ export async function _resolveAvatar({
   const futureNftInfo = nftId
     ? _resolveNftInfo({ apiToken, nftId })
     : undefined;
-  const futureAccessories = userAvatar.accessoryIds.map((accessoryId) =>
+  const futureAccessories = userAvatar.accessoryIds.flatMap((accessoryId) =>
     _resolveAccessory({ accessoryId, accessories })
   );
   // Fetch everything concurrently
@@ -412,7 +420,7 @@ export async function _resolveAvatar({
  * Include this in cache keys that hold avatar data to invalidate the cache when
  * getCurrentAvatar() could return a different result.
  */
-export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 3;
+export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 4;
 
 export async function getCurrentAvatar({
   apiToken,

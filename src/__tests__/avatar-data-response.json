@@ -166,6 +166,28 @@
             "collection:creators2022H1",
             "collection:hoppy_doodle"
           ]
+        },
+        {
+          "assets": [
+            {
+              "accessoryId": "outfits_1_hair_006",
+              "imageUrl": "https://i.redd.it/snoovatar/accessory_assets/cz68kLLyVAA_outfits_1_hair_back_006.svg",
+              "slotNumber": 20
+            },
+            {
+              "accessoryId": "outfits_1_hair_006",
+              "imageUrl": "https://i.redd.it/snoovatar/accessory_assets/hmM-hxGzwXY_outfits_1_hair_006.svg",
+              "slotNumber": 70
+            }
+          ],
+          "isAvailableForCloset": true,
+          "capabilityRequired": null,
+          "customizableClasses": ["hair"],
+          "defaultAccessoryId": null,
+          "id": "outfits_1_hair_006",
+          "sectionId": "head_hair",
+          "state": "ENABLED",
+          "tags": ["section:hair"]
         }
       ],
       "outfits": [
@@ -195,7 +217,8 @@
           "basic_face_upper_002",
           "chipperdoodlescomic_head_accessory_003",
           "gaming_body_bottom_006",
-          "hoppydoodle_accessory_back_004"
+          "hoppydoodle_accessory_back_004",
+          "outfits_1_hair_006"
         ],
         "accountId": "t2_37r42",
         "id": "81090756",

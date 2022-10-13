@@ -222,8 +222,8 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
   const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
 
   expect(resolvedAvatar.styles).toEqual(avatar.styles);
-  expect(resolvedAvatar.accessories.map((acc) => acc.id)).toEqual(
-    avatar.accessoryIds
+  expect([...new Set(resolvedAvatar.accessories.map((acc) => acc.id))]).toEqual(
+    [...new Set(avatar.accessoryIds)]
   );
   expect(
     resolvedAvatar.accessories.every(
@@ -235,7 +235,7 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
   ).toBeTruthy();
   expect(
     new Set(resolvedAvatar.accessories.map((acc) => acc.svgData)).size
-  ).toBe(avatar.accessoryIds.length);
+  ).toBe(resolvedAvatar.accessories.length);
 
   expect(
     resolvedAvatar.accessories.find(
@@ -247,6 +247,12 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
     slotNumber: 30,
     svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/accessory_assets/vO5m6xr_4KQ_gaming_body_bottom_006.svg --></svg>`,
   });
+
+  // The hair accessory has two asset layers
+  expect(
+    resolvedAvatar.accessories.filter((acc) => acc.id === "outfits_1_hair_006")
+      .length
+  ).toBe(2);
 
   // This is an NFT avatar
   const nftInfo = resolvedAvatar.nftInfo;
@@ -277,8 +283,8 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
   const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
 
   expect(resolvedAvatar.styles).toEqual(avatar.styles);
-  expect(resolvedAvatar.accessories.map((acc) => acc.id)).toEqual(
-    avatar.accessoryIds
+  expect([...new Set(resolvedAvatar.accessories.map((acc) => acc.id))]).toEqual(
+    [...new Set(avatar.accessoryIds)]
   );
   expect(
     resolvedAvatar.accessories.every(
@@ -290,7 +296,7 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
   ).toBeTruthy();
   expect(
     new Set(resolvedAvatar.accessories.map((acc) => acc.svgData)).size
-  ).toBe(avatar.accessoryIds.length);
+  ).toBe(resolvedAvatar.accessories.length);
 
   expect(
     resolvedAvatar.accessories.find(
@@ -302,5 +308,11 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
     slotNumber: 80,
     svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/accessory_assets/_9an0Q3Akvo_cricket_helmet.svg --></svg>`,
   });
+  // The hair accessory has two asset layers
+  expect(
+    resolvedAvatar.accessories.filter((acc) => acc.id === "outfits_1_hair_006")
+      .length
+  ).toBe(2);
+
   expect(resolvedAvatar.nftInfo).toBeFalsy();
 });
