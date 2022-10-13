@@ -1,4 +1,4 @@
-import { parsePageJSONData } from "./page-data";
+import { parsePageJSONData } from "../page-data";
 
 test("parsePageJSONData() extracts JSON from #data element", () => {
   const html = `\
