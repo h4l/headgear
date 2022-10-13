@@ -175,7 +175,30 @@ async function _graphqlJsonApiRequest<T>({
   return await resp.json();
 }
 
-export const _GQL_QUERY_ID_AVATAR_DATA = "d78e4dc3c12e";
+/**
+ * These IDs identify GraphQL queries understood by Reddit's gql.reddit.com
+ * GraphQL server. This is not a public API. Reddit doesn't provide access to
+ * Avatar info through its public API, so the only way to get at it is via the
+ * internal APIs used by the Reddit Avatar Builder and NFT shop.
+ *
+ * This is fundamentally the reason why Headgear is a browser extension instead
+ * of a stand-alone web app. By being a browser extension, a user effectively
+ * grants Headgear access to Reddit with the same permissions they themselves
+ * have when logged in. An external API client gets different access tokens that
+ * are not able to access these internal APIs.
+ *
+ * Being internal, these APIs could be changed or removed at any time. And the
+ * query IDs can also change.
+ *
+ * The IDs can be found by using a browser's dev tools to observe HTTP requests
+ * made when opening the Avatar Builder.
+ *
+ * TODO: We should set up a scheduled CI build to try to catch when these IDs
+ *   change.
+ */
+// AvatarBuilderCatalogWithStorefront GQL query
+export const _GQL_QUERY_ID_AVATAR_DATA = "ebab39507acd";
+// GetNftDetails GQL query
 export const _GQL_QUERY_ID_NFT_INFO = "e9865cc4d93d";
 
 export async function _fetchAvatarData({

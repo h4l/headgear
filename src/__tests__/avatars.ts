@@ -111,7 +111,7 @@ describe("_fetchAvatarData()", () => {
     );
     expect(fetchMock).toHaveFetched("https://gql.reddit.com/", {
       headers: { authorization: "Bearer 123" },
-      body: { id: "d78e4dc3c12e" },
+      body: { id: _GQL_QUERY_ID_AVATAR_DATA },
       matchPartialBody: true,
     });
   });
