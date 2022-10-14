@@ -26,6 +26,8 @@ import {
   createStandardAvatarSVG,
 } from "./svg";
 
+const HEADGEAR_ADDRESS = "0xcF4CbFd13BCAc9E30d4fd666BD8d2a81536C01d5";
+
 export enum AvatarDataErrorType {
   UNKNOWN,
   NOT_REDDIT_TAB,
@@ -413,15 +415,19 @@ export function Controls() {
         {/* TODO: decide what we're doing with exposing avatar data... */}
         {/* {<AvatarData />} */}
       </div>
-      <div class="pl-4 pr-4 pt-2 pb-2 text-xs text-center">
-        <p>Support this project if you found it useful.</p>
+      <div class="pl-4 pr-4 pt-2 pb-2 text-xs text-center prose dark:prose-invert prose-sm">
         <p>
+          Support this project by tipping{" "}
+          <a href="https://www.reddit.com/user/h4l" target="_blank">
+            /u/h4l
+          </a>{" "}
+          moons on Reddit, or via{" "}
           <a
             class="rounded dark:text-slate-50  bg-slate-200 dark:bg-slate-600 font-mono my-2 p-1 leading-6"
             target="_blank"
-            href="https://polygonscan.com/address/0x0000000000000000000000000000000000000000"
+            href={`https://blockscan.com/address/${HEADGEAR_ADDRESS}`}
           >
-            0x0000000000000000000000000000000000000000
+            {HEADGEAR_ADDRESS.substring(0, 20)}…
           </a>
         </p>
       </div>
