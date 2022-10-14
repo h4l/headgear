@@ -1,7 +1,7 @@
 {
   "name": "Headgear",
   "action": {
-    "default_title": "Default Title",
+    "default_title": "Headgear (Reddit Avatars)",
     "default_popup": "html/popup.html"
   },
   "manifest_version": 3,
