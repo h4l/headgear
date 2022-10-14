@@ -220,6 +220,7 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
   const avatarData = await exampleAvatarDataResponseJSON();
   const avatar = avatarData.data.avatarBuilderCatalog.avatar;
   const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
+  assert(avatar && resolvedAvatar);
 
   expect(resolvedAvatar.styles).toEqual(avatar.styles);
   expect([...new Set(resolvedAvatar.accessories.map((acc) => acc.id))]).toEqual(
@@ -281,6 +282,7 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
   const avatarData = await exampleNonNftAvatarDataResponseJSON();
   const avatar = avatarData.data.avatarBuilderCatalog.avatar;
   const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
+  assert(avatar && resolvedAvatar);
 
   expect(resolvedAvatar.styles).toEqual(avatar.styles);
   expect([...new Set(resolvedAvatar.accessories.map((acc) => acc.id))]).toEqual(
@@ -315,4 +317,11 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
   ).toBe(2);
 
   expect(resolvedAvatar.nftInfo).toBeFalsy();
+});
+
+test("getCurrentAvatar() resolves to none when users have no avatar", async () => {
+  const body = await exampleNonNftAvatarDataResponseJSON();
+  body.data.avatarBuilderCatalog.avatar = null;
+  fetchMock.post(AVATAR_DATA_REQUEST, { body });
+  await expect(getCurrentAvatar({ apiToken: "foo" })).resolves.toBeNull();
 });

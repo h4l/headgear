@@ -37,12 +37,12 @@ export async function _fetchUserAPIToken() {
 }
 
 export type GetAvatarMessageResponse =
-  | [undefined, ResolvedAvatar]
+  | [undefined, ResolvedAvatar | null]
   | [{ message: string }, undefined];
 
 interface CachedAvatar {
   versionTag: string;
-  avatar: ResolvedAvatar;
+  avatar: ResolvedAvatar | null;
 }
 
 /**
@@ -51,7 +51,7 @@ interface CachedAvatar {
  * The result is cached in local storage — the Reddit API requests required to
  * assemble the Avatar data are pretty heavy.
  */
-export async function _getAvatar(): Promise<ResolvedAvatar> {
+export async function _getAvatar(): Promise<ResolvedAvatar | null> {
   const versionTag = await _avatarVersionTag();
   if (versionTag !== undefined) {
     const cachedAvatar = (await chrome.storage.local.get(AVATAR_CACHE_KEY))[

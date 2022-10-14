@@ -32,6 +32,7 @@ export enum AvatarDataErrorType {
   UNKNOWN,
   NOT_REDDIT_TAB,
   GET_AVATAR_FAILED,
+  USER_HAS_NO_AVATAR,
 }
 export type AvatarDataError =
   | { type: AvatarDataErrorType.UNKNOWN; exception: Error }
@@ -39,7 +40,8 @@ export type AvatarDataError =
   | {
       type: AvatarDataErrorType.NOT_REDDIT_TAB;
       tab: chrome.tabs.Tab;
-    };
+    }
+  | { type: AvatarDataErrorType.USER_HAS_NO_AVATAR };
 
 export enum DataStateType {
   BEFORE_LOAD,
@@ -240,8 +242,27 @@ export function AvatarDataError({
 }): JSX.Element {
   if (error.type === AvatarDataErrorType.NOT_REDDIT_TAB) {
     return (
-      <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your avatar">
+      <CouldNotLoadAvatarMessage title="Open a Reddit tab to see your Avatar">
         <p>Headgear needs a Reddit tab open to load your Avatar.</p>
+      </CouldNotLoadAvatarMessage>
+    );
+  } else if (error.type === AvatarDataErrorType.USER_HAS_NO_AVATAR) {
+    return (
+      <CouldNotLoadAvatarMessage title="Your Reddit account has no Avatar">
+        <p>
+          Headgear could not load your Avatar because your Reddit account has no
+          Avatar.
+        </p>
+        <p>
+          Go and use the{" "}
+          <a
+            href="https://reddit.zendesk.com/hc/en-us/articles/360043035352-How-do-I-customize-and-style-my-avatar-"
+            target="_blank"
+          >
+            Reddit Avatar Builder
+          </a>
+          , make yourself an Avatar, then come back.
+        </p>
       </CouldNotLoadAvatarMessage>
     );
   } else if (error.type === AvatarDataErrorType.GET_AVATAR_FAILED) {
@@ -632,7 +653,7 @@ export function App() {
 
 export async function _getUserCurrentAvatar(
   tab: chrome.tabs.Tab
-): Promise<ResolvedAvatar> {
+): Promise<ResolvedAvatar | null> {
   const tabId = tab.id;
   assert(typeof tabId === "number");
   await chrome.scripting.executeScript({
@@ -703,6 +724,12 @@ async function _loadAvatarDataStateAsync(): Promise<AvatarDataState> {
     };
   }
   const avatar = await _getUserCurrentAvatar(tab);
+  if (avatar === null) {
+    return {
+      type: DataStateType.ERROR,
+      error: { type: AvatarDataErrorType.USER_HAS_NO_AVATAR },
+    };
+  }
   return { type: DataStateType.LOADED, tab, avatar };
 }
 

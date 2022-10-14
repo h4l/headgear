@@ -8,7 +8,7 @@ interface AvatarData {
 
 interface AvatarBuilderCatalog {
   accessories: AvatarAccessory[];
-  avatar: UserAvatar;
+  avatar: null | UserAvatar;
   pastAvatars: UserAvatar[];
   outfits: Array<AvatarOutfit | NftAvatarOutfit>;
 }
@@ -121,13 +121,17 @@ function validateAvatarDataResponseData(
   if (
     !(
       Array.isArray(json?.data?.avatarBuilderCatalog?.accessories) &&
-      typeof json?.data?.avatarBuilderCatalog?.avatar === "object" &&
-      Array.isArray(json?.data?.avatarBuilderCatalog?.avatar?.styles) &&
+      (json?.data?.avatarBuilderCatalog?.avatar === null ||
+        (typeof json?.data?.avatarBuilderCatalog?.avatar === "object" &&
+          Array.isArray(json?.data?.avatarBuilderCatalog?.avatar?.styles))) &&
       typeof json?.data?.avatarBuilderCatalog?.pastAvatars === "object" &&
       Array.isArray(json?.data?.avatarBuilderCatalog?.outfits)
     )
   ) {
     throw new Error(msg);
+  }
+  if (json?.data?.avatarBuilderCatalog?.avatar === null) {
+    return;
   }
 
   // We need to be strict about the contents of the style objects, as if they
@@ -392,8 +396,10 @@ export async function _resolveAvatar({
 }: {
   apiToken: string;
   avatarData: AvatarData;
-}): Promise<ResolvedAvatar> {
+}): Promise<ResolvedAvatar | null> {
   const userAvatar = avatarData.avatarBuilderCatalog.avatar;
+  // avatar is null for users who've never used the avatar builder
+  if (!userAvatar) return null;
   const accessories = new Map<string, AvatarAccessory>(
     avatarData.avatarBuilderCatalog.accessories.map((acc) => [acc.id, acc])
   );
@@ -426,7 +432,7 @@ export async function getCurrentAvatar({
   apiToken,
 }: {
   apiToken: string;
-}): Promise<ResolvedAvatar> {
+}): Promise<ResolvedAvatar | null> {
   const avatarData = await _fetchAvatarData({ apiToken });
   return _resolveAvatar({ apiToken, avatarData });
 }
