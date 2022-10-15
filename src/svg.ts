@@ -338,7 +338,6 @@ export function composeAvatarSVG({
   avatar: ResolvedAvatar;
 }): SVGElement {
   const accessories = [...avatar.accessories];
-  const styles = avatar.styles;
   // In the SVG, accessories are layered by slotNumber, lowest to highest
   accessories.sort((a, b) => a.slotNumber - b.slotNumber);
   // Each accessory has its own SVG doc, with its own CSS styles and class
