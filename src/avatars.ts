@@ -97,14 +97,15 @@ interface NFTInfoResponse {
 }
 
 function validateAvatarNFTInfoResponseData(
-  json: any
+  json: unknown
 ): asserts json is AvatarNFTInfoResponseData {
-  const size = json?.data?.inventoryItems?.edges?.[0]?.node?.drop?.size;
+  const data = json as Partial<AvatarNFTInfoResponseData>;
+  const size = data?.data?.inventoryItems?.edges?.[0]?.node?.drop?.size;
   if (
     !(
-      typeof json?.data?.inventoryItems?.edges?.[0]?.node?.name === "string" &&
+      typeof data?.data?.inventoryItems?.edges?.[0]?.node?.name === "string" &&
       (size === null || typeof size === "number") &&
-      typeof json?.data?.inventoryItems?.edges?.[0]?.node?.benefits
+      typeof data?.data?.inventoryItems?.edges?.[0]?.node?.benefits
         ?.avatarOutfit?.backgroundImage?.url === "string"
     )
   ) {
@@ -115,29 +116,30 @@ function validateAvatarNFTInfoResponseData(
 }
 
 function validateAvatarDataResponseData(
-  json: any
+  json: unknown
 ): asserts json is AvatarDataResponseData {
   const msg = "Avatar Data API response JSON is not structured as expected";
+  const data = json as Partial<AvatarDataResponseData>;
   if (
     !(
-      Array.isArray(json?.data?.avatarBuilderCatalog?.accessories) &&
-      (json?.data?.avatarBuilderCatalog?.avatar === null ||
-        (typeof json?.data?.avatarBuilderCatalog?.avatar === "object" &&
-          Array.isArray(json?.data?.avatarBuilderCatalog?.avatar?.styles))) &&
-      typeof json?.data?.avatarBuilderCatalog?.pastAvatars === "object" &&
-      Array.isArray(json?.data?.avatarBuilderCatalog?.outfits)
+      Array.isArray(data?.data?.avatarBuilderCatalog?.accessories) &&
+      (data?.data?.avatarBuilderCatalog?.avatar === null ||
+        (typeof data?.data?.avatarBuilderCatalog?.avatar === "object" &&
+          Array.isArray(data?.data?.avatarBuilderCatalog?.avatar?.styles))) &&
+      typeof data?.data?.avatarBuilderCatalog?.pastAvatars === "object" &&
+      Array.isArray(data?.data?.avatarBuilderCatalog?.outfits)
     )
   ) {
     throw new Error(msg);
   }
-  if (json?.data?.avatarBuilderCatalog?.avatar === null) {
+  if (data?.data?.avatarBuilderCatalog?.avatar === null) {
     return;
   }
 
   // We need to be strict about the contents of the style objects, as if they
   // contain unexpected properties our merged SVGs will not render as intended.
   try {
-    (json.data.avatarBuilderCatalog.avatar.styles as object[]).forEach((obj) =>
+    (data.data.avatarBuilderCatalog.avatar.styles as object[]).forEach((obj) =>
       _validateSVGStyle(obj)
     );
   } catch (e) {
@@ -162,7 +164,7 @@ async function _graphqlJsonApiRequest<T>({
   const resp = await fetch("https://gql.reddit.com/", {
     headers: {
       authorization: `Bearer ${apiToken}`,
-      ["Content-Type"]: "application/json",
+      "Content-Type": "application/json",
     },
     referrer: "https://www.reddit.com/",
     referrerPolicy: "origin-when-cross-origin",

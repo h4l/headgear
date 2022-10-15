@@ -1,4 +1,4 @@
-import { Signal, computed, effect, signal, useSignal } from "@preact/signals";
+import { Signal, computed, effect, signal } from "@preact/signals";
 import memoizeOne from "memoize-one";
 import { ComponentChildren, Fragment, JSX, createContext } from "preact";
 import {
@@ -160,7 +160,7 @@ export function ImageStyleOption(props: {
     avatarDataState.value.type !== DataStateType.LOADED ||
     // controlsState is undefined while loading from storage
     controlsState.value === undefined;
-  let disabledReason = props.disabledReason;
+  const disabledReason = props.disabledReason;
 
   return (
     <div class="group relative">
@@ -219,7 +219,7 @@ export function CouldNotLoadAvatarMessage(props: {
         ].filter((x) => x)
       );
     }
-  }, [props.logError]);
+  }, [props.logError, props.logErrorContextMessage]);
 
   return (
     <div
@@ -258,6 +258,7 @@ export function AvatarDataError({
           <a
             href="https://reddit.zendesk.com/hc/en-us/articles/360043035352-How-do-I-customize-and-style-my-avatar-"
             target="_blank"
+            rel="noreferrer"
           >
             Reddit Avatar Builder
           </a>
@@ -279,7 +280,11 @@ export function AvatarDataError({
         <p>
           If Reddit is working and this keeps happening, there could be
           something wrong with Headgear. Let{" "}
-          <a href="https://www.reddit.com/user/h4l" target="_blank">
+          <a
+            href="https://www.reddit.com/user/h4l"
+            target="_blank"
+            rel="noreferrer"
+          >
             /u/h4l
           </a>{" "}
           know about this if it keeps happening.
@@ -309,7 +314,11 @@ function RequestBugReport() {
     <p>
       This probably means you found a bug in Headgear that needs fixing. If you
       could let{" "}
-      <a href="https://www.reddit.com/user/h4l" target="_blank">
+      <a
+        href="https://www.reddit.com/user/h4l"
+        target="_blank"
+        rel="noreferrer"
+      >
         /u/h4l
       </a>{" "}
       know about this, they should be able to fix it. Sorry!
@@ -322,8 +331,9 @@ export function AvatarSVG({ svg }: { svg: string }) {
     <svg
       data-testid="avatar"
       class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
+      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: svg }}
-    ></svg>
+    />
   );
 }
 
@@ -381,7 +391,7 @@ export function DisplayArea() {
 export function Controls() {
   const avatarDataState = useContext(AvatarDataContext);
   let nftOptionsDisabled = false;
-  let nftOptionsDisabledReason: string | undefined = undefined;
+  let nftOptionsDisabledReason: string | undefined;
   if (
     avatarDataState.value.type === DataStateType.LOADED &&
     !avatarDataState.value.avatar.nftInfo
@@ -393,7 +403,7 @@ export function Controls() {
   return (
     <div class="grow-0 shrink-0 basis-[350px] h-full flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="px-4 flex my-4">
-        <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg"></img>
+        <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg" />
         <div class="mr-auto flex-shrink">
           <h1 class="text-3xl font-bold">Headgear</h1>
           <p class="text-xs">Unleash your Reddit Avatar.</p>
@@ -439,13 +449,18 @@ export function Controls() {
       <div class="pl-4 pr-4 pt-2 pb-2 text-xs text-center prose dark:prose-invert prose-sm">
         <p>
           Support this project by tipping{" "}
-          <a href="https://www.reddit.com/user/h4l" target="_blank">
+          <a
+            href="https://www.reddit.com/user/h4l"
+            target="_blank"
+            rel="noreferrer"
+          >
             /u/h4l
           </a>{" "}
           moons on Reddit, or via{" "}
           <a
             class="rounded dark:text-slate-50  bg-slate-200 dark:bg-slate-600 font-mono my-2 p-1 leading-6"
             target="_blank"
+            rel="noreferrer"
             href={`https://blockscan.com/address/${HEADGEAR_ADDRESS}`}
           >
             {HEADGEAR_ADDRESS.substring(0, 20)}…
@@ -457,6 +472,7 @@ export function Controls() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function AvatarData(): JSX.Element {
   return (
     <div>
@@ -507,7 +523,7 @@ export function DownloadSVGButton(): JSX.Element {
     return `data:image/svg+xml;base64,${b64Svg}`;
   }, [avatarSvgState]);
 
-  let filename: string | undefined = undefined;
+  let filename: string | undefined;
   if (controlsState) {
     const imgStyleName = IMAGE_STYLE_NAMES.get(controlsState?.imageStyle);
     assert(imgStyleName);
@@ -556,7 +572,9 @@ export function ClosePopupButton() {
     <button
       class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
       title="Close"
-      onClick={window.close.bind(window)}
+      onClick={() => {
+        window.close();
+      }}
     >
       {iconCross}
     </button>
@@ -599,7 +617,11 @@ export function HeadgearIsVeryBrokenMessage() {
       <h1>Headgear is broken</h1>
       <p>
         An unrecoverable error occurred. If you could let
-        <a href="https://www.reddit.com/user/h4l" target="_blank">
+        <a
+          href="https://www.reddit.com/user/h4l"
+          target="_blank"
+          rel="noreferrer"
+        >
           /u/h4l
         </a>
         know about this, they should be able to fix it. Sorry!
@@ -626,17 +648,18 @@ export function App() {
       );
     }
   }, [error.value]);
+
+  const [rootState] = useState<RootState>(() => createRootState());
+  useEffect(() => {
+    if (rootState.avatarDataState.value.type === DataStateType.BEFORE_LOAD) {
+      rootState.avatarDataState.value = { type: DataStateType.LOADING };
+      _initialiseRootState(rootState);
+    }
+  }, [rootState]);
+
   if (error.value) {
     return <HeadgearIsVeryBrokenMessage />;
   }
-
-  const [rootState] = useState<RootState>(() => createRootState());
-
-  useEffect(() => {
-    if (rootState.avatarDataState.value.type === DataStateType.BEFORE_LOAD) {
-      _initialiseRootState(rootState);
-    }
-  }, [rootState.avatarDataState.value.type]);
 
   return (
     <AvatarDataContext.Provider value={rootState.avatarDataState}>

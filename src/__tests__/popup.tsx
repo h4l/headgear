@@ -1,4 +1,4 @@
-import { Signal, effect, signal } from "@preact/signals";
+import { Signal, signal } from "@preact/signals";
 import {
   cleanup,
   fireEvent,
@@ -32,7 +32,6 @@ import {
   RootState,
   _createAvatarSvgState,
   _initialiseRootState,
-  _loadAvatarDataState,
   createRootState,
 } from "../popup";
 import {
@@ -75,7 +74,7 @@ describe("create & initialise RootState", () => {
   test("controlsState changes trigger messages on image-controls-changed channel", () => {
     const state1 = { imageStyle: ImageStyleType.NFT_CARD };
     const state2 = { imageStyle: ImageStyleType.HEADSHOT_HEX };
-    let port: chrome.runtime.Port | undefined = undefined;
+    let port: chrome.runtime.Port | undefined;
     chrome.runtime.onConnect.addListener((_port) => {
       port = _port;
     });
@@ -135,36 +134,26 @@ describe("create & initialise RootState", () => {
     }
   );
 
-  test("avatarDataState becomes NOT_REDDIT_TAB error state if tab is not reddit", (done) => {
+  test("avatarDataState becomes NOT_REDDIT_TAB error state if tab is not reddit", async () => {
     tab.url = "https://not-reddit.com/";
     const rootState = createRootState();
     _initialiseRootState(rootState);
     const { avatarDataState } = rootState;
 
-    effect(() => {
-      const state = avatarDataState.value;
-      if (
-        state.type === DataStateType.BEFORE_LOAD ||
-        state.type === DataStateType.LOADING
-      )
-        return;
-      else if (state.type === DataStateType.ERROR) {
-        expect(chrome.tabs.query).toBeCalledWith({
-          currentWindow: true,
-          active: true,
-        });
-        expect(avatarDataState.value).toEqual({
-          type: DataStateType.ERROR,
-          error: { type: AvatarDataErrorType.NOT_REDDIT_TAB, tab },
-        });
-        done();
-      } else {
-        done(`unexpected state: ${state.type}`);
-      }
+    await waitFor(() => {
+      expect(avatarDataState.value.type).toBe(DataStateType.ERROR);
+    });
+    expect(chrome.tabs.query).toBeCalledWith({
+      currentWindow: true,
+      active: true,
+    });
+    expect(avatarDataState.value).toEqual({
+      type: DataStateType.ERROR,
+      error: { type: AvatarDataErrorType.NOT_REDDIT_TAB, tab },
     });
   });
 
-  test("avatarDataState becomes AVATAR_LOADED if tab is reddit", (done) => {
+  test("avatarDataState becomes AVATAR_LOADED if tab is reddit", async () => {
     const mockAvatarData = { avatar: true };
     jest
       .mocked(chrome.tabs.sendMessage)
@@ -173,29 +162,20 @@ describe("create & initialise RootState", () => {
     _initialiseRootState(rootState);
     const { avatarDataState } = rootState;
 
-    effect(() => {
-      const state = avatarDataState.value;
-      if (
-        state.type === DataStateType.BEFORE_LOAD ||
-        state.type === DataStateType.LOADING
-      )
-        return;
-      else if (state.type === DataStateType.LOADED) {
-        expect(chrome.scripting.executeScript).toBeCalledWith({
-          target: { tabId: 123 },
-          files: ["reddit.js"],
-        });
-        expect(chrome.tabs.sendMessage).toBeCalledWith(123, MSG_GET_AVATAR);
-        expect(state.tab).toBe(tab);
-        expect(state.avatar).toBe(mockAvatarData);
-        done();
-      } else {
-        done(`unexpected state: ${state.type}`);
-      }
+    await waitFor(() => {
+      expect(avatarDataState.value.type).toBe(DataStateType.LOADED);
     });
+    assert(avatarDataState.value.type === DataStateType.LOADED);
+    expect(chrome.scripting.executeScript).toBeCalledWith({
+      target: { tabId: 123 },
+      files: ["reddit.js"],
+    });
+    expect(chrome.tabs.sendMessage).toBeCalledWith(123, MSG_GET_AVATAR);
+    expect(avatarDataState.value.tab).toBe(tab);
+    expect(avatarDataState.value.avatar).toBe(mockAvatarData);
   });
 
-  test("avatarDataState becomes ERROR with type GET_AVATAR_FAILED if get-avatar message responds with an error", (done) => {
+  test("avatarDataState becomes ERROR with type GET_AVATAR_FAILED if get-avatar message responds with an error", async () => {
     jest
       .mocked(chrome.tabs.sendMessage)
       .mockResolvedValue([
@@ -206,26 +186,17 @@ describe("create & initialise RootState", () => {
     _initialiseRootState(rootState);
     const { avatarDataState } = rootState;
 
-    effect(() => {
-      const state = avatarDataState.value;
-      if (
-        state.type === DataStateType.BEFORE_LOAD ||
-        state.type === DataStateType.LOADING
-      )
-        return;
-      else if (state.type === DataStateType.ERROR) {
-        expect(state.error).toEqual({
-          type: AvatarDataErrorType.GET_AVATAR_FAILED,
-          message: "An expected error occurred",
-        });
-        done();
-      } else {
-        done(`unexpected state: ${state.type}`);
-      }
+    await waitFor(() => {
+      expect(avatarDataState.value.type).toBe(DataStateType.ERROR);
+    });
+    assert(avatarDataState.value.type === DataStateType.ERROR);
+    expect(avatarDataState.value.error).toEqual({
+      type: AvatarDataErrorType.GET_AVATAR_FAILED,
+      message: "An expected error occurred",
     });
   });
 
-  test("avatarDataState becomes ERROR with type UNKNOWN if get-avatar handler throws", (done) => {
+  test("avatarDataState becomes ERROR with type UNKNOWN if get-avatar handler throws", async () => {
     jest
       .mocked(chrome.tabs.sendMessage)
       .mockRejectedValue(new Error("An unexpected error occurred"));
@@ -233,22 +204,13 @@ describe("create & initialise RootState", () => {
     _initialiseRootState(rootState);
     const { avatarDataState } = rootState;
 
-    effect(() => {
-      const state = avatarDataState.value;
-      if (
-        state.type === DataStateType.BEFORE_LOAD ||
-        state.type === DataStateType.LOADING
-      )
-        return;
-      else if (state.type === DataStateType.ERROR) {
-        expect(state.error).toEqual({
-          type: AvatarDataErrorType.UNKNOWN,
-          exception: new Error("An unexpected error occurred"),
-        });
-        done();
-      } else {
-        done(`unexpected state: ${state.type}`);
-      }
+    await waitFor(() => {
+      expect(avatarDataState.value.type).toBe(DataStateType.ERROR);
+    });
+    assert(avatarDataState.value.type === DataStateType.ERROR);
+    expect(avatarDataState.value.error).toEqual({
+      type: AvatarDataErrorType.UNKNOWN,
+      exception: new Error("An unexpected error occurred"),
     });
   });
 });
@@ -311,7 +273,7 @@ describe("_createAvatarSvgStateSignal()", () => {
       svgVariantFn,
     }: {
       imageStyle: ImageStyleType;
-      svgVariantFn: any;
+      svgVariantFn: (...args: unknown[]) => unknown;
     }) => {
       const mockSvg = document.createElementNS(SVGNS, "svg");
       jest.mocked(composeAvatarSVG).mockReturnValue(mockSvg);
@@ -343,7 +305,7 @@ describe("_createAvatarSvgStateSignal()", () => {
       svgVariantFn,
     }: {
       imageStyle: ImageStyleType;
-      svgVariantFn: any;
+      svgVariantFn: (...args: unknown[]) => unknown;
     }) => {
       const mockComposedSvg = document.createElementNS(SVGNS, "svg");
       const mockStyledSvg = document.createElementNS(SVGNS, "svg");
@@ -361,15 +323,11 @@ describe("_createAvatarSvgStateSignal()", () => {
         controlsState: signal({ imageStyle }),
       });
 
-      if (imageStyle === ImageStyleType.NO_BG) {
-        expect(svgSignal.value).toBe(
-          `<svg xmlns=\"http://www.w3.org/2000/svg\"/>`
-        );
-      } else {
-        expect(svgSignal.value).toBe(
-          `<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"styled\"/>`
-        );
-      }
+      expect(svgSignal.value).toBe(
+        imageStyle === ImageStyleType.NO_BG
+          ? `<svg xmlns="http://www.w3.org/2000/svg"/>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" id="styled"/>`
+      );
     }
   );
 });
@@ -439,41 +397,39 @@ describe("<ImageStyleOption>", () => {
     expect(radio).toBeDisabled();
   });
 
-  test.each`
-    name             | disabled          | state
-    ${"loaded"}      | ${"not disabled"} | ${{ type: DataStateType.LOADED }}
-    ${"before load"} | ${"disabled"}     | ${{ type: DataStateType.BEFORE_LOAD }}
-    ${"loading"}     | ${"disabled"}     | ${{ type: DataStateType.LOADING }}
-    ${"error"}       | ${"disabled"}     | ${{ type: DataStateType.ERROR }}
-  `(
-    "is $disabled in $name state",
-    async ({
-      disabled,
-      state,
-    }: {
-      disabled: "disabled" | "not disabled";
-      state: AvatarDataState;
-    }) => {
-      const avatarDataState: Signal<AvatarDataState> = signal(state);
-      const controlsState: Signal<ControlsState> = signal({
-        imageStyle: ImageStyleType.HEADSHOT_CIRCLE,
-      });
-      render(
-        <AvatarDataContext.Provider value={avatarDataState}>
-          <ControlsContext.Provider value={controlsState}>
-            <ImageStyleOption
-              name={ImageStyleType.HEADSHOT_CIRCLE}
-              title="The Title"
-              description="A description."
-            />
-          </ControlsContext.Provider>
-        </AvatarDataContext.Provider>
-      );
-      const radio = await screen.findByLabelText("The Title", { exact: false });
-      if (disabled === "disabled") expect(radio).toBeDisabled();
-      else expect(radio).not.toBeDisabled();
+  test("is disabled unless avatarDataState is LOADED", async () => {
+    const {
+      state: { avatarDataState, controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(
+      <ImageStyleOption
+        name={ImageStyleType.HEADSHOT_CIRCLE}
+        title="The Title"
+        description="A description."
+      />
+    );
+
+    controlsState.value = { imageStyle: ImageStyleType.HEADSHOT_CIRCLE };
+
+    for (const stateType of [
+      DataStateType.BEFORE_LOAD,
+      DataStateType.LOADING,
+      DataStateType.ERROR,
+    ]) {
+      avatarDataState.value.type = stateType;
+      renderWithStateContext();
+      expect(
+        await screen.findByLabelText("The Title", { exact: false })
+      ).toBeDisabled();
+      cleanup();
     }
-  );
+
+    avatarDataState.value.type = DataStateType.LOADED;
+    renderWithStateContext();
+    expect(
+      await screen.findByLabelText("The Title", { exact: false })
+    ).not.toBeDisabled();
+  });
 });
 
 test("<AvatarSVG>", async () => {
@@ -484,7 +440,7 @@ test("<AvatarSVG>", async () => {
 
 describe("<CouldNotLoadAvatarMessage>", () => {
   test("logs errors ONCE with console.error", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
     const title = signal("Initial Title");
     function TitleChanger(): JSX.Element {
       return (
@@ -611,6 +567,7 @@ describe("<DisplayArea>", () => {
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
+  // eslint-disable-next-line jest/expect-expect
   test("displays Avatar SVG when fully-loaded", async () => {
     const {
       state: { avatarDataState, controlsState, avatarSvgState },
@@ -627,9 +584,10 @@ describe("<DisplayArea>", () => {
     await screen.findByTestId("avatar");
   });
 
+  // eslint-disable-next-line jest/expect-expect
   test("displays error when in failed AvatarDataState", async () => {
     const {
-      state: { avatarDataState, controlsState, avatarSvgState },
+      state: { avatarDataState },
       renderWithStateContext,
     } = statefulElementRenderer(<DisplayArea />);
 

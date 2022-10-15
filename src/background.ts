@@ -10,7 +10,7 @@ import {
 } from "./popup-state-persistence";
 
 export function _persistImageControlsOnChange() {
-  let controlsState: ControlsStateObject | undefined = undefined;
+  let controlsState: ControlsStateObject | undefined;
 
   // Debounce set() calls so that we don't trigger the storage throttle limits
   // if the user spams UI changes.

@@ -176,11 +176,6 @@ const accessory: ResolvedAccessory = {
   slotNumber: 0,
   svgData: '<svg xmlns="http://www.w3.org/2000/svg"/>',
 };
-const styles: SVGStyle[] = [
-  { className: "foo", fill: "red" },
-  { className: "bar", fill: "#aabbcc" },
-  { className: "other", fill: "#fff" },
-];
 
 describe("createAccessoryCustomisationCSSRules()", () => {
   test("creates CSS from styles", () => {
@@ -433,16 +428,15 @@ describe("Avatar SVG", () => {
         const composedAvatar = composeAvatarSVG({ avatar: _avatar });
         const nftCard = createNFTCardAvatarSVG({
           composedAvatar,
-          nftInfo: {
-            ..._avatar.nftInfo,
-            seriesSize: seriesSize,
-          },
+          nftInfo: { ..._avatar.nftInfo, seriesSize },
           variant: NFTCardVariant.SHOP_INVENTORY,
         });
 
         if (renderedSeriesSize === null) {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(nftCard.querySelector("#series-size")).toBeFalsy();
         } else {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(nftCard.querySelector("#series-size")?.textContent).toEqual(
             renderedSeriesSize
           );
@@ -469,15 +463,14 @@ describe("Avatar SVG", () => {
       }) => {
         const _avatar = avatar();
         assert(_avatar.nftInfo);
-        const nftInfo: NFTInfo = {
-          ..._avatar.nftInfo,
-          seriesSize: seriesSize,
-        };
+        const nftInfo: NFTInfo = { ..._avatar.nftInfo, seriesSize };
         const nftName = _nftNameSVG(nftInfo);
 
         if (renderedSeriesSize === null) {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(nftName.querySelector("#series-size")).toBeFalsy();
         } else {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(nftName.querySelector("#series-size")?.textContent).toEqual(
             renderedSeriesSize
           );

@@ -21,7 +21,7 @@ export function isControlsStateObject(
   return (
     typeof obj === "object" &&
     _imageStyleTypeValues.includes(
-      (obj as Partial<ControlsStateObject>).imageStyle as any
+      (obj as Partial<ControlsStateObject>).imageStyle as ImageStyleType
     )
   );
 }

@@ -185,9 +185,9 @@ test("getCurrentAvatar() throws on non SVG asset image", async () => {
   fetchMock.post(AVATAR_DATA_REQUEST, {
     body: await exampleNonNftAvatarDataResponseJSON(),
   });
-  fetchMock.get("glob:https://i.redd.it/snoovatar/*", (url) => {
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*", () => {
     return {
-      headers: { ["content-type"]: "image/png" },
+      headers: { "content-type": "image/png" },
       body: Buffer.alloc(8, "fakedata"),
     };
   });
@@ -206,13 +206,13 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
   });
   fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
     return {
-      headers: { ["content-type"]: "image/svg+xml" },
+      headers: { "content-type": "image/svg+xml" },
       body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
     };
   });
-  fetchMock.get("glob:https://i.redd.it/snoovatar/*", (url) => {
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*", () => {
     return {
-      headers: { ["content-type"]: "image/png" },
+      headers: { "content-type": "image/png" },
       body: "fakedata",
     };
   });
@@ -274,7 +274,7 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
   });
   fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
     return {
-      headers: { ["content-type"]: "image/svg+xml" },
+      headers: { "content-type": "image/svg+xml" },
       body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
     };
   });

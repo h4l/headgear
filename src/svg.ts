@@ -373,16 +373,10 @@ export function composeAvatarSVG({
     rootSvg instanceof SVGElement && style && avatarGroup instanceof SVGElement
   );
 
-  style.textContent =
-    preparedAccessories
-      .map(({ stylesheet }, i) => {
-        return `\
-/* ${accessories[i].id} */
-${stylesheet}`;
-      })
-      .join("\n") +
-    "\n/* customisation styles */\n" +
-    customisationStyles;
+  const accessoryStyles = preparedAccessories
+    .map(({ stylesheet }, i) => `/* ${accessories[i].id} */\n${stylesheet}`)
+    .join("\n");
+  style.textContent = `${accessoryStyles}\n/* customisation styles */\n${customisationStyles}`;
 
   preparedAccessories.forEach(({ svg }) => {
     avatarGroup.appendChild(doc.importNode(svg, true));
@@ -471,9 +465,6 @@ export function createStandardAvatarSVG({
   return svg;
 }
 
-const CARD_W = 552;
-const CARD_H = 736;
-
 export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
   let svg;
   if (nftInfo.seriesSize === null) {
@@ -485,7 +476,7 @@ export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
     seriesSize.textContent =
       nftInfo.seriesSize < 1000
         ? nftInfo.seriesSize.toFixed(0)
-        : (nftInfo.seriesSize / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+        : `${(nftInfo.seriesSize / 1000).toFixed(1).replace(/\.0$/, "")}k`;
   }
   const name = svg.querySelector("#nft-name");
   assert(name);

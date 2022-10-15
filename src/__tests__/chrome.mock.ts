@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-explicit-any: 0 */
 import { assert } from "../assert";
 
 type chrome = typeof window.chrome;
@@ -5,7 +6,7 @@ type chrome = typeof window.chrome;
 export class MockStorageArea
   implements jest.Mocked<chrome.storage.StorageArea>
 {
-  readonly data: { [key: string]: any } = {};
+  readonly data: { [key: string]: unknown } = {};
   get = jest.fn<any, any>(
     async (
       keys?: string | string[] | { [key: string]: any } | null
@@ -44,16 +45,16 @@ export class MockStorageArea
     }
   );
 
-  getBytesInUse = jest.fn<any, any>((...args: any): never => {
+  getBytesInUse = jest.fn<any, any>((): never => {
     throw new Error("Method not implemented.");
   });
-  clear = jest.fn<any, any>((...args: any): never => {
+  clear = jest.fn<any, any>((): never => {
     throw new Error("Method not implemented.");
   });
-  remove = jest.fn<any, any>((...args: any): never => {
+  remove = jest.fn<any, any>((): never => {
     throw new Error("Method not implemented.");
   });
-  setAccessLevel = jest.fn<any, any>((...args: any): never => {
+  setAccessLevel = jest.fn<any, any>((): never => {
     throw new Error("Method not implemented.");
   });
   get onChanged(): chrome.storage.StorageAreaChangedEvent {
@@ -100,19 +101,19 @@ export class MockEvent<T extends (...args: any) => void>
       listener(...Array.from(args));
     }
   }
-  getRules = jest.fn((...args: any): void => {
+  getRules = jest.fn<void, any>((): void => {
     throw new Error("Method not implemented.");
   });
-  hasListener = jest.fn((arg: any): boolean => {
+  hasListener = jest.fn<boolean, any>((): boolean => {
     throw new Error("Method not implemented.");
   });
-  removeRules = jest.fn((...args: any): void => {
+  removeRules = jest.fn<void, any>((): void => {
     throw new Error("Method not implemented.");
   });
-  addRules = jest.fn((...args: any): void => {
+  addRules = jest.fn<void, any>((): void => {
     throw new Error("Method not implemented.");
   });
-  removeListener = jest.fn((arg: any): void => {
+  removeListener = jest.fn<void, any>((): void => {
     throw new Error("Method not implemented.");
   });
   hasListeners = jest.fn((): boolean => {

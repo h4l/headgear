@@ -40,8 +40,11 @@ export function parsePageJSONData(html: string): object {
   return JSON.parse(dataScriptContent[1]);
 }
 
-export function validatePageData(pageData: any): asserts pageData is PageData {
-  if (!(typeof pageData?.user?.session?.accessToken === "string")) {
+export function validatePageData(
+  pageData: unknown
+): asserts pageData is PageData {
+  const _pageData = pageData as Partial<PageData>;
+  if (!(_pageData?.user?.session?.accessToken === "string")) {
     throw new Error(`page #data JSON value is not structured as expected`);
   }
 }

@@ -24,7 +24,7 @@ jest.mock("../page-data", () => ({
 }));
 
 beforeEach(() => {
-  jest.spyOn(console, "warn").mockImplementation(() => {});
+  jest.spyOn(console, "warn").mockImplementation(() => undefined);
 });
 afterEach(() => {
   jest.mocked(console.warn).mockReset();
@@ -107,46 +107,51 @@ describe("avatar fetching", () => {
       expect(getCurrentAvatar).toHaveBeenCalledTimes(2);
     });
   });
-  describe("get-avatar message handling", () => {});
-  test("registerMessageHandler()", () => {
-    expect(chrome.runtime.onMessage.addListener).not.toHaveBeenCalled();
-    registerMessageHandler();
-    expect(chrome.runtime.onMessage.addListener).toHaveBeenCalledWith(
-      _handleMessage
-    );
-  });
-  test("_handleMessage() throws on unexpected message", async () => {
-    expect(() =>
-      _handleMessage(
-        "foo",
+  describe("get-avatar message handling", () => {
+    test("registerMessageHandler()", () => {
+      expect(chrome.runtime.onMessage.addListener).not.toHaveBeenCalled();
+      registerMessageHandler();
+      expect(chrome.runtime.onMessage.addListener).toHaveBeenCalledWith(
+        _handleMessage
+      );
+    });
+    test("_handleMessage() throws on unexpected message", async () => {
+      expect(() =>
+        _handleMessage(
+          "foo",
+          undefined as unknown as chrome.runtime.MessageSender,
+          jest.fn()
+        )
+      ).toThrow("unexpected message: foo");
+    });
+
+    // eslint-disable-next-line jest/no-done-callback
+    test("_handleMessage() responds with avatar", (done) => {
+      const result = _handleMessage(
+        MSG_GET_AVATAR,
         undefined as unknown as chrome.runtime.MessageSender,
-        jest.fn()
-      )
-    ).toThrow("unexpected message: foo");
-  });
-  test("_handleMessage() responds with avatar", (done) => {
-    const result = _handleMessage(
-      MSG_GET_AVATAR,
-      undefined as unknown as chrome.runtime.MessageSender,
-      ([err, _avatar]) => {
-        expect(err).toBeFalsy();
-        expect(_avatar).toBe(avatar);
-        done();
-      }
-    );
-    expect(result).toBeTruthy();
-  });
-  test("_handleMessage() responds with error on failure", (done) => {
-    jest.mocked(getCurrentAvatar).mockRejectedValue(new Error("boom!"));
-    _handleMessage(
-      MSG_GET_AVATAR,
-      undefined as unknown as chrome.runtime.MessageSender,
-      ([err, _avatar]) => {
-        expect(err).not.toBeFalsy();
-        expect(err?.message).toBe("boom!");
-        expect(_avatar).toBeFalsy();
-        done();
-      }
-    );
+        ([err, _avatar]) => {
+          expect(err).toBeFalsy();
+          expect(_avatar).toBe(avatar);
+          done();
+        }
+      );
+      expect(result).toBeTruthy();
+    });
+
+    // eslint-disable-next-line jest/no-done-callback
+    test("_handleMessage() responds with error on failure", (done) => {
+      jest.mocked(getCurrentAvatar).mockRejectedValue(new Error("boom!"));
+      _handleMessage(
+        MSG_GET_AVATAR,
+        undefined as unknown as chrome.runtime.MessageSender,
+        ([err, _avatar]) => {
+          expect(err).not.toBeFalsy();
+          expect(err?.message).toBe("boom!");
+          expect(_avatar).toBeFalsy();
+          done();
+        }
+      );
+    });
   });
 });
