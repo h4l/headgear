@@ -1,9 +1,9 @@
 // Every page seems to contain a script#data element containing the session data
 // we need. But some pages are bigger than others. /coins doesn't have much
 // going on, so it's smaller & faster than (say the homepage).
-const DEFAULT_PAGE_DATA_URL = "https://www.reddit.com/coins";
+export const DEFAULT_PAGE_DATA_URL = "https://www.reddit.com/coins";
 
-interface PageData {
+export interface PageData {
   user: User;
 }
 interface User {
@@ -44,7 +44,7 @@ export function validatePageData(
   pageData: unknown
 ): asserts pageData is PageData {
   const _pageData = pageData as Partial<PageData>;
-  if (!(_pageData?.user?.session?.accessToken === "string")) {
+  if (!(typeof _pageData?.user?.session?.accessToken === "string")) {
     throw new Error(`page #data JSON value is not structured as expected`);
   }
 }
