@@ -9,7 +9,9 @@
     "webpack-watch": "webpack --watch --config webpack-config-dev.ts",
     "test": "jest",
     "test-watch": "jest --watch",
-    "eslint": "eslint src"
+    "eslint": "eslint src",
+    "prettier-check": "prettier --check .",
+    "create-release-zip": "test ! -e dist.zip && test -d dist && cd dist && find . -type f | sort | xargs sha256sum | tee ../dist-files.sha256 && find . -type f -exec touch --no-dereference --date=1970-01-01T00:00:00Z {} + -print | sort | zip -9 -X -@ ../dist.zip"
   },
   "author": "Hal Blackburn",
   "license": "MIT",

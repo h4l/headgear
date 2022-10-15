@@ -7,5 +7,5 @@
 !.prettierignore
 !.prettierrc.json
 /data
-dist
+/dist*
 node_modules

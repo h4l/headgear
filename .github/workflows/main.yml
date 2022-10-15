@@ -1,0 +1,47 @@
+name: main
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: "bash -euo pipefail {0}"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: npm
+      - name: Install Dependencies
+        run: npm ci
+      - name: Ensure files are auto-formatted
+        run: npm run prettier-check
+      - name: Lint Typescript code
+        run: npm run eslint
+      - name: Test
+        run: npm run test
+      - name: Build
+        run: |
+          rm -rf dist
+          npm run webpack-prod
+      - name: Create Chrome Extension zip archive
+        run: |
+          npm run create-release-zip
+          mv dist.zip "headgear-${{ github.ref_name }}.zip"
+          mv dist-files.sha256 "headgear-files-${{ github.ref_name }}.sha256"
+          sha256sum "headgear-${{ github.ref_name }}.zip" "headgear-files-${{ github.ref_name }}.sha256" | tee "headgear-${{ github.ref_name }}.sha256"
+        if: startsWith(github.ref, 'refs/tags/') || github.ref_name == 'ci'
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            headgear-${{ github.ref_name }}.zip
+            headgear-files-${{ github.ref_name }}.sha256
+            headgear-${{ github.ref_name }}.sha256
+          fail_on_unmatched_files: true
+          draft: true
