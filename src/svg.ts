@@ -370,7 +370,9 @@ export function composeAvatarSVG({
   const rootSvg = doc.firstElementChild;
   const style = rootSvg?.querySelector("style");
   const avatarGroup = rootSvg?.querySelector("#avatar");
-  assert(rootSvg instanceof SVGElement && style && avatarGroup);
+  assert(
+    rootSvg instanceof SVGElement && style && avatarGroup instanceof SVGElement
+  );
 
   style.textContent =
     preparedAccessories
@@ -386,7 +388,45 @@ ${stylesheet}`;
   preparedAccessories.forEach(({ svg }) => {
     avatarGroup.appendChild(doc.importNode(svg, true));
   });
+  if (accessories.some((acc) => acc.id === "dubbl3bee_body_001")) {
+    applyDubbl3beeRecursion(avatarGroup);
+  }
+
   return rootSvg;
+}
+
+/**
+ * https://www.reddit.com/r/avatartrading/comments/y3pyiz/
+ */
+function applyDubbl3beeRecursion(avatarGroup: SVGElement): void {
+  const avatarElements = Array.from(avatarGroup.children);
+  const bodyPos = avatarElements.findIndex(
+    (el) => el.getAttribute("id") === "dubbl3bee_body_001"
+  );
+  if (bodyPos < 0) return;
+  avatarElements.forEach((el) => el.remove());
+  const lower = avatarGroup.ownerDocument.createElementNS(SVGNS, "g");
+  const upper = avatarGroup.ownerDocument.createElementNS(SVGNS, "g");
+  lower.setAttribute("id", "avatar-lower");
+  upper.setAttribute("id", "avatar-upper");
+  avatarElements.forEach((el, i) => {
+    (i <= bodyPos ? lower : upper).appendChild(el);
+  });
+  const ref = (name: "lower" | "upper", depth: 1 | 2): SVGElement => {
+    const use = avatarGroup.ownerDocument.createElementNS(SVGNS, "use");
+    use.setAttributeNS(XLINKNS, "href", `#avatar-${name}`);
+    use.setAttribute(
+      "transform",
+      new Array(depth).fill("translate(140 426.3) scale(0.0055)").join(" ")
+    );
+    return use;
+  };
+  avatarGroup.appendChild(lower);
+  avatarGroup.appendChild(ref("lower", 1));
+  avatarGroup.appendChild(ref("lower", 2));
+  avatarGroup.appendChild(ref("upper", 1));
+  avatarGroup.appendChild(ref("upper", 2));
+  avatarGroup.appendChild(upper);
 }
 
 function redditLogoSVG(): SVGElement {

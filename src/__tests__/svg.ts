@@ -362,6 +362,20 @@ describe("composeAvatarSVG()", () => {
     expect(svg.querySelectorAll(".color-yyy").length).toBe(2);
     expect(svg).toMatchSnapshot();
   });
+
+  test("applies dubbl3bee recursion", () => {
+    const av = avatar();
+    const body = { ...av.accessories[0], id: "dubbl3bee_body_001" };
+    av.accessories = [av.accessories[0], body, ...av.accessories.slice(1)];
+    const svg = composeAvatarSVG({ avatar: av });
+    const avatarGroup = svg.querySelector("#avatar");
+    assert(avatarGroup);
+    expect(avatarGroup.children.length).toBe(6);
+    expect(avatarGroup.children[0].id).toBe("avatar-lower");
+    expect(avatarGroup.children[0].id).toBe("avatar-lower");
+    expect(Array.from(avatarGroup.children).slice(1, 5)).toMatchSnapshot();
+    expect(avatarGroup.children[5].id).toBe("avatar-upper");
+  });
 });
 
 test("stripWhitespaceAndComments()", () => {

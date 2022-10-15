@@ -597,6 +597,27 @@ exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar i
 </svg>
 `;
 
+exports[`composeAvatarSVG() applies dubbl3bee recursion 1`] = `
+[
+  <use
+    href="#avatar-lower"
+    transform="translate(140 426.3) scale(0.0055)"
+  />,
+  <use
+    href="#avatar-lower"
+    transform="translate(140 426.3) scale(0.0055) translate(140 426.3) scale(0.0055)"
+  />,
+  <use
+    href="#avatar-upper"
+    transform="translate(140 426.3) scale(0.0055)"
+  />,
+  <use
+    href="#avatar-upper"
+    transform="translate(140 426.3) scale(0.0055) translate(140 426.3) scale(0.0055)"
+  />,
+]
+`;
+
 exports[`composeAvatarSVG() merges avatar accessories into single SVG doc 1`] = `
 <svg
   viewBox="0 0 380 600"
