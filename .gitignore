@@ -1,5 +1,6 @@
 .*
 !.editorconfig
+!.eslintrc.js
 !.devcontainer
 !.gitignore
 !.prettierignore
