@@ -2,6 +2,7 @@
 !.editorconfig
 !.eslintrc.js
 !.devcontainer
+!.github
 !.gitignore
 !.prettierignore
 !.prettierrc.json
