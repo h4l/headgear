@@ -31,7 +31,18 @@ class GenerateManifestPlugin {
     const manifest = JSON.parse(
       await readFile(path.resolve(__dirname, "src/manifest.json"), "utf-8")
     );
-    manifest.version = packageConfig.version;
+    // The version in manifest.json must only be a simple version like 1.2.3,
+    // it can't have modifiers like 1.2.3-rc1.
+    const match = /^((\d+\.\d+\.\d+).*)$/.exec(packageConfig.version);
+    if (!match)
+      throw new Error(
+        `package.json version is invalid: ${packageConfig.version}`
+      );
+    const [fullVersion, safeVersion] = match.slice(1);
+    if (fullVersion !== safeVersion) {
+      manifest.name = `${manifest.name} (${fullVersion})`;
+    }
+    manifest.version = safeVersion;
     return new sources.RawSource(JSON.stringify(manifest, undefined, 2));
   }
 }
