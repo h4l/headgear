@@ -18,6 +18,7 @@
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
         "bradlc.vscode-tailwindcss",
+        "cschleiden.vscode-github-actions",
         "dbaeumer.vscode-eslint",
         "dotjoshjohnson.xml",
         "editorconfig.editorconfig",
