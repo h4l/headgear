@@ -30,18 +30,29 @@ jobs:
           npm run webpack-prod
       - name: Create Chrome Extension zip archive
         run: |
+          PACKAGE_JSON_VERSION="$(jq -r .version package.json)"
+          [[ v$PACKAGE_JSON_VERSION = ${{ github.ref_name }} ]] || {
+              echo "The package.json version does not match the tag. The tag must be the version with a 'v' prefix, e.g. 'v0.0.0'.";
+              exit 1;
+          }
           npm run create-release-zip
           mv dist.zip "headgear-${{ github.ref_name }}.zip"
           mv dist-files.sha256 "headgear-files-${{ github.ref_name }}.sha256"
-          sha256sum "headgear-${{ github.ref_name }}.zip" "headgear-files-${{ github.ref_name }}.sha256" | tee "headgear-${{ github.ref_name }}.sha256"
+          cat > RELEASE.txt << EOF
+          # Name: Headgear
+          # Version: $PACKAGE_JSON_VERSION
+          # Tag: ${{ github.ref_name }}
+          # Commit: ${{ github.sha }}
+          EOF
+          sha256sum "headgear-${{ github.ref_name }}.zip" "headgear-files-${{ github.ref_name }}.sha256" | tee -a RELEASE.txt
+          sha256sum RELEASE.txt | tee RELEASE.txt.sha256
         if: startsWith(github.ref, 'refs/tags/') || github.ref_name == 'ci'
       - name: Create GitHub Release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            headgear-${{ github.ref_name }}.zip
-            headgear-files-${{ github.ref_name }}.sha256
-            headgear-${{ github.ref_name }}.sha256
+            headgear-*
+            RELEASE.txt*
           fail_on_unmatched_files: true
           draft: true
