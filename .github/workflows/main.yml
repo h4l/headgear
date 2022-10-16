@@ -43,6 +43,7 @@ jobs:
           # Version: $PACKAGE_JSON_VERSION
           # Tag: ${{ github.ref_name }}
           # Commit: ${{ github.sha }}
+          # Built-by: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EOF
           sha256sum "headgear-${{ github.ref_name }}.zip" "headgear-files-${{ github.ref_name }}.sha256" | tee -a RELEASE.txt
           sha256sum RELEASE.txt | tee RELEASE.txt.sha256
