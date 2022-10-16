@@ -1,0 +1,25 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+Nothing yet.
+
+## [0.1.0] - 2022-10-16
+
+The first release.
+
+### Added
+
+- Create single SVG image of a customised Reddit Avatar using the individual
+  SVG asset layers used internally in the Reddit Avatar Builder.
+- Re-create the NFT Card and the standard "Share Avatar" images in SVG
+- Download these SVG Avatar images
+- Support for Chrome-based browsers
+
+[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/h4l/headgear/releases/tag/v0.1.0
