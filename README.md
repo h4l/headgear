@@ -2,11 +2,19 @@
 
 # Headgear
 
-Headgear creates high-quality, resolution-independent images of your Reddit Avatar (NFT or regular), allowing you to use it beyond Reddit. With images from Headgear you can create high-quality prints, images for other social media sites, or extract Avatar accessories to create image macros/memes or general mash-ups.
+Headgear creates high-quality, resolution-independent images of your Reddit
+Avatar (NFT or regular), allowing you to use it beyond Reddit. With images from
+Headgear you can create high-quality prints, images for other social media
+sites, or extract Avatar accessories to create image macros/memes or general
+mash-ups.
 
 ![Screenshot of Headgear](./docs/headgear-0.0.0-screenshot.png "The Headgear UI")
 
-Headgear is a browser extension that works in Chrome or Brave. Currently Headgear needs to be a browser extension rather than a separate website because the data it needs to create its images is not available from Reddit's public APIs. Headgear needs to use the internal APIs used by Reddit's own Avatar Builder and NFT shop.
+Headgear is a browser extension that works in Chrome or Brave. Currently
+Headgear needs to be a browser extension rather than a separate website because
+the data it needs to create its images is not available from Reddit's public
+APIs. Headgear needs to use the internal APIs used by Reddit's own Avatar
+Builder and NFT shop.
 
 ## Install & Use
 
@@ -24,7 +32,8 @@ Headgear is a browser extension that works in Chrome or Brave. Currently Headgea
   <img src="./docs/browse-toolbar-extensions-popup.png" width="300" alt="Screenshot of browser extensions toolbar menu">
 
 - You can Pin Headgear to keep it on the toolbar
-- To uninstall Headgear, click _Manage Extensions_ under the Extensions toolbar icon
+- To uninstall Headgear, click _Manage Extensions_ under the Extensions toolbar
+  icon
 
 ### Demo Video
 
@@ -43,18 +52,24 @@ Reddit recently launched [Collectable Avatars] — limited-edition Avatars that
 are NFTs which are owned by their holders, and can be re-sold or transferred to
 other users.
 
-[avatar builder]: https://www.reddit.com/r/snoovatars/comments/jipi5d/announcing_reddits_new_avatar_builder/
-[share avatar]: https://www.reddit.com/r/snoovatars/comments/oh2v6o/share_and_swap_avatar_looks_with_the_reddit/
-[collectable avatars]: https://www.reddit.com/r/reddit/comments/vtkmni/introducing_collectible_avatars/
+[avatar builder]:
+  https://www.reddit.com/r/snoovatars/comments/jipi5d/announcing_reddits_new_avatar_builder/
+[share avatar]:
+  https://www.reddit.com/r/snoovatars/comments/oh2v6o/share_and_swap_avatar_looks_with_the_reddit/
+[collectable avatars]:
+  https://www.reddit.com/r/reddit/comments/vtkmni/introducing_collectible_avatars/
 
 ### Project Goals
 
 - Enable Reddit users to access their Avatars in the best available quality
-  - Initially this means SVG format, via the SVG assets used by the Reddit Avatar Builder
+  - Initially this means SVG format, via the SVG assets used by the Reddit
+    Avatar Builder
 - Decentralise Avatar assets and data:
-  - So that Reddit Avatars are not lost if Reddit stops supporting them (see [the previous Reddit Avatars][snoovatars])
+  - So that Reddit Avatars are not lost if Reddit stops supporting them (see
+    [the previous Reddit Avatars][snoovatars])
   - To enable them to be used beyond Reddit
 - Be easy to use
 - Have fun
 
-[snoovatars]: https://venturebeat.com/business/reddit-now-lets-you-make-your-own-snoo-avatar-adds-two-new-features/
+[snoovatars]:
+  https://venturebeat.com/business/reddit-now-lets-you-make-your-own-snoo-avatar-adds-two-new-features/
