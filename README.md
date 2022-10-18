@@ -18,6 +18,9 @@ Builder and NFT shop.
 
 ## Install
 
+**Never enter your Reddit Vault password in a browser that has extensions
+installed**. See Headgear's [security advice](./docs/security.md) for more.
+
 <dl>
   <dt>Chrome / Brave</dt>
   <dd>Install Headgear from the <a href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp" target="_blank">Chrome Web Store</a></dd>
