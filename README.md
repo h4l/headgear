@@ -16,16 +16,20 @@ the data it needs to create its images is not available from Reddit's public
 APIs. Headgear needs to use the internal APIs used by Reddit's own Avatar
 Builder and NFT shop.
 
-## Install & Use
+## Install
 
 <dl>
   <dt>Chrome / Brave</dt>
-  <dd>Install Headgear from the <a href="https://chrome.google.com/webstore/category/extensions" target="_blank">Chrome Web Store</a></dd>
-  <dt>Firefox / Other browsers</dt>
-  <dd>Headgear only supports Chrome-based browsers at the moment, sorry.</dd>
+  <dd>Install Headgear from the <a href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp" target="_blank">Chrome Web Store</a></dd>
+  <dt>Edge</dt>
+  <dd>Headgear supports Edge in principle, as Edge is compatible with Chrome extensions, but it's not yet been tested with Edge or submitted to the Edge Add-ons site.</dd>
+  <dt>Firefox</dt>
+  <dd>Firefox is not yet supported, as they've not released support for Manifest V3 extensions in their stable release yet. However they have a developer preview of Manifest V3 support now, and it seems that they'll be releasing it in a few months (as of Oct 2022).</dd>
+  <dt>Other browsers</dt>
+  <dd>Opera and Safari may be able to support Headgear, but this has not been investigated in any detail.</dd>
 </dl>
 
-> **FIXME**: Headgear is not yet published on the Chrome Web Store
+# Quickstart
 
 - After installing, open the Reddit website, then click Headgear under the
   Extensions toolbar item
