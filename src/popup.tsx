@@ -798,6 +798,32 @@ export function _persistControlsState({
   });
 }
 
+export function _getPermittedImageStyle({
+  requestedImageStyle,
+  avatarData,
+}: {
+  requestedImageStyle: ImageStyleType;
+  avatarData: AvatarDataState;
+}): ImageStyleType {
+  if (
+    requestedImageStyle === ImageStyleType.HEADSHOT_CIRCLE ||
+    requestedImageStyle === ImageStyleType.HEADSHOT_HEX
+  ) {
+    // These aren't implemented yet
+    return ImageStyleType.STANDARD;
+  } else if (
+    requestedImageStyle === ImageStyleType.NFT_CARD &&
+    avatarData.type === DataStateType.LOADED &&
+    !avatarData.avatar.nftInfo
+  ) {
+    // When restoring the UI state from storage, the Avatar may no longer be an
+    // NFT avatar, so we can't rely on UI validation to prevent the requested
+    // image style being for an NFT card for a non-NFT avatar.
+    return ImageStyleType.STANDARD;
+  }
+  return requestedImageStyle;
+}
+
 export function _createAvatarSvgState({
   avatarDataState,
   controlsState,
@@ -846,7 +872,11 @@ export function _createAvatarSvgState({
       // useMemo() doesn't work outside a component context, and this can get
       // run asynchronously.
       const composedAvatar = _composeAvatarSVGMemo(avatar);
-      return _createAvatarSVGMemo(controls.imageStyle, avatar, composedAvatar);
+      const style = _getPermittedImageStyle({
+        requestedImageStyle: controls.imageStyle,
+        avatarData,
+      });
+      return _createAvatarSVGMemo(style, avatar, composedAvatar);
     } catch (e) {
       return e instanceof Error ? e : new Error(`${e}`);
     }
