@@ -245,6 +245,52 @@ describe("_createAvatarSvgStateSignal()", () => {
     }
   );
 
+  test.each`
+    unimplementedStyle
+    ${ImageStyleType.HEADSHOT_CIRCLE}
+    ${ImageStyleType.HEADSHOT_HEX}
+  `(
+    "defaults to available image style if requested image style is not implemented",
+    ({ unimplementedStyle }: { unimplementedStyle: ImageStyleType }) => {
+      jest
+        .mocked(createStandardAvatarSVG)
+        .mockReturnValue(document.createElementNS(SVGNS, "svg"));
+      const avatarDataState: Partial<AvatarDataState> = {
+        type: DataStateType.LOADED,
+      };
+      const controlsState = signal<ControlsState>(undefined);
+      const svgStateSignal = _createAvatarSvgState({
+        avatarDataState: signal(avatarDataState as AvatarDataState),
+        controlsState,
+      });
+      controlsState.value = { imageStyle: unimplementedStyle };
+      expect(svgStateSignal.value).toBe(
+        '<svg xmlns="http://www.w3.org/2000/svg"/>'
+      );
+      expect(createStandardAvatarSVG).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test("defaults to available image style if NFT style is requested with non-NFT calendar", () => {
+    jest
+      .mocked(createStandardAvatarSVG)
+      .mockReturnValue(document.createElementNS(SVGNS, "svg"));
+    const avatarDataState: Partial<AvatarDataState> = {
+      type: DataStateType.LOADED,
+      avatar: { nftInfo: undefined, accessories: [], styles: [] },
+    };
+    const controlsState = signal<ControlsState>(undefined);
+    const svgStateSignal = _createAvatarSvgState({
+      avatarDataState: signal(avatarDataState as AvatarDataState),
+      controlsState,
+    });
+    controlsState.value = { imageStyle: ImageStyleType.NFT_CARD };
+    expect(svgStateSignal.value).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg"/>'
+    );
+    expect(createStandardAvatarSVG).toHaveBeenCalledTimes(1);
+  });
+
   test("handles failure to compose avatar accessories into single SVG", () => {
     const err = new Error("failed to generate SVG");
     jest.mocked(composeAvatarSVG).mockImplementation(() => {

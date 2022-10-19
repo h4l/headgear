@@ -8,7 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- A regular Avatar could be rendered as an NFT Card, resulting in an error
+  ([#5](https://github.com/h4l/headgear/issues/5))
 
 ## [0.1.0] - 2022-10-16
 
