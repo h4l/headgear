@@ -1,5 +1,104 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Avatar SVG Headshot Circle Layout - createHeadshotCircleAvatarSVG() renders avatar in styled container 1`] = `
+<svg
+  viewBox="0 63.5 380 544"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <clippath
+      id="avatar-upper"
+    >
+      <rect
+        height="353.5"
+        width="100%"
+        x="0"
+        y="0"
+      />
+      <circle
+        cx="50%"
+        cy="353.5"
+        r="146"
+      />
+    </clippath>
+  </defs>
+  <circle
+    cx="50%"
+    cy="353.5"
+    fill="#eff1f2"
+    r="153.5"
+  />
+  <svg
+    clip-path="url(#avatar-upper)"
+    height="600"
+    viewBox="0 0 380 600"
+    width="380"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <style>
+      /* accessory-a */
+.accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
+/* accessory-b */
+.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+/* customisation styles */
+.color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
+    </style>
+    <g
+      id="avatar"
+    >
+      <g
+        id="accessory-a"
+      >
+        <rect
+          class="accessory-a-baz accessory-a-boz"
+          height="16"
+          width="15"
+        />
+        <defs />
+        <g>
+          <circle
+            class="foo accessory-a-baz accessory-a-boz color-yyy"
+            cx="15"
+            cy="16"
+            r="11"
+          />
+        </g>
+        <circle
+          class="accessory-a-baz"
+          cx="12"
+          cy="13"
+          r="14"
+        />
+      </g>
+      <g
+        id="accessory-b"
+      >
+        <rect
+          class="accessory-b-foo bar baz color-xxx"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="bar color-yyy"
+            cx="5"
+            cy="6"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b-foo"
+          cx="2"
+          cy="3"
+          r="4"
+        />
+      </g>
+    </g>
+  </svg>
+</svg>
+`;
+
 exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT avatar in styled container (seriesSize null) 1`] = `
 <svg
   viewBox="0 0 552 736"

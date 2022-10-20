@@ -17,6 +17,7 @@ import {
   addPrefixesToSVGClassAttributes,
   composeAvatarSVG,
   createAccessoryCustomisationCSSRules,
+  createHeadshotCircleAvatarSVG,
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
   prepareAccessorySVG,
@@ -477,5 +478,26 @@ describe("Avatar SVG", () => {
         }
       }
     );
+  });
+
+  describe("Headshot Circle Layout - createHeadshotCircleAvatarSVG()", () => {
+    const _getBBox = SVGGraphicsElement.prototype.getBBox;
+    beforeEach(() => {
+      SVGGraphicsElement.prototype.getBBox = jest.fn().mockReturnValue({
+        x: 10,
+        y: 100,
+        width: 350,
+        height: 470,
+      } as Partial<DOMRect> as DOMRect);
+    });
+    afterEach(() => {
+      SVGGraphicsElement.prototype.getBBox = _getBBox;
+    });
+    test("renders avatar in styled container", () => {
+      const composedAvatar = composeAvatarSVG({ avatar: avatar() });
+      const layout = createHeadshotCircleAvatarSVG({ composedAvatar });
+      expect(layout.querySelector("#avatar")).toBeTruthy();
+      expect(layout).toMatchSnapshot();
+    });
   });
 });

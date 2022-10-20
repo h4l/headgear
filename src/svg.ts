@@ -8,6 +8,7 @@ import {
 
 import { assert, assertNever } from "./assert";
 import { NFTInfo, ResolvedAccessory, ResolvedAvatar } from "./avatars";
+import { default as headshotCircleTemplateSrc } from "./img/avatar-svg/headshot-circle-template.svg";
 import { default as nftCardTemplateSrc } from "./img/avatar-svg/nft-card-template.svg";
 import { default as nftIconSrc } from "./img/avatar-svg/nft-icon.svg";
 import { default as nftNameWithCountSrc } from "./img/avatar-svg/nft-name-with-count.svg";
@@ -546,6 +547,45 @@ export function createNFTCardAvatarSVG({
   const cardBgImg = svg.querySelector("#nft-card-bg") as SVGImageElement;
   assert(cardBgImg);
   cardBgImg.setAttributeNS(XLINKNS, "href", nftInfo.backgroundImage.dataUrl);
+
+  return svg;
+}
+
+const HEADSHOT_CIRCLE_RADIUS = 153.5;
+
+export function createHeadshotCircleAvatarSVG({
+  composedAvatar,
+}: {
+  composedAvatar: SVGElement;
+}): SVGElement {
+  const svg = _parseSVG({ svgSource: headshotCircleTemplateSrc });
+  const doc = svg.ownerDocument;
+
+  const viewBox = svg.getAttribute("viewBox")?.split(" ");
+  assert(viewBox?.length === 4);
+
+  const avatar: SVGElement = svg.appendChild(
+    doc.importNode(composedAvatar, true)
+  );
+  assert(avatar instanceof SVGGraphicsElement);
+  avatar.setAttribute("width", `${ACC_W}`);
+  avatar.setAttribute("height", `${ACC_H}`);
+  avatar.setAttribute("clip-path", "url(#avatar-upper)");
+
+  // The heights of avatars vary according to their headgear (erm, as in actual
+  // headgear, not this program). Unless we resize the SVG to fit the avatar,
+  // we'll have quite a bit of empty space above many avatars. So we'll measure
+  // the rendered avatar and adjust the size of the generated SVG. To measure it
+  // we need to temporarily insert it into the page DOM, otherwise the reported
+  // sizes are 0.
+  svg.setAttribute("style", "position: absolute; visibility: hidden");
+  window.document.body.append(svg);
+  const avatarArea = avatar.getBBox();
+  const padding = ACC_W / 2 - HEADSHOT_CIRCLE_RADIUS;
+  viewBox[1] = `${Math.max(0, avatarArea.y - padding)}`;
+  svg.setAttribute("viewBox", viewBox.join(" "));
+  svg.remove();
+  svg.removeAttribute("style");
 
   return svg;
 }
