@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Nothing yet
+
+## [0.2.0] - 2022-10-20
+
 ### Added
 
 - UI Headshot Avatar style (the upper half of the Avatar over a circle)
@@ -37,4 +41,5 @@ The first release.
 
 [unreleased]:
   https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.0...HEAD
+[0.2.0]: https://github.com/h4l/headgear/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/h4l/headgear/releases/tag/v0.1.0
