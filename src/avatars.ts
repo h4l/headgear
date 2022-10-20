@@ -161,6 +161,7 @@ async function _graphqlJsonApiRequest<T>({
   apiToken: string;
   bodyJSON: string;
 }): Promise<T> {
+  console.log("_graphqlJsonApiRequest", bodyJSON);
   const resp = await fetch("https://gql.reddit.com/", {
     headers: {
       authorization: `Bearer ${apiToken}`,
@@ -203,7 +204,7 @@ async function _graphqlJsonApiRequest<T>({
  *   change.
  */
 // AvatarBuilderCatalogWithStorefront GQL query
-export const _GQL_QUERY_ID_AVATAR_DATA = "ebab39507acd";
+export const _GQL_QUERY_ID_AVATAR_DATA = "18f86c0ecf82";
 // GetNftDetails GQL query
 export const _GQL_QUERY_ID_NFT_INFO = "e9865cc4d93d";
 
@@ -214,7 +215,13 @@ export async function _fetchAvatarData({
 }): Promise<AvatarData> {
   const json = await _graphqlJsonApiRequest({
     apiToken,
-    bodyJSON: JSON.stringify({ variables: {}, id: _GQL_QUERY_ID_AVATAR_DATA }),
+    bodyJSON: JSON.stringify({
+      variables: {
+        // true has some interesting results... 👀
+        includeDistributionCampaigns: false,
+      },
+      id: _GQL_QUERY_ID_AVATAR_DATA,
+    }),
   });
   validateAvatarDataResponseData(json);
   return json.data;
