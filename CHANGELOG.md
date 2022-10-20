@@ -11,6 +11,12 @@ and this project adheres to
 ### Added
 
 - UI Headshot Avatar style (the upper half of the Avatar over a circle)
+  ([#7](https://github.com/h4l/headgear/pull/7))
+
+### Changed
+
+- Updated Avatar Data API call query ID
+  ([#8](https://github.com/h4l/headgear/pull/8))
 
 ### Fixed
 
