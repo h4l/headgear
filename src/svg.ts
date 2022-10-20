@@ -552,6 +552,7 @@ export function createNFTCardAvatarSVG({
 }
 
 const HEADSHOT_CIRCLE_RADIUS = 153.5;
+const HEADSHOT_CIRCLE_BASE_HEIGHT = 544;
 
 export function createHeadshotCircleAvatarSVG({
   composedAvatar,
@@ -582,7 +583,10 @@ export function createHeadshotCircleAvatarSVG({
   window.document.body.append(svg);
   const avatarArea = avatar.getBBox();
   const padding = ACC_W / 2 - HEADSHOT_CIRCLE_RADIUS;
-  viewBox[1] = `${Math.max(0, avatarArea.y - padding)}`;
+  const top = Math.max(0, avatarArea.y - padding);
+  const height = HEADSHOT_CIRCLE_BASE_HEIGHT - top;
+  viewBox[1] = `${top}`;
+  viewBox[3] = `${height}`;
   svg.setAttribute("viewBox", viewBox.join(" "));
   svg.remove();
   svg.removeAttribute("style");

@@ -2,7 +2,7 @@
 
 exports[`Avatar SVG Headshot Circle Layout - createHeadshotCircleAvatarSVG() renders avatar in styled container 1`] = `
 <svg
-  viewBox="0 63.5 380 544"
+  viewBox="0 63.5 380 480.5"
   xmlns="http://www.w3.org/2000/svg"
 >
   <defs>
