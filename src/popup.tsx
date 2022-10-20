@@ -22,6 +22,7 @@ import { GetAvatarMessageResponse, MSG_GET_AVATAR } from "./reddit-interaction";
 import {
   NFTCardVariant,
   composeAvatarSVG,
+  createHeadshotCircleAvatarSVG,
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
 } from "./svg";
@@ -429,16 +430,14 @@ export function Controls() {
           description="Just the Avatar."
         />
         <ImageStyleOption
-          name={ImageStyleType.HEADSHOT_HEX}
-          title="Comment thread headshot"
-          description="The upper half in a hexagon."
-          disabled={true}
-          disabledReason="Not available yet 🫤"
-        />
-        <ImageStyleOption
           name={ImageStyleType.HEADSHOT_CIRCLE}
           title="UI Headshot"
           description="The upper half in a circle."
+        />
+        <ImageStyleOption
+          name={ImageStyleType.HEADSHOT_HEX}
+          title="Comment thread headshot"
+          description="The upper half in a hexagon."
           disabled={true}
           disabledReason="Not available yet 🫤"
         />
@@ -511,6 +510,7 @@ const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
   [ImageStyleType.STANDARD, "Standard"],
   [ImageStyleType.NFT_CARD, "NFT Card"],
   [ImageStyleType.NO_BG, "No Background"],
+  [ImageStyleType.HEADSHOT_CIRCLE, "UI Headshot"],
 ]);
 
 export function DownloadSVGButton(): JSX.Element {
@@ -805,11 +805,8 @@ export function _getPermittedImageStyle({
   requestedImageStyle: ImageStyleType;
   avatarData: AvatarDataState;
 }): ImageStyleType {
-  if (
-    requestedImageStyle === ImageStyleType.HEADSHOT_CIRCLE ||
-    requestedImageStyle === ImageStyleType.HEADSHOT_HEX
-  ) {
-    // These aren't implemented yet
+  if (requestedImageStyle === ImageStyleType.HEADSHOT_HEX) {
+    // This isn't implemented yet
     return ImageStyleType.STANDARD;
   } else if (
     requestedImageStyle === ImageStyleType.NFT_CARD &&
@@ -853,6 +850,8 @@ export function _createAvatarSvgState({
         });
       } else if (imageStyle === ImageStyleType.NO_BG) {
         svg = composedAvatar;
+      } else if (imageStyle === ImageStyleType.HEADSHOT_CIRCLE) {
+        svg = createHeadshotCircleAvatarSVG({ composedAvatar });
       } else {
         svg = createStandardAvatarSVG({ composedAvatar });
       }

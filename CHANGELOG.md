@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- UI Headshot Avatar style (the upper half of the Avatar over a circle)
+
 ### Fixed
 
 - A regular Avatar could be rendered as an NFT Card, resulting in an error

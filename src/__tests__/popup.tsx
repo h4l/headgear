@@ -43,6 +43,7 @@ import { MSG_GET_AVATAR } from "../reddit-interaction";
 import {
   SVGNS,
   composeAvatarSVG,
+  createHeadshotCircleAvatarSVG,
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
 } from "../svg";
@@ -247,7 +248,6 @@ describe("_createAvatarSvgStateSignal()", () => {
 
   test.each`
     unimplementedStyle
-    ${ImageStyleType.HEADSHOT_CIRCLE}
     ${ImageStyleType.HEADSHOT_HEX}
   `(
     "defaults to available image style if requested image style is not implemented",
@@ -309,9 +309,10 @@ describe("_createAvatarSvgStateSignal()", () => {
   });
 
   test.each`
-    imageStyle                 | svgVariantFn
-    ${ImageStyleType.STANDARD} | ${createStandardAvatarSVG}
-    ${ImageStyleType.NFT_CARD} | ${createNFTCardAvatarSVG}
+    imageStyle                        | svgVariantFn
+    ${ImageStyleType.STANDARD}        | ${createStandardAvatarSVG}
+    ${ImageStyleType.NFT_CARD}        | ${createNFTCardAvatarSVG}
+    ${ImageStyleType.HEADSHOT_CIRCLE} | ${createHeadshotCircleAvatarSVG}
   `(
     "handles failure to generate styled SVG variant",
     ({
@@ -340,10 +341,11 @@ describe("_createAvatarSvgStateSignal()", () => {
     }
   );
   test.each`
-    imageStyle                 | svgVariantFn
-    ${ImageStyleType.STANDARD} | ${createStandardAvatarSVG}
-    ${ImageStyleType.NO_BG}    | ${undefined}
-    ${ImageStyleType.NFT_CARD} | ${createNFTCardAvatarSVG}
+    imageStyle                        | svgVariantFn
+    ${ImageStyleType.STANDARD}        | ${createStandardAvatarSVG}
+    ${ImageStyleType.NO_BG}           | ${undefined}
+    ${ImageStyleType.NFT_CARD}        | ${createNFTCardAvatarSVG}
+    ${ImageStyleType.HEADSHOT_CIRCLE} | ${createHeadshotCircleAvatarSVG}
   `(
     "generates SVG",
     ({
@@ -678,6 +680,11 @@ describe("<Controls>", () => {
     expect(button).not.toBeDisabled();
     fireEvent.click(button);
     expect(controlsState.value.imageStyle).toBe(ImageStyleType.NO_BG);
+
+    button = await screen.findByLabelText("UI Headshot", { exact: false });
+    expect(button).not.toBeDisabled();
+    fireEvent.click(button);
+    expect(controlsState.value.imageStyle).toBe(ImageStyleType.HEADSHOT_CIRCLE);
   });
 
   test("Some options are disabled", async () => {
@@ -693,14 +700,9 @@ describe("<Controls>", () => {
     controlsState.value = { imageStyle: ImageStyleType.STANDARD };
     renderWithStateContext();
 
-    let button = await screen.findByLabelText("Comment thread headshot", {
+    const button = await screen.findByLabelText("Comment thread headshot", {
       exact: false,
     });
-    expect(button).toBeDisabled();
-    fireEvent.click(button);
-    expect(controlsState.value.imageStyle).toBe(ImageStyleType.STANDARD);
-
-    button = await screen.findByLabelText("UI Headshot", { exact: false });
     expect(button).toBeDisabled();
     fireEvent.click(button);
     expect(controlsState.value.imageStyle).toBe(ImageStyleType.STANDARD);
