@@ -11,7 +11,7 @@ and this project adheres to
 ### Fixed
 
 - Remove extra padding at the bottom of the UI Headshot image style
-  ([#7](https://github.com/h4l/headgear/pull/10))
+  ([#11](https://github.com/h4l/headgear/pulls/11))
 
 ## [0.2.1] - 2022-10-20
 
