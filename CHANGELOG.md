@@ -8,7 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Nothing yet
+### Fixed
+
+- Remove extra padding at the bottom of the UI Headshot image style
+  ([#7](https://github.com/h4l/headgear/pull/10))
 
 ## [0.2.1] - 2022-10-20
 
