@@ -161,7 +161,6 @@ async function _graphqlJsonApiRequest<T>({
   apiToken: string;
   bodyJSON: string;
 }): Promise<T> {
-  console.log("_graphqlJsonApiRequest", bodyJSON);
   const resp = await fetch("https://gql.reddit.com/", {
     headers: {
       authorization: `Bearer ${apiToken}`,
