@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 552 736">
-    <style>@font-face {
+  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 552 736">
+  <style>@font-face {
   font-family: 'Reddit Sans';
   font-weight: bold;
   font-style: normal;
@@ -12,5 +12,36 @@
   font-style: normal;
   src: url('https://www.redditstatic.com/crypto-assets/v2/-core-styles-fonts-redditsans-redditsans-extrabold-5d96a4e524.woff2') format('woff2');
 }</style>
-    <image id="nft-card-bg" width="552" height="736" preserveAspectRatio="none" xlink:href=""/>
+  <defs>
+    <image id="nft-card-bg" preserveAspectRatio="none" width="552" height="736" xlink:href=""/>
+    <clipPath id="corner-alpha-fill-bg-clip">
+      <rect x="0" y="0" width="50" height="50"/>
+      <rect x="502" y="0" width="50" height="50"/>
+      <rect x="0" y="686" width="50" height="50"/>
+      <rect x="502" y="686" width="50" height="50"/>
+    </clipPath>
+    <clipPath id="nft-card-clip">
+      <rect width="100%" height="100%" ry="50" rx="50"/>
+    </clipPath>
+  </defs>
+  <!-- The way we render the NFT Card background image is a little more involved
+       than just using an <image/>. The backgrounds are lowish res PNG files
+       (552x736) with rounded corners in the alpha channel. When the image is
+       rendered at larger than 1:1, the corners start to look aliased. To work
+       around this, we clip the background image with a vector mask covering the
+       same area as the alpha channel. However the alpha channel fades off
+       across the vector mask, leading to a slight halo. To fix this, we render
+       the background image again - enlarged by 1px in all directions - to cover
+       the halo area under the corners, but without expanding the primary card
+       image.
+
+       The #corner-alpha-fill-bg-clip is just a speculative optimisation - it
+       clips the enlarged bg image to only render in each of the corners.
+        -->
+  <g clip-path="url(#nft-card-clip)">
+    <!-- Specifying width/height doesn't seem to work when referencing an image (even when not specifying it on the
+         image) so we enlarge by scaling instead: 554/552 = 1.0036 -->
+    <use id="corner-alpha-fill-bg" xlink:href="#nft-card-bg" clip-path="url(#corner-alpha-fill-bg-clip)" x="-1" y="-1" transform="scale(1.0036,1.0027)"/>
+    <use id="nft-card-front" xlink:href="#nft-card-bg"/>
+  </g>
 </svg>
