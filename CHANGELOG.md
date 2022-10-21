@@ -13,6 +13,11 @@ and this project adheres to
 - Comment Headshot Avatar style (the upper half of the Avatar over a hexagon)
   ([#13](https://github.com/h4l/headgear/pull/13))
 
+### Changed
+
+- Improve NFT Card background rendering to remove pixelated corners when scaled
+  up. ([#14](https://github.com/h4l/headgear/pull/14))
+
 ### Fixed
 
 - Remove extra padding at the bottom of the UI Headshot image style
