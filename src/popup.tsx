@@ -23,6 +23,7 @@ import {
   NFTCardVariant,
   composeAvatarSVG,
   createHeadshotCircleAvatarSVG,
+  createHeadshotCommentsAvatarSVG,
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
 } from "./svg";
@@ -436,10 +437,8 @@ export function Controls() {
         />
         <ImageStyleOption
           name={ImageStyleType.HEADSHOT_HEX}
-          title="Comment thread headshot"
+          title="Comment Headshot"
           description="The upper half in a hexagon."
-          disabled={true}
-          disabledReason="Not available yet 🫤"
         />
 
         {/* TODO: decide what we're doing with exposing avatar data... */}
@@ -511,6 +510,7 @@ const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
   [ImageStyleType.NFT_CARD, "NFT Card"],
   [ImageStyleType.NO_BG, "No Background"],
   [ImageStyleType.HEADSHOT_CIRCLE, "UI Headshot"],
+  [ImageStyleType.HEADSHOT_HEX, "Comment Headshot"],
 ]);
 
 export function DownloadSVGButton(): JSX.Element {
@@ -805,10 +805,7 @@ export function _getPermittedImageStyle({
   requestedImageStyle: ImageStyleType;
   avatarData: AvatarDataState;
 }): ImageStyleType {
-  if (requestedImageStyle === ImageStyleType.HEADSHOT_HEX) {
-    // This isn't implemented yet
-    return ImageStyleType.STANDARD;
-  } else if (
+  if (
     requestedImageStyle === ImageStyleType.NFT_CARD &&
     avatarData.type === DataStateType.LOADED &&
     !avatarData.avatar.nftInfo
@@ -852,6 +849,8 @@ export function _createAvatarSvgState({
         svg = composedAvatar;
       } else if (imageStyle === ImageStyleType.HEADSHOT_CIRCLE) {
         svg = createHeadshotCircleAvatarSVG({ composedAvatar });
+      } else if (imageStyle === ImageStyleType.HEADSHOT_HEX) {
+        svg = createHeadshotCommentsAvatarSVG({ composedAvatar });
       } else {
         svg = createStandardAvatarSVG({ composedAvatar });
       }

@@ -44,6 +44,7 @@ import {
   SVGNS,
   composeAvatarSVG,
   createHeadshotCircleAvatarSVG,
+  createHeadshotCommentsAvatarSVG,
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
 } from "../svg";
@@ -246,31 +247,6 @@ describe("_createAvatarSvgStateSignal()", () => {
     }
   );
 
-  test.each`
-    unimplementedStyle
-    ${ImageStyleType.HEADSHOT_HEX}
-  `(
-    "defaults to available image style if requested image style is not implemented",
-    ({ unimplementedStyle }: { unimplementedStyle: ImageStyleType }) => {
-      jest
-        .mocked(createStandardAvatarSVG)
-        .mockReturnValue(document.createElementNS(SVGNS, "svg"));
-      const avatarDataState: Partial<AvatarDataState> = {
-        type: DataStateType.LOADED,
-      };
-      const controlsState = signal<ControlsState>(undefined);
-      const svgStateSignal = _createAvatarSvgState({
-        avatarDataState: signal(avatarDataState as AvatarDataState),
-        controlsState,
-      });
-      controlsState.value = { imageStyle: unimplementedStyle };
-      expect(svgStateSignal.value).toBe(
-        '<svg xmlns="http://www.w3.org/2000/svg"/>'
-      );
-      expect(createStandardAvatarSVG).toHaveBeenCalledTimes(1);
-    }
-  );
-
   test("defaults to available image style if NFT style is requested with non-NFT calendar", () => {
     jest
       .mocked(createStandardAvatarSVG)
@@ -313,6 +289,7 @@ describe("_createAvatarSvgStateSignal()", () => {
     ${ImageStyleType.STANDARD}        | ${createStandardAvatarSVG}
     ${ImageStyleType.NFT_CARD}        | ${createNFTCardAvatarSVG}
     ${ImageStyleType.HEADSHOT_CIRCLE} | ${createHeadshotCircleAvatarSVG}
+    ${ImageStyleType.HEADSHOT_HEX}    | ${createHeadshotCommentsAvatarSVG}
   `(
     "handles failure to generate styled SVG variant",
     ({
@@ -346,6 +323,7 @@ describe("_createAvatarSvgStateSignal()", () => {
     ${ImageStyleType.NO_BG}           | ${undefined}
     ${ImageStyleType.NFT_CARD}        | ${createNFTCardAvatarSVG}
     ${ImageStyleType.HEADSHOT_CIRCLE} | ${createHeadshotCircleAvatarSVG}
+    ${ImageStyleType.HEADSHOT_HEX}    | ${createHeadshotCommentsAvatarSVG}
   `(
     "generates SVG",
     ({
@@ -685,26 +663,12 @@ describe("<Controls>", () => {
     expect(button).not.toBeDisabled();
     fireEvent.click(button);
     expect(controlsState.value.imageStyle).toBe(ImageStyleType.HEADSHOT_CIRCLE);
-  });
 
-  test("Some options are disabled", async () => {
-    const {
-      state: { avatarDataState, controlsState },
-      renderWithStateContext,
-    } = statefulElementRenderer(<Controls />);
-
-    avatarDataState.value = {
-      type: DataStateType.LOADED,
-      avatar: { nftInfo: {} },
-    } as unknown as AvatarDataState;
-    controlsState.value = { imageStyle: ImageStyleType.STANDARD };
-    renderWithStateContext();
-
-    const button = await screen.findByLabelText("Comment thread headshot", {
+    button = await screen.findByLabelText("Comment Headshot", {
       exact: false,
     });
-    expect(button).toBeDisabled();
+    expect(button).not.toBeDisabled();
     fireEvent.click(button);
-    expect(controlsState.value.imageStyle).toBe(ImageStyleType.STANDARD);
+    expect(controlsState.value.imageStyle).toBe(ImageStyleType.HEADSHOT_HEX);
   });
 });
