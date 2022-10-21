@@ -99,6 +99,170 @@ exports[`Avatar SVG Headshot Circle Layout - createHeadshotCircleAvatarSVG() ren
 </svg>
 `;
 
+exports[`Avatar SVG Headshot Comments Layout - createHeadshotCommentsAvatarSVG() renders avatar in styled container 1`] = `
+<svg
+  viewBox="0 61 380 479"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+>
+  <defs>
+    <radialgradient
+      cx="0"
+      cy="0"
+      gradientTransform="matrix(201.88813,61.382495,-31170.321,102519.62,-2.0097474,295.40586)"
+      gradientUnits="userSpaceOnUse"
+      id="hex-frame-stroke"
+      r="1"
+    >
+      <stop
+        offset="0"
+        stop-color="#1185b5"
+      />
+      <stop
+        offset=".29"
+        stop-color="#d7f7ff"
+      />
+      <stop
+        offset=".53"
+        stop-color="#5ef6d8"
+      />
+      <stop
+        offset=".84"
+        stop-color="#5ef6d8"
+      />
+      <stop
+        offset=".87"
+        stop-color="#1990b9"
+      />
+      <stop
+        offset="1"
+        stop-color="#3f9fc6"
+      />
+    </radialgradient>
+    <lineargradient
+      gradientTransform="matrix(1.0362797,0,0,1.0362797,150.50099,288.55634)"
+      gradientUnits="userSpaceOnUse"
+      id="hex-frame-bg"
+      x1="-92.955505"
+      x2="143.67026"
+      y1="-124.51587"
+      y2="226.29623"
+    >
+      <stop
+        offset="0.36240309"
+        style="stop-color:#004e5f"
+      />
+      <stop
+        offset="0.77810073"
+        style="stop-color:#8e94e1"
+      />
+    </lineargradient>
+    <path
+      d="m 177.75041,189.74577 c 7.64778,-4.12577 17.10688,-4.12577 24.75465,0 l 118.43998,65.2074 c 7.54715,4.2264 12.07544,11.77355 12.07544,19.72322 v 130.21353 c 0,7.94966 -4.52829,15.49681 -12.07544,19.62259 l -118.43998,65.10677 c -7.64777,4.2264 -17.10687,4.2264 -24.75465,0 L 59.310436,424.41188 A 22.641456,22.641456 0 0 1 47.235,404.78929 V 274.57576 c 0,-7.94967 4.42766,-15.39619 12.075436,-19.72323 z"
+      id="hex-frame"
+      stroke="url(#hex-frame-stroke)"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <clippath
+      id="avatar-upper"
+    >
+      <path
+        d="M 190,488 325.52665,413 H 380 V 0 H 0 v 413 h 55 z"
+      />
+    </clippath>
+    <clippath
+      id="hex-frame-foreground-clip"
+    >
+      <rect
+        height="187"
+        width="380"
+        x="0"
+        y="413"
+      />
+    </clippath>
+  </defs>
+  <use
+    fill="url(#hex-frame-bg)"
+    id="hex-frame-background"
+    xlink:href="#hex-frame"
+  />
+  <svg
+    clip-path="url(#avatar-upper)"
+    height="600"
+    viewBox="0 0 380 600"
+    width="380"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <style>
+      /* accessory-a */
+.accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
+/* accessory-b */
+.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+/* customisation styles */
+.color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
+    </style>
+    <g
+      id="avatar"
+    >
+      <g
+        id="accessory-a"
+      >
+        <rect
+          class="accessory-a-baz accessory-a-boz"
+          height="16"
+          width="15"
+        />
+        <defs />
+        <g>
+          <circle
+            class="foo accessory-a-baz accessory-a-boz color-yyy"
+            cx="15"
+            cy="16"
+            r="11"
+          />
+        </g>
+        <circle
+          class="accessory-a-baz"
+          cx="12"
+          cy="13"
+          r="14"
+        />
+      </g>
+      <g
+        id="accessory-b"
+      >
+        <rect
+          class="accessory-b-foo bar baz color-xxx"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="bar color-yyy"
+            cx="5"
+            cy="6"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b-foo"
+          cx="2"
+          cy="3"
+          r="4"
+        />
+      </g>
+    </g>
+  </svg>
+  <use
+    clip-path="url(#hex-frame-foreground-clip)"
+    fill="none"
+    xlink:href="#hex-frame"
+  />
+</svg>
+`;
+
 exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT avatar in styled container (seriesSize null) 1`] = `
 <svg
   viewBox="0 0 552 736"

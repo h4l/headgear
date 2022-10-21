@@ -9,6 +9,7 @@ import {
 import { assert, assertNever } from "./assert";
 import { NFTInfo, ResolvedAccessory, ResolvedAvatar } from "./avatars";
 import { default as headshotCircleTemplateSrc } from "./img/avatar-svg/headshot-circle-template.svg";
+import { default as headshotCommentsTemplateSrc } from "./img/avatar-svg/headshot-comments-template.svg";
 import { default as nftCardTemplateSrc } from "./img/avatar-svg/nft-card-template.svg";
 import { default as nftIconSrc } from "./img/avatar-svg/nft-icon.svg";
 import { default as nftNameWithCountSrc } from "./img/avatar-svg/nft-name-with-count.svg";
@@ -585,6 +586,49 @@ export function createHeadshotCircleAvatarSVG({
   const padding = ACC_W / 2 - HEADSHOT_CIRCLE_RADIUS;
   const top = Math.max(0, avatarArea.y - padding);
   const height = HEADSHOT_CIRCLE_BASE_HEIGHT - top;
+  viewBox[1] = `${top}`;
+  viewBox[3] = `${height}`;
+  svg.setAttribute("viewBox", viewBox.join(" "));
+  svg.remove();
+  svg.removeAttribute("style");
+
+  return svg;
+}
+
+// The distance from the image edge to the edge of the hex background's stroke
+const HEADSHOT_COMMENTS_PADDING = 39;
+const HEADSHOT_COMMENTS_BASE_HEIGHT = 540;
+
+export function createHeadshotCommentsAvatarSVG({
+  composedAvatar,
+}: {
+  composedAvatar: SVGElement;
+}): SVGElement {
+  const svg = _parseSVG({ svgSource: headshotCommentsTemplateSrc });
+  const doc = svg.ownerDocument;
+
+  const viewBox = svg.getAttribute("viewBox")?.split(" ");
+  assert(viewBox?.length === 4);
+
+  const avatar: SVGElement = doc.importNode(composedAvatar, true);
+  svg
+    .querySelector("#hex-frame-background")
+    ?.insertAdjacentElement("afterend", avatar);
+  assert(avatar.parentElement);
+
+  assert(avatar instanceof SVGGraphicsElement);
+  avatar.setAttribute("width", `${ACC_W}`);
+  avatar.setAttribute("height", `${ACC_H}`);
+  avatar.setAttribute("clip-path", "url(#avatar-upper)");
+
+  // As with createHeadshotCircleAvatarSVG() we need to adjust the size of the
+  // image according to the Avatar, so we need to insert the SVG into the page
+  // DOM.
+  svg.setAttribute("style", "position: absolute; visibility: hidden");
+  window.document.body.append(svg);
+  const avatarArea = avatar.getBBox();
+  const top = Math.max(0, avatarArea.y - HEADSHOT_COMMENTS_PADDING);
+  const height = HEADSHOT_COMMENTS_BASE_HEIGHT - top;
   viewBox[1] = `${top}`;
   viewBox[3] = `${height}`;
   svg.setAttribute("viewBox", viewBox.join(" "));
