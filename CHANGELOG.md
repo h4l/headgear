@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Comment Headshot Avatar style (the upper half of the Avatar over a hexagon)
+  ([#13](https://github.com/h4l/headgear/pull/13))
+
 ### Fixed
 
 - Remove extra padding at the bottom of the UI Headshot image style
