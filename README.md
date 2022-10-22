@@ -8,7 +8,7 @@ Headgear you can create high-quality prints, images for other social media
 sites, or extract Avatar accessories to create image macros/memes or general
 mash-ups.
 
-![Screenshot of Headgear](./docs/headgear-0.0.0-screenshot.png "The Headgear UI")
+![Screenshot of Headgear](./docs/headgear-0.2.0-screenshot.png "The Headgear UI")
 
 Headgear is a browser extension that works in Chrome or Brave. Currently
 Headgear needs to be a browser extension rather than a separate website because
