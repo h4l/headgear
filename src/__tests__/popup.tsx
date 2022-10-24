@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/preact";
 import { ComponentChildren } from "preact";
 import { Fragment, JSX } from "preact/jsx-runtime";
@@ -28,6 +29,7 @@ import {
   DisplayArea,
   DownloadSVGButton,
   ErrorBoundary,
+  ImageOptions,
   ImageStyleOption,
   RootState,
   _createAvatarSvgState,
@@ -35,8 +37,11 @@ import {
   createRootState,
 } from "../popup";
 import {
+  DEFAULT_CONTROLS_STATE,
   ImageStyleType,
+  OutputImageFormat,
   PORT_IMAGE_CONTROLS_CHANGED,
+  RasterImageSize,
   STORAGE_KEY_IMAGE_CONTROLS,
 } from "../popup-state-persistence";
 import { MSG_GET_AVATAR } from "../reddit-interaction";
@@ -74,8 +79,14 @@ describe("create & initialise RootState", () => {
   });
 
   test("controlsState changes trigger messages on image-controls-changed channel", () => {
-    const state1 = { imageStyle: ImageStyleType.NFT_CARD };
-    const state2 = { imageStyle: ImageStyleType.HEADSHOT_HEX };
+    const state1 = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.NFT_CARD,
+    };
+    const state2 = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.HEADSHOT_HEX,
+    };
     let port: chrome.runtime.Port | undefined;
     chrome.runtime.onConnect.addListener((_port) => {
       port = _port;
@@ -109,6 +120,7 @@ describe("create & initialise RootState", () => {
 
     await waitFor(() => {
       expect(rootState.controlsState.value).toEqual({
+        ...DEFAULT_CONTROLS_STATE,
         imageStyle: ImageStyleType.NFT_CARD,
       });
     });
@@ -130,6 +142,7 @@ describe("create & initialise RootState", () => {
 
       await waitFor(() => {
         expect(rootState.controlsState.value).toEqual({
+          ...DEFAULT_CONTROLS_STATE,
           imageStyle: ImageStyleType.STANDARD,
         });
       });
@@ -238,7 +251,7 @@ describe("_createAvatarSvgStateSignal()", () => {
       const controlsState: ControlsState =
         imageStyleType === undefined
           ? undefined
-          : { imageStyle: imageStyleType };
+          : { ...DEFAULT_CONTROLS_STATE, imageStyle: imageStyleType };
       const svgStateSignal = _createAvatarSvgState({
         avatarDataState: signal(avatarDataState as AvatarDataState),
         controlsState: signal(controlsState),
@@ -260,7 +273,10 @@ describe("_createAvatarSvgStateSignal()", () => {
       avatarDataState: signal(avatarDataState as AvatarDataState),
       controlsState,
     });
-    controlsState.value = { imageStyle: ImageStyleType.NFT_CARD };
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.NFT_CARD,
+    };
     expect(svgStateSignal.value).toBe(
       '<svg xmlns="http://www.w3.org/2000/svg"/>'
     );
@@ -278,7 +294,10 @@ describe("_createAvatarSvgStateSignal()", () => {
         type: DataStateType.LOADED,
         avatar: {},
       } as unknown as AvatarDataState),
-      controlsState: signal({ imageStyle: ImageStyleType.NO_BG }),
+      controlsState: signal({
+        ...DEFAULT_CONTROLS_STATE,
+        imageStyle: ImageStyleType.NO_BG,
+      }),
     });
 
     expect(svgSignal.value).toEqual(err);
@@ -311,7 +330,7 @@ describe("_createAvatarSvgStateSignal()", () => {
           type: DataStateType.LOADED,
           avatar: { nftInfo: {} },
         } as unknown as AvatarDataState),
-        controlsState: signal({ imageStyle }),
+        controlsState: signal({ ...DEFAULT_CONTROLS_STATE, imageStyle }),
       });
 
       expect(svgSignal.value).toEqual(err);
@@ -346,7 +365,7 @@ describe("_createAvatarSvgStateSignal()", () => {
           type: DataStateType.LOADED,
           avatar: { nftInfo: {} },
         } as unknown as AvatarDataState),
-        controlsState: signal({ imageStyle }),
+        controlsState: signal({ ...DEFAULT_CONTROLS_STATE, imageStyle }),
       });
 
       expect(svgSignal.value).toBe(
@@ -372,6 +391,7 @@ describe("<ClosePopupButton>", () => {
 describe("<ImageStyleOption>", () => {
   test("sets imageStyle when clicked", async () => {
     const controlsState: Signal<ControlsState> = signal({
+      ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.NFT_CARD,
     });
     render(
@@ -435,7 +455,10 @@ describe("<ImageStyleOption>", () => {
       />
     );
 
-    controlsState.value = { imageStyle: ImageStyleType.HEADSHOT_CIRCLE };
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.HEADSHOT_CIRCLE,
+    };
 
     for (const stateType of [
       DataStateType.BEFORE_LOAD,
@@ -525,7 +548,10 @@ describe("<DownloadSVGButton>", () => {
     expect(button).toHaveAttribute("href", "#");
     expect(button).not.toHaveAttribute("download");
 
-    controlsState.value = { imageStyle: ImageStyleType.STANDARD };
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.STANDARD,
+    };
     avatarSvgState.value = "<svg/>";
 
     await waitFor(async () => {
@@ -581,7 +607,10 @@ describe("<DisplayArea>", () => {
     await screen.findByRole("progressbar");
     cleanup();
 
-    controlsState.value = { imageStyle: ImageStyleType.STANDARD };
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.STANDARD,
+    };
     renderWithStateContext();
     await screen.findByRole("progressbar");
     cleanup();
@@ -603,7 +632,10 @@ describe("<DisplayArea>", () => {
     avatarDataState.value = {
       type: DataStateType.LOADED,
     } as unknown as AvatarDataState;
-    controlsState.value = { imageStyle: ImageStyleType.STANDARD };
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.STANDARD,
+    };
     avatarSvgState.value = "<svg/>";
 
     renderWithStateContext();
@@ -641,7 +673,10 @@ describe("<Controls>", () => {
       type: DataStateType.LOADED,
       avatar: { nftInfo: {} },
     } as unknown as AvatarDataState;
-    controlsState.value = { imageStyle: ImageStyleType.STANDARD };
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.STANDARD,
+    };
     renderWithStateContext();
 
     let button = await screen.findByLabelText("NFT Card", { exact: false });
@@ -671,4 +706,193 @@ describe("<Controls>", () => {
     fireEvent.click(button);
     expect(controlsState.value.imageStyle).toBe(ImageStyleType.HEADSHOT_HEX);
   });
+
+  test("Settings button toggles the Image Options UI", async () => {
+    const {
+      state: { controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<Controls />);
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: false,
+    };
+    renderWithStateContext();
+    const settingsBtn = await screen.findByRole("button", { name: "Settings" });
+    fireEvent.click(settingsBtn);
+    expect(controlsState.value.imageOptionsUIOpen).toBeTruthy();
+    fireEvent.click(settingsBtn);
+    expect(controlsState.value.imageOptionsUIOpen).toBeFalsy();
+  });
+});
+
+describe("<ImageOptions>", () => {
+  test("dialog opens and closes with state", async () => {
+    const {
+      state: { controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<ImageOptions />);
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: false,
+    };
+    renderWithStateContext();
+    expect(
+      await screen.queryByRole("dialog", { name: "Image Output Options" })
+    ).toBeNull();
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: true,
+    };
+    await screen.findByRole("dialog", {
+      name: "Image Output Options",
+    });
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: false,
+    };
+    await waitFor(async () => {
+      expect(
+        await screen.queryByRole("dialog", { name: "Image Output Options" })
+      ).toBeNull();
+    });
+  });
+
+  test("clicking the close button closes the dialog", async () => {
+    const {
+      state: { controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<ImageOptions />);
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: true,
+    };
+    renderWithStateContext();
+    const dialog = await screen.getByRole("dialog", {
+      name: "Image Output Options",
+    });
+    const closeBtn = await within(dialog).getByRole("button", {
+      name: "Close",
+    });
+    fireEvent.click(closeBtn);
+    expect(
+      await screen.queryByRole("dialog", {
+        name: "Image Output Options",
+      })
+    ).toBeNull();
+  });
+
+  test("clicking the modal background closes the dialog", async () => {
+    const {
+      state: { controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<ImageOptions />);
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: true,
+    };
+    renderWithStateContext();
+    await screen.queryByRole("dialog", { name: "Image Output Options" });
+    const background = await screen.getByTestId("modal-bg");
+    fireEvent.click(background);
+    expect(
+      await screen.queryByRole("dialog", {
+        name: "Image Output Options",
+      })
+    ).toBeNull();
+  });
+
+  test.each`
+    name               | value
+    ${"Vector Images"} | ${OutputImageFormat.SVG}
+    ${"Normal Images"} | ${OutputImageFormat.PNG}
+  `(
+    "Sets $name format when clicking its radio button",
+    async (options: { name: string; value: OutputImageFormat }) => {
+      const {
+        state: { controlsState },
+        renderWithStateContext,
+      } = statefulElementRenderer(<ImageOptions />);
+
+      controlsState.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        imageOptionsUIOpen: true,
+      };
+      renderWithStateContext();
+      const radio = await screen.getByLabelText(options.name);
+      fireEvent.click(radio);
+      await waitFor(() => {
+        expect(controlsState.value?.outputImageFormat).toBe(options.value);
+      });
+    }
+  );
+
+  test.each`
+    name         | value
+    ${"Small"}   | ${RasterImageSize.SMALL}
+    ${"Medium"}  | ${RasterImageSize.MEDIUM}
+    ${/^Large/}  | ${RasterImageSize.LARGE}
+    ${"X-Large"} | ${RasterImageSize.XLARGE}
+  `(
+    "Sets $name size when clicking its radio button",
+    async (options: { name: string; value: RasterImageSize }) => {
+      const {
+        state: { controlsState },
+        renderWithStateContext,
+      } = statefulElementRenderer(<ImageOptions />);
+
+      controlsState.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        imageOptionsUIOpen: true,
+        rasterImageSize: RasterImageSize.EXACT_HEIGHT,
+      };
+      renderWithStateContext();
+      const radio = await screen.getByLabelText(options.name, { exact: false });
+      fireEvent.click(radio);
+      await waitFor(() => {
+        expect(controlsState.value?.rasterImageSize).toBe(options.value);
+      });
+    }
+  );
+
+  test.each`
+    name        | value
+    ${"Width"}  | ${RasterImageSize.EXACT_WIDTH}
+    ${"Height"} | ${RasterImageSize.EXACT_HEIGHT}
+  `(
+    "Sets exact $name size when clicking and filling its input",
+    async (options: { name: string; value: RasterImageSize }) => {
+      const {
+        state: { controlsState },
+        renderWithStateContext,
+      } = statefulElementRenderer(<ImageOptions />);
+
+      controlsState.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        imageOptionsUIOpen: true,
+      };
+      renderWithStateContext();
+      const input = await screen.getByLabelText(options.name, { exact: false });
+      assert(input instanceof HTMLInputElement);
+      fireEvent.click(input);
+      await waitFor(() => {
+        expect(controlsState.value?.rasterImageSize).toBe(options.value);
+      });
+
+      input.value = "1234";
+      fireEvent.blur(input);
+      await waitFor(() => {
+        expect(
+          options.value === RasterImageSize.EXACT_WIDTH
+            ? controlsState.value?.rasterImageExactWidth
+            : controlsState.value?.rasterImageExactHeight
+        ).toBe(1234);
+      });
+    }
+  );
 });

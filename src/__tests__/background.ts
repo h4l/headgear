@@ -8,6 +8,7 @@ import {
 import { _persistImageControlsOnChange } from "../background";
 import {
   ControlsStateObject,
+  DEFAULT_CONTROLS_STATE,
   ImageStyleType,
   PORT_IMAGE_CONTROLS_CHANGED,
   STORAGE_KEY_IMAGE_CONTROLS,
@@ -26,9 +27,11 @@ describe("_persistImageControlsOnChange()", () => {
     const syncStorage = chrome.storage.sync as MockSyncStorageArea;
     const port = new MockPort(PORT_IMAGE_CONTROLS_CHANGED);
     const controlsState1: ControlsStateObject = {
+      ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.NFT_CARD,
     };
     const controlsState2: ControlsStateObject = {
+      ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.HEADSHOT_HEX,
     };
 
@@ -57,6 +60,7 @@ describe("_persistImageControlsOnChange()", () => {
     const syncStorage = chrome.storage.sync as MockSyncStorageArea;
     const port = new MockPort(PORT_IMAGE_CONTROLS_CHANGED);
     const controlsState: ControlsStateObject = {
+      ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.NFT_CARD,
     };
 

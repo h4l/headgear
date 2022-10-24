@@ -1,4 +1,5 @@
-import { Signal, computed, effect, signal } from "@preact/signals";
+import { Signal, computed, effect, signal, useSignal } from "@preact/signals";
+import debounce from "lodash.debounce";
 import memoizeOne from "memoize-one";
 import { ComponentChildren, Fragment, JSX, createContext } from "preact";
 import {
@@ -6,6 +7,8 @@ import {
   useEffect,
   useErrorBoundary,
   useMemo,
+  useReducer,
+  useRef,
   useState,
 } from "preact/hooks";
 
@@ -13,8 +16,11 @@ import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
 import {
   ControlsStateObject,
+  DEFAULT_CONTROLS_STATE,
   ImageStyleType,
+  OutputImageFormat,
   PORT_IMAGE_CONTROLS_CHANGED,
+  RasterImageSize,
   STORAGE_KEY_IMAGE_CONTROLS,
   isControlsStateObject,
 } from "./popup-state-persistence";
@@ -125,6 +131,27 @@ const iconCross = (
   </svg>
 );
 
+/**
+ * cog-6-tooth Solid
+ * https://heroicons.com/
+ */
+function IconCog6(props: { class?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class={props.class || "w-6 h-6"}
+    >
+      <path
+        fill-rule="evenodd"
+        d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 00-2.282.819l-.922 1.597a1.875 1.875 0 00.432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 000 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 00-.432 2.385l.922 1.597a1.875 1.875 0 002.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 002.28-.819l.923-1.597a1.875 1.875 0 00-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 000-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 00-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 00-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 00-1.85-1.567h-1.843zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"
+        clip-rule="evenodd"
+      />
+    </svg>
+  );
+}
+
 const BUTTON_STYLES = (
   <div
     class={`\
@@ -154,6 +181,7 @@ export function ImageStyleOption(props: {
   const controlsState = useContext(ControlsContext);
 
   const setImageStyle = () => {
+    if (!controlsState.value) return;
     controlsState.value = { ...controlsState.value, imageStyle: props.name };
   };
 
@@ -392,6 +420,40 @@ export function DisplayArea() {
 
 export function Controls() {
   const avatarDataState = useContext(AvatarDataContext);
+  const controlsState = useContext(ControlsContext);
+
+  const [scrollPosNeedsRestore, setScrollPosNeedsRestore] = useState(
+    controlsState.value === undefined
+  );
+  const scrollContainer = useRef<HTMLDivElement>(null);
+  const [updateScrollPosition] = useState(() => {
+    const updateScrollPositionDebounced = debounce(
+      (scrollPosition: number) => {
+        if (controlsState.value === undefined) return;
+        controlsState.value = { ...controlsState.value, scrollPosition };
+      },
+      150,
+      { trailing: true }
+    );
+    return (scrollPosition: number) => {
+      // don't restore scroll pos after a scroll has already occurred
+      if (scrollPosNeedsRestore) setScrollPosNeedsRestore(false);
+      updateScrollPositionDebounced(scrollPosition);
+    };
+  });
+
+  useEffect(() => {
+    if (
+      scrollContainer.current &&
+      scrollPosNeedsRestore &&
+      controlsState.value !== undefined
+    ) {
+      setScrollPosNeedsRestore(false);
+      scrollContainer.current.scrollTop =
+        controlsState.value.scrollPosition || 0;
+    }
+  }, [scrollPosNeedsRestore, controlsState.value]);
+
   let nftOptionsDisabled = false;
   let nftOptionsDisabledReason: string | undefined;
   if (
@@ -412,7 +474,13 @@ export function Controls() {
         </div>
       </div>
 
-      <div class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 flex-grow overflow-y-scroll pl-4 pr-4">
+      <div
+        onScroll={(e) => {
+          updateScrollPosition(e.currentTarget.scrollTop);
+        }}
+        ref={scrollContainer}
+        class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 flex-grow overflow-y-scroll pl-4 pr-4"
+      >
         <ImageStyleOption
           name={ImageStyleType.STANDARD}
           title="Standard"
@@ -465,7 +533,7 @@ export function Controls() {
           </a>
         </p>
       </div>
-      <DownloadSVGButton />
+      <BottomButtons />
     </div>
   );
 }
@@ -505,6 +573,40 @@ function AvatarData(): JSX.Element {
   );
 }
 
+export function BottomButtons() {
+  const controlsState = useContext(ControlsContext);
+
+  const toggleImageOptionsUI = () => {
+    if (controlsState.value === undefined) return;
+    controlsState.value = {
+      ...controlsState.value,
+      imageOptionsUIOpen: !controlsState.value.imageOptionsUIOpen,
+    };
+  };
+  return (
+    <div class="flex">
+      <DownloadSVGButton />
+      <button
+        aria-label="Settings"
+        onClick={toggleImageOptionsUI}
+        class={`flex-shrink
+      ${
+        controlsState.value?.imageOptionsUIOpen
+          ? "bg-orange-600 relative z-10"
+          : "bg-indigo-600"
+      }
+      hover:ring active:ring hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600
+      hover:text-white hover:ring-indigo-500 active:ring-indigo-400
+      flex text-lg font-medium
+      text-slate-50 p-3
+    `}
+      >
+        <IconCog6 class="w-7 h-7 inline m-1" />
+      </button>
+    </div>
+  );
+}
+
 const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
   [ImageStyleType.STANDARD, "Standard"],
   [ImageStyleType.NFT_CARD, "NFT Card"],
@@ -536,6 +638,8 @@ export function DownloadSVGButton(): JSX.Element {
       role="button"
       aria-disabled={disabled || undefined}
       class={`\
+      flex-grow
+      border-r border-r-indigo-900
     ${
       disabled
         ? "cursor-not-allowed"
@@ -580,6 +684,418 @@ export function ClosePopupButton() {
     </button>
   );
 }
+
+type UninitialisedValue = {
+  hasChanged: false;
+  isInitial: false;
+  current: undefined;
+  previous: undefined;
+};
+type InitialisedValue<T> = {
+  hasChanged: false;
+  isInitial: true;
+  current: T;
+  previous: undefined;
+};
+type ChangedValue<T> = {
+  hasChanged: true;
+  isInitial: false;
+  current: T;
+  previous: T;
+};
+type ValueHistory<T> =
+  | UninitialisedValue
+  | InitialisedValue<T>
+  | ChangedValue<T>;
+function useValueHistory<T>(
+  initial?: T
+): [ValueHistory<T>, (value: T) => void] {
+  return useReducer(
+    (state: ValueHistory<T>, value: T): ValueHistory<T> => {
+      // 3 possible states, uninitialised -> initialised -> changed
+      // uninitialised:
+      if (!state.hasChanged && !state.isInitial) {
+        assert(state.previous === undefined);
+        return value === undefined
+          ? state
+          : {
+              current: value,
+              previous: undefined,
+              isInitial: true,
+              hasChanged: false,
+            };
+      }
+      // initialised
+      else if (!state.hasChanged && state.isInitial) {
+        return value === state.current
+          ? state
+          : {
+              current: value,
+              previous: state.current,
+              isInitial: false,
+              hasChanged: true,
+            };
+      }
+      // changed
+      return value === state.current
+        ? state
+        : {
+            current: value,
+            previous: state.current,
+            isInitial: false,
+            hasChanged: true,
+          };
+    },
+    initial === undefined
+      ? {
+          current: undefined,
+          previous: undefined,
+          isInitial: false,
+          hasChanged: false,
+        }
+      : {
+          current: initial,
+          previous: undefined,
+          isInitial: true,
+          hasChanged: false,
+        }
+  );
+}
+
+export function ImageOptions(): JSX.Element {
+  const controlsState = useContext(ControlsContext);
+  const fadingOut = useSignal(false);
+
+  const [uiOpenValue, dispatch] = useValueHistory<boolean | undefined>(
+    controlsState.value?.imageOptionsUIOpen
+  );
+  useEffect(() => {
+    dispatch(controlsState.value?.imageOptionsUIOpen);
+  }, [dispatch, controlsState.value?.imageOptionsUIOpen]);
+  useEffect(() => {
+    if (controlsState.value?.imageOptionsUIOpen) {
+      fadingOut.value = true;
+    }
+  }, [fadingOut, controlsState.value?.imageOptionsUIOpen]);
+
+  const hideImageOptions = () => {
+    if (controlsState.value === undefined) return;
+    controlsState.value = {
+      ...controlsState.value,
+      imageOptionsUIOpen: false,
+    };
+  };
+
+  return (
+    <Fragment>
+      <div
+        data-testid="modal-bg"
+        onClick={hideImageOptions}
+        onTransitionEnd={() => {
+          fadingOut.value = false;
+        }}
+        class={`
+        ${
+          controlsState.value?.imageOptionsUIOpen
+            ? "opacity-100"
+            : fadingOut.value
+            ? "opacity-0"
+            : "hidden opacity-0"
+        }
+        transition-opacity
+        absolute left-0 right-0 top-0 bottom-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80
+        `}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Image Output Options"
+        aria-hidden={!uiOpenValue.current}
+        open={uiOpenValue.current}
+        class={`absolute ${
+          uiOpenValue.current
+            ? "right-4"
+            : fadingOut.value
+            ? "-right-80"
+            : "-right-80 invisible"
+        }
+        ${
+          uiOpenValue.isInitial && uiOpenValue.current
+            ? "transition-none"
+            : "transition-[right]"
+        }
+        rounded-md
+        bottom-20 w-80 px-4 _py-0
+        flex flex-col
+        bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50`}
+      >
+        <button
+          class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
+          title="Close"
+          onClick={() => {
+            if (!controlsState.value) return;
+            controlsState.value = {
+              ...controlsState.value,
+              imageOptionsUIOpen: false,
+            };
+          }}
+        >
+          {iconCross}
+        </button>
+        <h2 class="text-lg font-medium mx-2 mt-4">Download/copy images as:</h2>
+        <div class="flex my-2">
+          <div class="flex items-center h-5">
+            <input
+              id="output-image-format-svg"
+              aria-describedby="output-image-format-svg-desc"
+              type="radio"
+              name="output-image-format"
+              value="svg"
+              checked={
+                controlsState.value?.outputImageFormat === OutputImageFormat.SVG
+              }
+              onClick={() => {
+                if (!controlsState.value) return;
+                controlsState.value = {
+                  ...controlsState.value,
+                  outputImageFormat: OutputImageFormat.SVG,
+                };
+              }}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+          </div>
+          <div class="ml-2 text-sm">
+            <label
+              for="output-image-format-svg"
+              class="font-medium text-gray-900 dark:text-gray-300"
+            >
+              Vector Images
+            </label>
+            <p
+              id="output-image-format-svg-desc"
+              class="text-xs font-normal text-gray-500 dark:text-gray-300"
+            >
+              Download and copy Avatars as vector images (SVG). These have the
+              highest level of detail, but most websites and image editing tools
+              can't open them.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex my-2">
+          <div class="flex items-center h-5">
+            <input
+              id="output-image-format-png"
+              aria-describedby="output-image-format-png-desc"
+              type="radio"
+              name="output-image-format"
+              value="png"
+              checked={
+                controlsState.value?.outputImageFormat === OutputImageFormat.PNG
+              }
+              onClick={() => {
+                if (!controlsState.value) return;
+                controlsState.value = {
+                  ...controlsState.value,
+                  outputImageFormat: OutputImageFormat.PNG,
+                };
+              }}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+          </div>
+          <div class="ml-2 text-sm">
+            <label
+              for="output-image-format-png"
+              class="font-medium text-gray-900 dark:text-gray-300"
+            >
+              Normal Images
+            </label>
+            <p
+              id="output-image-format-png-desc"
+              class="text-xs font-normal text-gray-500 dark:text-gray-300"
+            >
+              Download and copy Avatars as fixed-size regular images (PNG). This
+              is the best option for most people.
+            </p>
+            <div class="ml-4">
+              <OutputImageScaleOptions />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Fragment>
+  );
+}
+
+export function OutputImageScaleOptions(): JSX.Element {
+  return (
+    <Fragment>
+      <OutputImageScaleRadio
+        value={RasterImageSize.SMALL}
+        label="Small"
+        scale={1}
+      />
+      <OutputImageScaleRadio
+        value={RasterImageSize.MEDIUM}
+        label="Medium"
+        scale={2}
+      />
+      <OutputImageScaleRadio
+        value={RasterImageSize.LARGE}
+        label="Large"
+        scale={3}
+      />
+      <OutputImageScaleRadio
+        value={RasterImageSize.XLARGE}
+        label="X-Large"
+        scale={4}
+      />
+      <OutputImageExactRadio
+        value={RasterImageSize.EXACT_WIDTH}
+        label="Exact width"
+      />
+      <OutputImageExactRadio
+        value={RasterImageSize.EXACT_HEIGHT}
+        label="Exact height"
+      />
+    </Fragment>
+  );
+}
+
+export function OutputImageScaleRadio(props: {
+  value:
+    | RasterImageSize.SMALL
+    | RasterImageSize.MEDIUM
+    | RasterImageSize.LARGE
+    | RasterImageSize.XLARGE;
+  label: string;
+  scale: number;
+}): JSX.Element {
+  const controlsState = useContext(ControlsContext);
+  const [w, h] = [380 * props.scale, 600 * props.scale];
+  return (
+    <div class="flex my-1">
+      <div class="flex items-center h-5">
+        <input
+          id={`output-image-scale-${props.value}`}
+          aria-describedby={`output-image-scale-${props.value}-desc`}
+          type="radio"
+          name="output-image-scale"
+          value={props.value}
+          checked={controlsState.value?.rasterImageSize === props.value}
+          onClick={() => {
+            if (!controlsState.value) return;
+            controlsState.value = {
+              ...controlsState.value,
+              rasterImageSize: props.value,
+            };
+          }}
+          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        />
+      </div>
+      <div class="ml-2 text-sm">
+        <label
+          for={`output-image-scale-${props.value}`}
+          class="font-medium text-gray-900 dark:text-gray-300"
+        >
+          {props.label}{" "}
+          <span class="font-normal text-xs">
+            ≈ {w} {"\u00d7"} {h} pixels
+          </span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+export function OutputImageExactRadio(props: {
+  value: RasterImageSize.EXACT_HEIGHT | RasterImageSize.EXACT_WIDTH;
+  label: string;
+}): JSX.Element {
+  const controlsState = useContext(ControlsContext);
+  const input = useRef<HTMLInputElement>(null);
+  const checked = controlsState.value?.rasterImageSize === props.value;
+  const disabled = controlsState.value === undefined;
+  const setImageSize = () => {
+    if (!controlsState.value) return;
+    controlsState.value = {
+      ...controlsState.value,
+      rasterImageSize: props.value,
+    };
+  };
+  const focusInput = () => {
+    input.current && input.current.focus();
+  };
+
+  return (
+    <div class="flex my-1">
+      <div class="flex items-center h-5">
+        <input
+          id={`output-image-scale-exact-${props.value}`}
+          aria-describedby={`output-image-scale-exact-${props.value}-desc`}
+          type="radio"
+          name="output-image-scale"
+          value={props.value}
+          checked={checked}
+          disabled={disabled}
+          onClick={setImageSize}
+          onMouseUp={focusInput}
+          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        />
+      </div>
+      <div class="ml-2 text-sm">
+        <label
+          for={`output-image-scale-exact-${props.value}-value`}
+          class="font-medium text-gray-900 dark:text-gray-300"
+        >
+          {props.label}
+        </label>
+        <input
+          ref={input}
+          id={`output-image-scale-exact-${props.value}-value`}
+          name={`output-image-scale-exact-${props.value}-value`}
+          type="number"
+          step="50"
+          min="50"
+          max="10000"
+          value={
+            (props.value === RasterImageSize.EXACT_WIDTH
+              ? controlsState.value?.rasterImageExactWidth
+              : controlsState.value?.rasterImageExactHeight) || 1000
+          }
+          onClick={setImageSize}
+          onKeyUp={({ key }) => {
+            if (key === "Enter") setImageSize();
+          }}
+          onBlur={(e) => {
+            if (!controlsState.value) return;
+            assert(e.target instanceof HTMLInputElement);
+            let value: number | undefined;
+            if (e.target?.value === "") {
+              value = undefined;
+            } else {
+              value = Math.max(50, Math.min(10000, e.target?.valueAsNumber));
+              if (Number.isNaN(value)) value = 50;
+              controlsState.value = {
+                ...controlsState.value,
+                ...(props.value === RasterImageSize.EXACT_WIDTH
+                  ? { rasterImageExactWidth: value }
+                  : { rasterImageExactHeight: value }),
+              };
+            }
+          }}
+          placeholder="1234"
+          class="
+          bg-gray-50 rounded-lg border border-gray-300 text-gray-900
+          block w-full px-1.5 py-1 my-1 text-sm
+          focus:ring-blue-500 focus:border-blue-500
+          dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function Headgear() {
   return (
     // 800x600 is the current largest size a popup can be.
@@ -587,6 +1103,7 @@ export function Headgear() {
       <ClosePopupButton />
       <DisplayArea />
       <Controls />
+      <ImageOptions />
     </div>
   );
 }
@@ -616,14 +1133,14 @@ export function HeadgearIsVeryBrokenMessage() {
     <main class="prose m-12">
       <h1>Headgear is broken</h1>
       <p>
-        An unrecoverable error occurred. If you could let
+        An unrecoverable error occurred. If you could let{" "}
         <a
           href="https://www.reddit.com/user/h4l"
           target="_blank"
           rel="noreferrer"
         >
           /u/h4l
-        </a>
+        </a>{" "}
         know about this, they should be able to fix it. Sorry!
       </p>
     </main>
@@ -763,7 +1280,7 @@ export function _loadControlsState(state: Signal<ControlsState>): void {
     })
     // Just use defaults if we can't get a previous state from storage.
     .catch(() => {
-      state.value = { imageStyle: ImageStyleType.STANDARD };
+      state.value = DEFAULT_CONTROLS_STATE;
     });
 }
 
@@ -771,8 +1288,16 @@ export async function _loadControlsStateFromStorage(): Promise<ControlsStateObje
   const controls = (await chrome.storage.sync.get(STORAGE_KEY_IMAGE_CONTROLS))[
     STORAGE_KEY_IMAGE_CONTROLS
   ];
-  if (isControlsStateObject(controls)) {
-    return { imageStyle: controls.imageStyle };
+  if (typeof controls === "object" && controls !== null) {
+    const defaultedControls = Object.fromEntries(
+      Object.entries(DEFAULT_CONTROLS_STATE).map(([k, v]) => [
+        k,
+        controls[k] !== undefined ? controls[k] : v,
+      ])
+    );
+    if (isControlsStateObject(defaultedControls)) {
+      return defaultedControls;
+    }
   }
   throw new Error("storage does not contain a valid ControlsStateObject");
 }
@@ -854,6 +1379,7 @@ export function _createAvatarSvgState({
       } else {
         svg = createStandardAvatarSVG({ composedAvatar });
       }
+
       return new XMLSerializer().serializeToString(svg);
     }
   );
