@@ -144,21 +144,53 @@ const iconCross = (
 );
 
 /**
- * cog-6-tooth Solid
+ * cog-6-tooth Outline
  * https://heroicons.com/
  */
 function IconCog6(props: { class?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
+      fill="none"
       viewBox="0 0 24 24"
-      fill="currentColor"
+      strokeWidth={1.5}
+      stroke="currentColor"
       class={props.class || "w-6 h-6"}
+      style="filter: drop-shadow(0px 0px 3px rgb(0 0 0 / 0.5));"
     >
       <path
-        fill-rule="evenodd"
-        d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 00-2.282.819l-.922 1.597a1.875 1.875 0 00.432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 000 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 00-.432 2.385l.922 1.597a1.875 1.875 0 002.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 002.28-.819l.923-1.597a1.875 1.875 0 00-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 000-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 00-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 00-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 00-1.85-1.567h-1.843zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"
-        clip-rule="evenodd"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  );
+}
+
+/**
+ * document-duplicate Outline
+ * https://heroicons.com/
+ */
+function IconCopy(props: { class?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      class={props.class || "w-6 h-6"}
+      style="filter: drop-shadow(0px 0px 3px rgb(0 0 0 / 0.5));"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"
       />
     </svg>
   );
@@ -598,6 +630,7 @@ export function BottomButtons() {
   return (
     <div class="flex">
       <DownloadImageButton />
+      <CopyImageButton />
       <button
         aria-label="Settings"
         onClick={toggleImageOptionsUI}
@@ -613,10 +646,26 @@ export function BottomButtons() {
       text-slate-50 p-3
     `}
       >
-        <IconCog6 class="w-7 h-7 inline m-1" />
+        <IconCog6
+          class={`
+          hover:scale-105 transition-transform ease-out
+          w-7 h-7 inline m-1`}
+        />
       </button>
     </div>
   );
+}
+
+function bottomBarButtonStyle(disabled: boolean): string {
+  return `\
+  border-r border-r-indigo-900
+  ${
+    disabled
+      ? "cursor-not-allowed"
+      : "hover:ring active:ring hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600"
+  }
+  bg-indigo-600 hover:text-white hover:ring-indigo-500 active:ring-indigo-400
+  flex text-lg text-slate-50 p-3`;
 }
 
 const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
@@ -648,18 +697,7 @@ export function DownloadImageButton(): JSX.Element {
     <a
       role="button"
       aria-disabled={disabled || undefined}
-      class={`\
-      flex-grow
-      border-r border-r-indigo-900
-    ${
-      disabled
-        ? "cursor-not-allowed"
-        : "hover:ring active:ring hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600"
-    }
-    bg-indigo-600 hover:text-white hover:ring-indigo-500 active:ring-indigo-400
-    flex text-lg font-medium
-    text-slate-50 p-3
-    `}
+      class={`flex-grow ${bottomBarButtonStyle(disabled)}`}
       onClick={disabled ? () => false : undefined}
       href={downloadUri}
       download={disabled ? undefined : filename}
@@ -667,7 +705,7 @@ export function DownloadImageButton(): JSX.Element {
       <span
         class={`\
       ${disabled ? "" : "hover:scale-105"}
-      m-auto hover:motion-reduce:scale-100  transition-transform ease-in
+      m-auto hover:motion-reduce:scale-100  transition-transform ease-out
       `}
       >
         {iconArrowDown}{" "}
@@ -675,10 +713,103 @@ export function DownloadImageButton(): JSX.Element {
           class="text-inherit m-1 drop-shadow-lg shadow-slate-900"
           style="text-shadow: 0px 0px 3px rgb(0 0 0 / 0.3)"
         >
-          Download {controlsState?.outputImageFormat.toUpperCase()} Image
+          Download Image
         </span>
       </span>
     </a>
+  );
+}
+
+enum CopyState {
+  BEFORE_COPY,
+  COPYING,
+  COPIED,
+  FAILED,
+}
+
+export function CopyImageButton(): JSX.Element {
+  const outputImageState = useContext(OutputImageContext);
+  const hovering = useSignal(false);
+  const copyState = useSignal(CopyState.BEFORE_COPY);
+  const hidden = useSignal(false);
+
+  const isImageReady = !(
+    outputImageState.value === undefined ||
+    outputImageState.value instanceof Error
+  );
+  const disabled = !isImageReady;
+
+  const copyImage = () => {
+    if (
+      outputImageState.value === undefined ||
+      outputImageState.value instanceof Error
+    ) {
+      return;
+    }
+    copyState.value = CopyState.COPYING;
+    const imageBlob = outputImageState.value.blob;
+    navigator.clipboard
+      .write([new ClipboardItem({ [imageBlob.type]: imageBlob })])
+      .then(() => {
+        copyState.value = CopyState.COPIED;
+      })
+      .catch(() => {
+        copyState.value = CopyState.FAILED;
+      });
+  };
+  const labels = {
+    [CopyState.BEFORE_COPY]: "Copy Image",
+    [CopyState.COPYING]: "Copy Image",
+    [CopyState.COPIED]: "Image Copied!",
+    [CopyState.FAILED]: "Copy Failed",
+  };
+
+  return (
+    <span class="relative flex-shrink">
+      <div
+        aria-role="tooltip"
+        class={`-top-10 -left-[2.7rem] flex absolute w-36
+        ${hovering.value ? "opacity-100" : "opacity-0"}
+        ${hidden.value ? "hidden" : ""}
+        transition-opacity duration-300`}
+      >
+        <div
+          role="tooltip"
+          class={`flex-shrink mx-auto
+         z-10 py-2 px-3
+        text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm
+        dark:bg-gray-700`}
+        >
+          {labels[copyState.value]}
+        </div>
+      </div>
+
+      <button
+        aria-label="Copy Image"
+        disabled={disabled || undefined}
+        onClick={disabled ? () => false : copyImage}
+        onTransitionEnd={() => {
+          if (!hovering.value) hidden.value = true;
+        }}
+        onMouseEnter={() => {
+          copyState.value = CopyState.BEFORE_COPY;
+          hovering.value = true;
+          hidden.value = false;
+        }}
+        onMouseLeave={() => {
+          hovering.value = false;
+        }}
+        class={bottomBarButtonStyle(disabled)}
+      >
+        <span
+          class={`
+        ${disabled ? "" : "hover:scale-105"}
+        m-auto hover:motion-reduce:scale-100  transition-transform ease-out`}
+        >
+          <IconCopy class="w-7 h-7 inline m-1" />
+        </span>
+      </button>
+    </span>
   );
 }
 

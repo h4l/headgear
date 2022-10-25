@@ -24,6 +24,7 @@ import {
   Controls,
   ControlsContext,
   ControlsState,
+  CopyImageButton,
   CouldNotLoadAvatarMessage,
   DataStateType,
   DisplayArea,
@@ -567,23 +568,21 @@ describe("<ErrorBoundary>", () => {
 
 describe("<DownloadImageButton>", () => {
   test.each`
-    format                   | name     | extension
-    ${OutputImageFormat.PNG} | ${"PNG"} | ${"png"}
-    ${OutputImageFormat.SVG} | ${"SVG"} | ${"svg"}
+    format                   | extension
+    ${OutputImageFormat.PNG} | ${"png"}
+    ${OutputImageFormat.SVG} | ${"svg"}
   `(
     "is disabled until state is available",
-    async (options: {
-      format: OutputImageFormat;
-      name: string;
-      extension: string;
-    }) => {
+    async (options: { format: OutputImageFormat; extension: string }) => {
       const {
         renderWithStateContext,
         state: { controlsState, outputImageState },
       } = statefulElementRenderer(<DownloadImageButton />);
       renderWithStateContext();
 
-      let button = await screen.findByRole("button");
+      let button = await screen.findByRole("button", {
+        name: `Download Image`,
+      });
       expect(button).toHaveAttribute("aria-disabled");
       expect(button).toHaveAttribute("href", "#");
       expect(button).not.toHaveAttribute("download");
@@ -604,13 +603,124 @@ describe("<DownloadImageButton>", () => {
         expect(button).not.toHaveAttribute("aria-disabled");
       });
       button = await screen.findByRole("button", {
-        name: `Download ${options.name} Image`,
+        name: `Download Image`,
       });
       expect(button).toHaveAttribute(
         "download",
         `Reddit Avatar Standard.${options.extension}`
       );
       expect(button.getAttribute("href")).toBe("example://0");
+    }
+  );
+});
+
+describe("<CopyImageButton>", () => {
+  class MockClipboardItem implements ClipboardItem {
+    // eslint-disable-next-line no-useless-constructor
+    constructor(
+      public items: Record<string, string | Blob | PromiseLike<string | Blob>>
+    ) {}
+    get types(): readonly string[] {
+      throw new Error("not implemented");
+    }
+    async getType(): Promise<Blob> {
+      throw new Error("not implemented");
+    }
+  }
+  beforeEach(() => {
+    // jsdom doesn't implement the clipboard API
+    assert(navigator.clipboard === undefined);
+    assert(global.ClipboardItem === undefined);
+    Object.assign(navigator, {
+      clipboard: {
+        write: jest.fn().mockResolvedValue(undefined),
+      },
+    });
+    global.ClipboardItem = MockClipboardItem;
+  });
+  afterEach(() => {
+    Object.assign(navigator, {
+      clipboard: undefined,
+    });
+    global.ClipboardItem = undefined as unknown as typeof ClipboardItem;
+  });
+
+  test.each`
+    format
+    ${OutputImageFormat.PNG}
+    ${OutputImageFormat.SVG}
+  `(
+    "is disabled until state is available",
+    async (options: { format: OutputImageFormat; extension: string }) => {
+      const {
+        renderWithStateContext,
+        state: { controlsState, outputImageState },
+      } = statefulElementRenderer(<CopyImageButton />);
+      renderWithStateContext();
+
+      let button = await screen.findByRole("button", {
+        name: `Copy Image`,
+      });
+      expect(button).toBeDisabled();
+
+      controlsState.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        imageStyle: ImageStyleType.STANDARD,
+        outputImageFormat: options.format,
+      };
+      outputImageState.value = {
+        format: options.format,
+        mimeType: "image/foo",
+        blob: new Blob([]),
+        url: "example://0",
+      };
+
+      await waitFor(async () => {
+        expect(button).not.toBeDisabled();
+      });
+      button = await screen.findByRole("button", {
+        name: `Copy Image`,
+      });
+    }
+  );
+
+  test.each`
+    format
+    ${OutputImageFormat.PNG}
+    ${OutputImageFormat.SVG}
+  `(
+    "copies the output image when clicked",
+    async (options: { format: OutputImageFormat; extension: string }) => {
+      const {
+        renderWithStateContext,
+        state: { controlsState, outputImageState },
+      } = statefulElementRenderer(<CopyImageButton />);
+      controlsState.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        imageStyle: ImageStyleType.STANDARD,
+        outputImageFormat: options.format,
+      };
+      const blob = new Blob([], { type: "image/foo" });
+      outputImageState.value = {
+        format: options.format,
+        mimeType: blob.type,
+        blob,
+        url: "example://0",
+      };
+      renderWithStateContext();
+
+      const button = await screen.findByRole("button", {
+        name: `Copy Image`,
+      });
+      fireEvent.click(button);
+
+      await waitFor(async () => {
+        expect(navigator.clipboard.write).toBeCalledTimes(1);
+        const [[[clipboardItem]]] = jest.mocked(navigator.clipboard.write).mock
+          .calls;
+        assert(clipboardItem instanceof MockClipboardItem);
+        expect(clipboardItem.items["image/foo"]).toBe(blob);
+      });
     }
   );
 });
