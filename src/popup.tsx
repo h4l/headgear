@@ -77,7 +77,7 @@ export type AvatarDataState =
  * data, depending on the UI controls state. `undefined` while data or UI
  * controls are loading, or if an error occurs.
  */
-export type AvatarSVGState = Error | string | undefined;
+export type AvatarSVGState = Error | SVGElement | undefined;
 
 // undefined while loading from storage
 export type ControlsState = undefined | ControlsStateObject;
@@ -356,13 +356,13 @@ function RequestBugReport() {
   );
 }
 
-export function AvatarSVG({ svg }: { svg: string }) {
+export function AvatarSVG({ svg }: { svg: SVGElement }) {
   return (
     <svg
       data-testid="avatar"
       class="object-contain w-full h-full drop-shadow-xl animate-fade-in"
       // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: svg }}
+      dangerouslySetInnerHTML={{ __html: svg.outerHTML }}
     />
   );
 }
@@ -620,8 +620,8 @@ export function DownloadSVGButton(): JSX.Element {
   const avatarSvgState = useContext(AvatarSvgContext).value;
 
   const downloadUri = useMemo(() => {
-    if (typeof avatarSvgState !== "string") return "#";
-    const b64Svg = btoa(avatarSvgState);
+    if (!(avatarSvgState instanceof SVGElement)) return "#";
+    const b64Svg = btoa(new XMLSerializer().serializeToString(avatarSvgState));
     return `data:image/svg+xml;base64,${b64Svg}`;
   }, [avatarSvgState]);
 
@@ -631,7 +631,8 @@ export function DownloadSVGButton(): JSX.Element {
     assert(imgStyleName);
     filename = `Reddit Avatar ${imgStyleName}.svg`;
   }
-  const disabled = typeof avatarSvgState !== "string" || filename === undefined;
+  const disabled =
+    !(avatarSvgState instanceof SVGElement) || filename === undefined;
 
   return (
     <a
@@ -1358,7 +1359,7 @@ export function _createAvatarSvgState({
       imageStyle: ImageStyleType,
       avatar: ResolvedAvatar,
       composedAvatar: SVGElement
-    ): string => {
+    ): SVGElement => {
       let svg: SVGElement;
       if (imageStyle === ImageStyleType.NFT_CARD) {
         if (!avatar.nftInfo)
@@ -1380,7 +1381,7 @@ export function _createAvatarSvgState({
         svg = createStandardAvatarSVG({ composedAvatar });
       }
 
-      return new XMLSerializer().serializeToString(svg);
+      return svg;
     }
   );
 

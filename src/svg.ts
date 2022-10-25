@@ -238,7 +238,7 @@ export class SVGParseError extends Error {
   }
 }
 
-function _parseSVG({
+export function _parseSVG({
   svgSource,
   parseErrorMessage,
 }: {

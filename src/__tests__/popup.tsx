@@ -47,6 +47,7 @@ import {
 import { MSG_GET_AVATAR } from "../reddit-interaction";
 import {
   SVGNS,
+  _parseSVG,
   composeAvatarSVG,
   createHeadshotCircleAvatarSVG,
   createHeadshotCommentsAvatarSVG,
@@ -55,6 +56,11 @@ import {
 } from "../svg";
 
 jest.mock("../svg.ts");
+
+function parseSVG(svg: string): SVGElement {
+  const parse: typeof _parseSVG = jest.requireActual("../svg")._parseSVG;
+  return parse({ svgSource: svg });
+}
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -277,9 +283,7 @@ describe("_createAvatarSvgStateSignal()", () => {
       ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.NFT_CARD,
     };
-    expect(svgStateSignal.value).toBe(
-      '<svg xmlns="http://www.w3.org/2000/svg"/>'
-    );
+    expect(svgStateSignal.value).toMatchInlineSnapshot(`<svg />`);
     expect(createStandardAvatarSVG).toHaveBeenCalledTimes(1);
   });
 
@@ -352,9 +356,14 @@ describe("_createAvatarSvgStateSignal()", () => {
       imageStyle: ImageStyleType;
       svgVariantFn: (...args: unknown[]) => unknown;
     }) => {
-      const mockComposedSvg = document.createElementNS(SVGNS, "svg");
-      const mockStyledSvg = document.createElementNS(SVGNS, "svg");
-      mockStyledSvg.setAttribute("id", "styled");
+      // const mockComposedSvg = document.createElementNS(SVGNS, "svg");
+      // const mockStyledSvg = document.createElementNS(SVGNS, "svg");
+      const mockComposedSvg = parseSVG(
+        `<svg xmlns="${SVGNS}" data-testid="composed"/>`
+      );
+      const mockStyledSvg = parseSVG(
+        `<svg xmlns="${SVGNS}" data-testid="styled"/>`
+      );
       jest.mocked(composeAvatarSVG).mockReturnValue(mockComposedSvg);
       if (imageStyle !== ImageStyleType.NO_BG) {
         jest.mocked(svgVariantFn).mockReturnValue(mockStyledSvg);
@@ -368,10 +377,11 @@ describe("_createAvatarSvgStateSignal()", () => {
         controlsState: signal({ ...DEFAULT_CONTROLS_STATE, imageStyle }),
       });
 
-      expect(svgSignal.value).toBe(
+      assert(svgSignal.value instanceof SVGElement);
+      expect(svgSignal.value.outerHTML).toEqual(
         imageStyle === ImageStyleType.NO_BG
-          ? `<svg xmlns="http://www.w3.org/2000/svg"/>`
-          : `<svg xmlns="http://www.w3.org/2000/svg" id="styled"/>`
+          ? `<svg xmlns="http://www.w3.org/2000/svg" data-testid="composed"/>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" data-testid="styled"/>`
       );
     }
   );
@@ -482,7 +492,9 @@ describe("<ImageStyleOption>", () => {
 });
 
 test("<AvatarSVG>", async () => {
-  render(<AvatarSVG svg={`<svg xmlns="${SVGNS}" data-testid="foo"/>`} />);
+  render(
+    <AvatarSVG svg={parseSVG(`<svg xmlns="${SVGNS}" data-testid="foo"/>`)} />
+  );
   const insertedSvg = await screen.findByTestId("foo");
   expect(insertedSvg).toBeTruthy();
 });
@@ -552,14 +564,14 @@ describe("<DownloadSVGButton>", () => {
       ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.STANDARD,
     };
-    avatarSvgState.value = "<svg/>";
+    avatarSvgState.value = parseSVG(`<svg xmlns="${SVGNS}"/>`);
 
     await waitFor(async () => {
       button = await screen.findByRole("button");
       expect(button).not.toHaveAttribute("aria-disabled");
       expect(button).toHaveAttribute("download", "Reddit Avatar Standard.svg");
       expect(button.getAttribute("href")).toBe(
-        `data:image/svg+xml;base64,${btoa("<svg/>")}`
+        `data:image/svg+xml;base64,${btoa(`<svg xmlns="${SVGNS}"/>`)}`
       );
     });
   });
@@ -618,7 +630,7 @@ describe("<DisplayArea>", () => {
     avatarDataState.value = {
       type: DataStateType.LOADED,
     } as unknown as AvatarDataState;
-    avatarSvgState.value = "<svg/>";
+    avatarSvgState.value = parseSVG(`<svg xmlns="${SVGNS}"/>`);
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
@@ -636,7 +648,7 @@ describe("<DisplayArea>", () => {
       ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.STANDARD,
     };
-    avatarSvgState.value = "<svg/>";
+    avatarSvgState.value = parseSVG(`<svg xmlns="${SVGNS}"/>`);
 
     renderWithStateContext();
     await screen.findByTestId("avatar");
