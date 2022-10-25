@@ -33,6 +33,7 @@ import {
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
 } from "./svg";
+import { rasteriseSVG } from "./svg-rasterisation";
 
 const HEADGEAR_ADDRESS = "0xcF4CbFd13BCAc9E30d4fd666BD8d2a81536C01d5";
 
@@ -78,6 +79,14 @@ export type AvatarDataState =
  * controls are loading, or if an error occurs.
  */
 export type AvatarSVGState = Error | SVGElement | undefined;
+
+export interface OutputImage {
+  format: OutputImageFormat;
+  blob: Blob;
+  url: string;
+  mimeType: string;
+}
+export type OutputImageState = Error | OutputImage | undefined;
 
 // undefined while loading from storage
 export type ControlsState = undefined | ControlsStateObject;
@@ -1406,4 +1415,153 @@ export function _createAvatarSvgState({
       return e instanceof Error ? e : new Error(`${e}`);
     }
   });
+}
+
+/**
+ * Create a Signal to an OutputImageState that's Asynchronously updated to
+ * contain an image of the current Avatar's SVG. The format and size of the
+ * image varies with the ControlsState Signal's value.
+ */
+export function _createOutputImageState({
+  avatarSvgState,
+  controlsState,
+}: Pick<
+  RootState,
+  "avatarSvgState" | "controlsState"
+>): Signal<OutputImageState> {
+  interface OutputImageJob {
+    id: number;
+    result: Error | OutputImage | undefined;
+    cleanup?: () => void;
+  }
+  // Creating a PNG image is asynchronous. We can receive state updates while
+  // an async OutputImage creation is ongoing, so we need to be able behave
+  // sensibly when this happens:
+  //  - don't allow multiple expensive image creation jobs to run in parallel
+  //  - don't start a job if there's a newer one that's superseded it
+  let next: Promise<OutputImageJob> | undefined;
+  let nextId = 0;
+  const state = signal<OutputImageState>(undefined);
+
+  effect(() => {
+    const id = ++nextId;
+    const previous = next;
+
+    if (avatarSvgState.value instanceof Error) {
+      state.value = avatarSvgState.value;
+      return;
+    }
+    state.value = undefined;
+    if (
+      controlsState.value === undefined ||
+      avatarSvgState.value === undefined
+    ) {
+      return;
+    }
+    const controls = controlsState.value;
+    const svg = avatarSvgState.value;
+
+    next = (async (): Promise<OutputImageJob> => {
+      const previousResult = await previous;
+      previousResult?.cleanup && previousResult.cleanup();
+
+      // bail out early if we've been superseded
+      if (nextId !== id) return { id, result: undefined };
+
+      let blob: Blob;
+      if (controls.outputImageFormat === OutputImageFormat.SVG) {
+        blob = new Blob([new XMLSerializer().serializeToString(svg)], {
+          type: "image/svg+xml",
+        });
+      } else {
+        assert(controls.outputImageFormat === OutputImageFormat.PNG);
+        const size = _measureScaledSVG({ svg, controlsState: controls });
+        blob = await rasteriseSVG({ svg, ...size });
+      }
+      // if we've been superseded our result is not needed, throw it away
+      if (nextId !== id) return { id, result: undefined };
+      const result: OutputImage = {
+        format: controls.outputImageFormat,
+        blob,
+        mimeType: blob.type,
+        url: URL.createObjectURL(blob),
+      };
+      const job: OutputImageJob = {
+        id,
+        result,
+        cleanup() {
+          URL.revokeObjectURL(result.url);
+        },
+      };
+      state.value = job.result;
+      return job;
+    })().catch((error) => {
+      console.error("output image generation failed:", error);
+      const job: OutputImageJob = { id, result: error };
+      if (nextId === id) {
+        state.value = job.result;
+      }
+      return job;
+    });
+  });
+  return state;
+}
+
+const imageSizeScaleFactors: Record<
+  Exclude<
+    RasterImageSize,
+    RasterImageSize.EXACT_HEIGHT | RasterImageSize.EXACT_WIDTH
+  >,
+  number
+> = {
+  [RasterImageSize.SMALL]: 1,
+  [RasterImageSize.MEDIUM]: 2,
+  [RasterImageSize.LARGE]: 3,
+  [RasterImageSize.XLARGE]: 4,
+};
+
+export function _measureScaledSVG({
+  svg,
+  controlsState,
+}: {
+  svg: SVGElement;
+  controlsState: Pick<
+    ControlsStateObject,
+    "rasterImageSize" | "rasterImageExactHeight" | "rasterImageExactWidth"
+  >;
+}): { width: number; height: number } {
+  // our SVG never has exact sizes set on the root, but we do always have a
+  // viewBox to allow proportional scaling.
+  assert(!svg.hasAttribute("width"));
+  assert(!svg.hasAttribute("height"));
+  assert(svg.hasAttribute("viewBox"));
+
+  const { width: baseWidth, height: baseHeight } = _getBaseSize(svg);
+
+  if (controlsState.rasterImageSize === RasterImageSize.EXACT_WIDTH) {
+    const width = controlsState.rasterImageExactWidth;
+    const scale = width / baseWidth;
+    return { width, height: baseHeight * scale };
+  } else if (controlsState.rasterImageSize === RasterImageSize.EXACT_HEIGHT) {
+    const height = controlsState.rasterImageExactHeight;
+    const scale = height / baseHeight;
+    return { width: baseWidth * scale, height };
+  }
+  const scale = imageSizeScaleFactors[controlsState.rasterImageSize];
+  return { width: baseWidth * scale, height: baseHeight * scale };
+}
+
+export function _getBaseSize(avatarSVG: SVGElement): {
+  width: number;
+  height: number;
+} {
+  const viewBox = (avatarSVG.getAttribute("viewBox") || "")
+    .split(" ")
+    .map((n) => Number.parseInt(n, 10));
+  if (!(viewBox.length === 4 && viewBox.every((n) => !Number.isNaN(n)))) {
+    throw new Error(
+      `svg viewBox attribute is invalid: ${avatarSVG.getAttribute("viewBox")}`
+    );
+  }
+  return { width: viewBox[2], height: viewBox[3] };
 }

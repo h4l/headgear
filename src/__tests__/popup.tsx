@@ -33,10 +33,14 @@ import {
   ImageStyleOption,
   RootState,
   _createAvatarSvgState,
+  _createOutputImageState,
+  _getBaseSize,
   _initialiseRootState,
+  _measureScaledSVG,
   createRootState,
 } from "../popup";
 import {
+  ControlsStateObject,
   DEFAULT_CONTROLS_STATE,
   ImageStyleType,
   OutputImageFormat,
@@ -54,12 +58,27 @@ import {
   createNFTCardAvatarSVG,
   createStandardAvatarSVG,
 } from "../svg";
+import { rasteriseSVG } from "../svg-rasterisation";
 
 jest.mock("../svg.ts");
+jest.mock("../svg-rasterisation.ts");
 
 function parseSVG(svg: string): SVGElement {
   const parse: typeof _parseSVG = jest.requireActual("../svg")._parseSVG;
   return parse({ svgSource: svg });
+}
+
+function readBlobAsText(blob: Blob): Promise<string> {
+  // jsdom doesn't implement Blob.text()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      assert(typeof reader.result === "string");
+      resolve(reader.result);
+    };
+    reader.onerror = reject;
+    reader.readAsText(blob);
+  });
 }
 
 beforeEach(() => {
@@ -907,4 +926,234 @@ describe("<ImageOptions>", () => {
       });
     }
   );
+});
+
+describe("_createOutputImageState()", () => {
+  let controlsState = signal<ControlsState>(undefined);
+  let avatarSvgState = signal<AvatarSVGState>(undefined);
+  let revokeObjectURL: jest.Mock<void, [string]>;
+  let blobs: Map<string, Blob>;
+  beforeEach(() => {
+    controlsState = signal<ControlsState>(undefined);
+    avatarSvgState = signal<AvatarSVGState>(undefined);
+    blobs = new Map();
+    let urlId = 0;
+    // jsdom doesn't implement these
+    assert(URL.createObjectURL === undefined);
+    assert(URL.revokeObjectURL === undefined);
+    URL.createObjectURL = jest.fn().mockImplementation((blob) => {
+      const url = `example://${urlId++}`;
+      blobs.set(url, blob as Blob);
+      return url;
+    });
+    URL.revokeObjectURL = revokeObjectURL = jest
+      .fn()
+      .mockImplementation(() => undefined);
+    jest
+      .mocked(rasteriseSVG)
+      .mockImplementation(async ({ svg, width, height }) => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 20);
+        });
+        return new Blob(
+          [
+            `mock PNG width: ${width}, height: ${height}, `,
+            `svg testid: ${svg.getAttribute("data-testid")}`,
+          ],
+          { type: "image/png" }
+        );
+      });
+  });
+
+  afterEach(() => {
+    URL.createObjectURL = undefined as unknown as typeof URL.createObjectURL;
+    URL.revokeObjectURL = undefined as unknown as typeof URL.revokeObjectURL;
+  });
+
+  test("creates and subsequently updates SVG image", async () => {
+    const outputImage = _createOutputImageState({
+      avatarSvgState,
+      controlsState,
+    });
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      outputImageFormat: OutputImageFormat.SVG,
+    };
+    const svgSrc1 = `<svg viewBox="0 0 10 16" data-testid="example1" xmlns="${SVGNS}"/>`;
+    const svgSrc2 = `<svg viewBox="0 0 10 16" data-testid="example2" xmlns="${SVGNS}"/>`;
+    avatarSvgState.value = parseSVG(svgSrc1);
+
+    await waitFor(async () => {
+      expect(outputImage.value).toEqual({
+        format: OutputImageFormat.SVG,
+        mimeType: "image/svg+xml",
+        blob: blobs.get("example://0"),
+        url: "example://0",
+      });
+      expect(await readBlobAsText(blobs.get("example://0") as Blob)).toEqual(
+        svgSrc1
+      );
+    });
+
+    avatarSvgState.value = parseSVG(svgSrc2);
+
+    await waitFor(async () => {
+      expect(outputImage.value).toEqual({
+        format: OutputImageFormat.SVG,
+        mimeType: "image/svg+xml",
+        blob: blobs.get("example://1"),
+        url: "example://1",
+      });
+      expect(await readBlobAsText(blobs.get("example://1") as Blob)).toEqual(
+        svgSrc2
+      );
+    });
+  });
+
+  test("creates and subsequently updates PNG image", async () => {
+    const outputImage = _createOutputImageState({
+      avatarSvgState,
+      controlsState,
+    });
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      outputImageFormat: OutputImageFormat.PNG,
+    };
+    const svgSrc1 = `<svg viewBox="0 0 10 16" data-testid="example1" xmlns="${SVGNS}"/>`;
+    const svgSrc2 = `<svg viewBox="0 0 10 16" data-testid="example2" xmlns="${SVGNS}"/>`;
+    avatarSvgState.value = parseSVG(svgSrc1);
+
+    await waitFor(async () => {
+      expect(outputImage.value).toEqual({
+        format: OutputImageFormat.PNG,
+        mimeType: "image/png",
+        blob: blobs.get("example://0"),
+        url: "example://0",
+      });
+      expect(await readBlobAsText(blobs.get("example://0") as Blob)).toEqual(
+        "mock PNG width: 20, height: 32, svg testid: example1"
+      );
+    });
+
+    avatarSvgState.value = parseSVG(svgSrc2);
+    controlsState.value = {
+      ...controlsState.value,
+      rasterImageSize: RasterImageSize.EXACT_WIDTH,
+      rasterImageExactWidth: 100,
+    };
+
+    await waitFor(async () => {
+      expect(revokeObjectURL.mock.calls).toEqual([["example://0"]]);
+      expect(outputImage.value).toEqual({
+        format: OutputImageFormat.PNG,
+        mimeType: "image/png",
+        blob: blobs.get("example://1"),
+        url: "example://1",
+      });
+      expect(await readBlobAsText(blobs.get("example://1") as Blob)).toEqual(
+        "mock PNG width: 100, height: 160, svg testid: example2"
+      );
+    });
+  });
+
+  test("skips pending render requests superseded by more recent requests", async () => {
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      outputImageFormat: OutputImageFormat.PNG,
+      rasterImageSize: RasterImageSize.EXACT_WIDTH,
+      rasterImageExactWidth: 500,
+    };
+    const svgSrc = `<svg viewBox="0 0 10 10" data-testid="example1" xmlns="${SVGNS}"/>`;
+    avatarSvgState.value = parseSVG(svgSrc);
+
+    const outputImage = _createOutputImageState({
+      avatarSvgState,
+      controlsState,
+    });
+
+    for (let i = 0; i < 10; ++i) {
+      controlsState.value = {
+        ...controlsState.value,
+        rasterImageExactWidth: 1000 + i,
+      };
+    }
+
+    await waitFor(async () => {
+      expect(outputImage.value).toEqual({
+        format: OutputImageFormat.PNG,
+        mimeType: "image/png",
+        blob: blobs.get("example://0"),
+        url: "example://0",
+      });
+      expect(await readBlobAsText(blobs.get("example://0") as Blob)).toEqual(
+        "mock PNG width: 1009, height: 1009, svg testid: example1"
+      );
+    });
+
+    // The jobs are executed asynchronously and aborted if another job has been
+    // queued since an earlier job was created, so we only render the image
+    // once, despite triggering several state changes.
+    expect(rasteriseSVG).toBeCalledTimes(1);
+    expect(rasteriseSVG).toBeCalledWith({
+      svg: avatarSvgState.value,
+      width: 1009,
+      height: 1009,
+    });
+  });
+
+  test("propagates error from SVG creation", async () => {
+    const outputImage = _createOutputImageState({
+      avatarSvgState,
+      controlsState,
+    });
+    avatarSvgState.value = new Error("Failed to create Avatar SVG");
+    await waitFor(() => {
+      expect(
+        outputImage.value instanceof Error && outputImage.value.message
+      ).toBe("Failed to create Avatar SVG");
+    });
+  });
+});
+
+describe("_measureScaledSVG()", () => {
+  test("throws if viewBox is invalid", () => {
+    expect(() =>
+      _getBaseSize(parseSVG(`<svg viewBox="foo" xmlns="${SVGNS}"/>`))
+    ).toThrow("svg viewBox attribute is invalid: foo");
+  });
+
+  test.each`
+    viewBox        | controlsState                                                                    | expectedSize
+    ${"0 0 10 20"} | ${{ rasterImageSize: RasterImageSize.SMALL }}                                    | ${{ width: 10, height: 20 }}
+    ${"0 0 10 20"} | ${{ rasterImageSize: RasterImageSize.MEDIUM }}                                   | ${{ width: 20, height: 40 }}
+    ${"0 0 10 20"} | ${{ rasterImageSize: RasterImageSize.LARGE }}                                    | ${{ width: 30, height: 60 }}
+    ${"0 0 10 20"} | ${{ rasterImageSize: RasterImageSize.XLARGE }}                                   | ${{ width: 40, height: 80 }}
+    ${"0 0 10 20"} | ${{ rasterImageSize: RasterImageSize.EXACT_WIDTH, rasterImageExactWidth: 12 }}   | ${{ width: 12, height: 24 }}
+    ${"0 0 10 20"} | ${{ rasterImageSize: RasterImageSize.EXACT_HEIGHT, rasterImageExactHeight: 24 }} | ${{ width: 12, height: 24 }}
+  `(
+    'measures SVG with viewBox="$viewBox" with size $controlsState as $expectedSize',
+    ({
+      viewBox,
+      controlsState,
+      expectedSize,
+    }: {
+      viewBox: string;
+      controlsState: ControlsStateObject;
+      expectedSize: { width: number; height: number };
+    }) => {
+      const svg = parseSVG(`<svg viewBox="${viewBox}" xmlns="${SVGNS}"/>`);
+      expect(_measureScaledSVG({ svg, controlsState })).toEqual(expectedSize);
+    }
+  );
+});
+
+test("_getBaseSize()", () => {
+  expect(() =>
+    _getBaseSize(parseSVG(`<svg viewBox="foo" xmlns="${SVGNS}"/>`))
+  ).toThrow("svg viewBox attribute is invalid: foo");
+  expect(
+    _getBaseSize(parseSVG(`<svg viewBox="0 0 10 20" xmlns="${SVGNS}"/>`))
+  ).toEqual({ width: 10, height: 20 });
 });
