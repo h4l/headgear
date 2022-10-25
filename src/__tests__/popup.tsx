@@ -27,10 +27,12 @@ import {
   CouldNotLoadAvatarMessage,
   DataStateType,
   DisplayArea,
-  DownloadSVGButton,
+  DownloadImageButton,
   ErrorBoundary,
   ImageOptions,
   ImageStyleOption,
+  OutputImageContext,
+  OutputImageState,
   RootState,
   _createAvatarSvgState,
   _createOutputImageState,
@@ -563,37 +565,54 @@ describe("<ErrorBoundary>", () => {
   });
 });
 
-describe("<DownloadSVGButton>", () => {
-  test("is disabled until state is available", async () => {
-    const controlsState = signal<ControlsState>(undefined);
-    const avatarSvgState = signal<AvatarSVGState>(undefined);
-    render(
-      <ControlsContext.Provider value={controlsState}>
-        <AvatarSvgContext.Provider value={avatarSvgState}>
-          <DownloadSVGButton />
-        </AvatarSvgContext.Provider>
-      </ControlsContext.Provider>
-    );
-    let button = await screen.findByRole("button");
-    expect(button).toHaveAttribute("aria-disabled");
-    expect(button).toHaveAttribute("href", "#");
-    expect(button).not.toHaveAttribute("download");
+describe("<DownloadImageButton>", () => {
+  test.each`
+    format                   | name     | extension
+    ${OutputImageFormat.PNG} | ${"PNG"} | ${"png"}
+    ${OutputImageFormat.SVG} | ${"SVG"} | ${"svg"}
+  `(
+    "is disabled until state is available",
+    async (options: {
+      format: OutputImageFormat;
+      name: string;
+      extension: string;
+    }) => {
+      const {
+        renderWithStateContext,
+        state: { controlsState, outputImageState },
+      } = statefulElementRenderer(<DownloadImageButton />);
+      renderWithStateContext();
 
-    controlsState.value = {
-      ...DEFAULT_CONTROLS_STATE,
-      imageStyle: ImageStyleType.STANDARD,
-    };
-    avatarSvgState.value = parseSVG(`<svg xmlns="${SVGNS}"/>`);
+      let button = await screen.findByRole("button");
+      expect(button).toHaveAttribute("aria-disabled");
+      expect(button).toHaveAttribute("href", "#");
+      expect(button).not.toHaveAttribute("download");
 
-    await waitFor(async () => {
-      button = await screen.findByRole("button");
-      expect(button).not.toHaveAttribute("aria-disabled");
-      expect(button).toHaveAttribute("download", "Reddit Avatar Standard.svg");
-      expect(button.getAttribute("href")).toBe(
-        `data:image/svg+xml;base64,${btoa(`<svg xmlns="${SVGNS}"/>`)}`
+      controlsState.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        imageStyle: ImageStyleType.STANDARD,
+        outputImageFormat: options.format,
+      };
+      outputImageState.value = {
+        format: options.format,
+        mimeType: "image/foo",
+        blob: new Blob([]),
+        url: "example://0",
+      };
+
+      await waitFor(async () => {
+        expect(button).not.toHaveAttribute("aria-disabled");
+      });
+      button = await screen.findByRole("button", {
+        name: `Download ${options.name} Image`,
+      });
+      expect(button).toHaveAttribute(
+        "download",
+        `Reddit Avatar Standard.${options.extension}`
       );
-    });
-  });
+      expect(button.getAttribute("href")).toBe("example://0");
+    }
+  );
 });
 
 function statefulElementRenderer(children: ComponentChildren): {
@@ -605,19 +624,22 @@ function statefulElementRenderer(children: ComponentChildren): {
   });
   const controlsState = signal<ControlsState>(undefined);
   const avatarSvgState = signal<AvatarSVGState>(undefined);
+  const outputImageState = signal<OutputImageState>(undefined);
 
   const renderWithStateContext = () =>
     render(
       <AvatarDataContext.Provider value={avatarDataState}>
         <ControlsContext.Provider value={controlsState}>
           <AvatarSvgContext.Provider value={avatarSvgState}>
-            {children}
+            <OutputImageContext.Provider value={outputImageState}>
+              {children}
+            </OutputImageContext.Provider>
           </AvatarSvgContext.Provider>
         </ControlsContext.Provider>
       </AvatarDataContext.Provider>
     );
   return {
-    state: { avatarDataState, controlsState, avatarSvgState },
+    state: { avatarDataState, controlsState, avatarSvgState, outputImageState },
     renderWithStateContext,
   };
 }
@@ -880,6 +902,7 @@ describe("<ImageOptions>", () => {
       controlsState.value = {
         ...DEFAULT_CONTROLS_STATE,
         imageOptionsUIOpen: true,
+        outputImageFormat: OutputImageFormat.SVG,
         rasterImageSize: RasterImageSize.EXACT_HEIGHT,
       };
       renderWithStateContext();
@@ -888,6 +911,8 @@ describe("<ImageOptions>", () => {
       await waitFor(() => {
         expect(controlsState.value?.rasterImageSize).toBe(options.value);
       });
+      // Format automatically switches to PNG when changing raster image size.
+      expect(controlsState.value.outputImageFormat).toBe(OutputImageFormat.PNG);
     }
   );
 

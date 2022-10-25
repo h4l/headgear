@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useErrorBoundary,
-  useMemo,
   useReducer,
   useRef,
   useState,
@@ -94,6 +93,7 @@ export type ControlsState = undefined | ControlsStateObject;
 export interface RootState {
   avatarDataState: Signal<AvatarDataState>;
   avatarSvgState: Signal<AvatarSVGState>;
+  outputImageState: Signal<OutputImageState>;
   controlsState: Signal<ControlsState>;
 }
 
@@ -106,6 +106,9 @@ export const ControlsContext = createContext<Signal<ControlsState>>(
   signal(undefined)
 );
 export const AvatarSvgContext = createContext<Signal<AvatarSVGState>>(
+  signal(undefined)
+);
+export const OutputImageContext = createContext<Signal<OutputImageState>>(
   signal(undefined)
 );
 
@@ -594,7 +597,7 @@ export function BottomButtons() {
   };
   return (
     <div class="flex">
-      <DownloadSVGButton />
+      <DownloadImageButton />
       <button
         aria-label="Settings"
         onClick={toggleImageOptionsUI}
@@ -624,24 +627,22 @@ const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
   [ImageStyleType.HEADSHOT_HEX, "Comment Headshot"],
 ]);
 
-export function DownloadSVGButton(): JSX.Element {
+export function DownloadImageButton(): JSX.Element {
   const controlsState = useContext(ControlsContext).value;
-  const avatarSvgState = useContext(AvatarSvgContext).value;
+  const outputImageState = useContext(OutputImageContext).value;
 
-  const downloadUri = useMemo(() => {
-    if (!(avatarSvgState instanceof SVGElement)) return "#";
-    const b64Svg = btoa(new XMLSerializer().serializeToString(avatarSvgState));
-    return `data:image/svg+xml;base64,${b64Svg}`;
-  }, [avatarSvgState]);
+  const isImageReady = !(
+    outputImageState === undefined || outputImageState instanceof Error
+  );
+  const disabled = !isImageReady;
+  const downloadUri = isImageReady ? outputImageState.url : "#";
 
   let filename: string | undefined;
   if (controlsState) {
     const imgStyleName = IMAGE_STYLE_NAMES.get(controlsState?.imageStyle);
     assert(imgStyleName);
-    filename = `Reddit Avatar ${imgStyleName}.svg`;
+    filename = `Reddit Avatar ${imgStyleName}.${controlsState.outputImageFormat}`;
   }
-  const disabled =
-    !(avatarSvgState instanceof SVGElement) || filename === undefined;
 
   return (
     <a
@@ -674,7 +675,7 @@ export function DownloadSVGButton(): JSX.Element {
           class="text-inherit m-1 drop-shadow-lg shadow-slate-900"
           style="text-shadow: 0px 0px 3px rgb(0 0 0 / 0.3)"
         >
-          Download SVG Image
+          Download {controlsState?.outputImageFormat.toUpperCase()} Image
         </span>
       </span>
     </a>
@@ -997,6 +998,7 @@ export function OutputImageScaleRadio(props: {
             if (!controlsState.value) return;
             controlsState.value = {
               ...controlsState.value,
+              outputImageFormat: OutputImageFormat.PNG,
               rasterImageSize: props.value,
             };
           }}
@@ -1030,6 +1032,7 @@ export function OutputImageExactRadio(props: {
     if (!controlsState.value) return;
     controlsState.value = {
       ...controlsState.value,
+      outputImageFormat: OutputImageFormat.PNG,
       rasterImageSize: props.value,
     };
   };
@@ -1192,9 +1195,11 @@ export function App() {
     <AvatarDataContext.Provider value={rootState.avatarDataState}>
       <ControlsContext.Provider value={rootState.controlsState}>
         <AvatarSvgContext.Provider value={rootState.avatarSvgState}>
-          <ErrorBoundary errorState={error}>
-            <Headgear />
-          </ErrorBoundary>
+          <OutputImageContext.Provider value={rootState.outputImageState}>
+            <ErrorBoundary errorState={error}>
+              <Headgear />
+            </ErrorBoundary>
+          </OutputImageContext.Provider>
         </AvatarSvgContext.Provider>
       </ControlsContext.Provider>
     </AvatarDataContext.Provider>
@@ -1227,10 +1232,15 @@ export function createRootState(): RootState {
     avatarDataState,
     controlsState,
   });
+  const outputImageState = _createOutputImageState({
+    controlsState,
+    avatarSvgState,
+  });
   return {
     avatarDataState,
     controlsState,
     avatarSvgState,
+    outputImageState,
   };
 }
 
