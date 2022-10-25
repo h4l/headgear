@@ -839,9 +839,7 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
 
 exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar in styled container 1`] = `
 <svg
-  height="100%"
   viewBox="0 0 587 718"
-  width="100%"
   xmlns="http://www.w3.org/2000/svg"
 >
   <rect

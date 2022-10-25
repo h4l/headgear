@@ -439,7 +439,7 @@ export function createStandardAvatarSVG({
   composedAvatar: SVGElement;
 }): SVGElement {
   const doc = new DOMParser().parseFromString(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${STD_W} ${STD_H}" width="100%" height="100%"></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${STD_W} ${STD_H}"></svg>`,
     "image/svg+xml"
   );
   let redditLogo = redditLogoSVG();
