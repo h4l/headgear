@@ -553,9 +553,9 @@ export function Controls() {
           disabledReason={nftOptionsDisabledReason}
         />
         <ImageStyleOption
-          name={ImageStyleType.NO_BG}
-          title="No Background"
-          description="Just the Avatar."
+          name={ImageStyleType.HEADSHOT_HEX}
+          title="Comment Headshot"
+          description="The upper half in a hexagon."
         />
         <ImageStyleOption
           name={ImageStyleType.HEADSHOT_CIRCLE}
@@ -563,9 +563,9 @@ export function Controls() {
           description="The upper half in a circle."
         />
         <ImageStyleOption
-          name={ImageStyleType.HEADSHOT_HEX}
-          title="Comment Headshot"
-          description="The upper half in a hexagon."
+          name={ImageStyleType.NO_BG}
+          title="No Background"
+          description="Just the Avatar."
         />
 
         {/* TODO: decide what we're doing with exposing avatar data... */}
