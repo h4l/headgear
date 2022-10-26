@@ -33,6 +33,7 @@ import {
   ImageOptions,
   ImageStyleOption,
   OutputImageContext,
+  OutputImageScaleRadio,
   OutputImageState,
   RootState,
   _createAvatarSvgState,
@@ -901,6 +902,31 @@ describe("<Controls>", () => {
     expect(controlsState.value.imageOptionsUIOpen).toBeTruthy();
     fireEvent.click(settingsBtn);
     expect(controlsState.value.imageOptionsUIOpen).toBeFalsy();
+  });
+});
+
+describe("<OutputImageScaleRadio>", () => {
+  // eslint-disable-next-line jest/expect-expect
+  test("displays scaled image size", async () => {
+    const {
+      state: { avatarSvgState },
+      renderWithStateContext,
+    } = statefulElementRenderer(
+      <OutputImageScaleRadio
+        scale={3}
+        label="Huge"
+        value={RasterImageSize.XLARGE}
+      />
+    );
+    renderWithStateContext();
+    await screen.getByLabelText("? \u00d7 ? pixels", { exact: false });
+
+    avatarSvgState.value = parseSVG(
+      `<svg xmlns="${SVGNS}" viewBox="0 0 10 20"/>`
+    );
+    await waitFor(async () => {
+      await screen.getByLabelText("30 \u00d7 60 pixels", { exact: false });
+    });
   });
 });
 

@@ -1129,7 +1129,13 @@ export function OutputImageScaleRadio(props: {
   scale: number;
 }): JSX.Element {
   const controlsState = useContext(ControlsContext);
-  const [w, h] = [380 * props.scale, 600 * props.scale];
+  const avatarSvgState = useContext(AvatarSvgContext);
+
+  let scaledSize: { width?: number; height?: number } = {};
+  if (avatarSvgState.value && !(avatarSvgState.value instanceof Error)) {
+    const { width, height } = _getBaseSize(avatarSvgState.value);
+    scaledSize = { width: width * props.scale, height: height * props.scale };
+  }
   return (
     <div class="flex my-1">
       <div class="flex items-center h-5">
@@ -1156,9 +1162,10 @@ export function OutputImageScaleRadio(props: {
           for={`output-image-scale-${props.value}`}
           class="font-medium text-gray-900 dark:text-gray-300"
         >
-          {props.label}{" "}
+          <span class="w-16 inline-block">{props.label} </span>
           <span class="font-normal text-xs">
-            ≈ {w} {"\u00d7"} {h} pixels
+            {scaledSize.width || "?"} {"\u00d7"} {scaledSize.height || "?"}{" "}
+            pixels
           </span>
         </label>
       </div>
