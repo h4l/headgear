@@ -8,13 +8,22 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Nothing yet
+
+## [0.3.0] - 2022-10-26
+
 ### Added
 
+- Avatar images can be downloaded or copied as PNG files, in addition to SVG.
+  ([#16](https://github.com/h4l/headgear/pull/16))
+  - The size of PNG images can be changed in a new settings dialog.
+  - The settings also allow switching between PNG and SVG output.
 - Comment Headshot Avatar style (the upper half of the Avatar over a hexagon)
   ([#13](https://github.com/h4l/headgear/pull/13))
 
 ### Changed
 
+- The order of the Avatar image style buttons has changed slightly
 - Improve NFT Card background rendering to remove pixelated corners when scaled
   up. ([#14](https://github.com/h4l/headgear/pull/14))
 
@@ -59,7 +68,8 @@ The first release.
 - Support for Chrome-based browsers
 
 [unreleased]:
-  https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.0...HEAD
+  https://github.com/olivierlacan/keep-a-changelog/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/h4l/headgear/compare/v0.2.2...v0.3.0
 [0.2.1]: https://github.com/h4l/headgear/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/h4l/headgear/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/h4l/headgear/releases/tag/v0.1.0
