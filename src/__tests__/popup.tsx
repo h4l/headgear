@@ -569,21 +569,23 @@ describe("<ErrorBoundary>", () => {
 
 describe("<DownloadImageButton>", () => {
   test.each`
-    format                   | extension
-    ${OutputImageFormat.PNG} | ${"png"}
-    ${OutputImageFormat.SVG} | ${"svg"}
+    format                   | extension | label
+    ${OutputImageFormat.PNG} | ${"png"}  | ${"Download Image"}
+    ${OutputImageFormat.SVG} | ${"svg"}  | ${"Download SVG Image"}
   `(
     "is disabled until state is available",
-    async (options: { format: OutputImageFormat; extension: string }) => {
+    async (options: {
+      format: OutputImageFormat;
+      extension: string;
+      label: string;
+    }) => {
       const {
         renderWithStateContext,
         state: { controlsState, outputImageState },
       } = statefulElementRenderer(<DownloadImageButton />);
       renderWithStateContext();
 
-      let button = await screen.findByRole("button", {
-        name: `Download Image`,
-      });
+      let button = await screen.findByRole("button");
       expect(button).toHaveAttribute("aria-disabled");
       expect(button).toHaveAttribute("href", "#");
       expect(button).not.toHaveAttribute("download");
@@ -604,7 +606,7 @@ describe("<DownloadImageButton>", () => {
         expect(button).not.toHaveAttribute("aria-disabled");
       });
       button = await screen.findByRole("button", {
-        name: `Download Image`,
+        name: options.label,
       });
       expect(button).toHaveAttribute(
         "download",
@@ -902,6 +904,33 @@ describe("<Controls>", () => {
     expect(controlsState.value.imageOptionsUIOpen).toBeTruthy();
     fireEvent.click(settingsBtn);
     expect(controlsState.value.imageOptionsUIOpen).toBeFalsy();
+  });
+
+  test("Copy button is not shown for SVG image output", async () => {
+    const {
+      state: { controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<Controls />);
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      outputImageFormat: OutputImageFormat.PNG,
+    };
+    renderWithStateContext();
+
+    expect(
+      await screen.queryByRole("button", { name: "Copy Image" })
+    ).not.toBeNull();
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      outputImageFormat: OutputImageFormat.SVG,
+    };
+    await waitFor(async () => {
+      expect(
+        await screen.queryByRole("button", { name: "Copy Image" })
+      ).toBeNull();
+    });
   });
 });
 

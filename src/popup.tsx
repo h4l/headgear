@@ -645,7 +645,13 @@ export function BottomButtons() {
   return (
     <div class="flex">
       <DownloadImageButton />
-      <CopyImageButton />
+      {/* Chrome does not allow SVG (image/svg+xml) to be copied to the
+          clipboard. We could copy it as text/plain, but that would be
+          inconsistent with the expectation of copying an image, so I think it's
+          best to just now allow copying SVG. */}
+      {!(controlsState.value?.outputImageFormat === OutputImageFormat.SVG) && (
+        <CopyImageButton />
+      )}
       <button
         aria-label="Settings"
         onClick={toggleImageOptionsUI}
@@ -728,7 +734,10 @@ export function DownloadImageButton(): JSX.Element {
           class="text-inherit m-1 drop-shadow-lg shadow-slate-900"
           style="text-shadow: 0px 0px 3px rgb(0 0 0 / 0.3)"
         >
-          Download Image
+          {controlsState &&
+          controlsState.outputImageFormat === OutputImageFormat.SVG
+            ? "Download SVG Image"
+            : "Download Image"}
         </span>
       </span>
     </a>
@@ -768,7 +777,12 @@ export function CopyImageButton(): JSX.Element {
       .then(() => {
         copyState.value = CopyState.COPIED;
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error(
+          "Failed to copy image data to clipboard:",
+          Object.getPrototypeOf(e),
+          e.message
+        );
         copyState.value = CopyState.FAILED;
       });
   };
