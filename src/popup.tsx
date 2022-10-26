@@ -415,6 +415,7 @@ export function DisplayArea() {
   const avatarDataState = useContext(AvatarDataContext);
   const controlsState = useContext(ControlsContext);
   const avatarSvgState = useContext(AvatarSvgContext);
+  const outputImageState = useContext(OutputImageContext);
 
   let content: JSX.Element;
   if (avatarDataState.value.type === DataStateType.ERROR) {
@@ -429,6 +430,20 @@ export function DisplayArea() {
         <p>
           Headgear could not load your Avatar because it was not able to
           generate an SVG image from Reddit's Avatar data.
+        </p>
+        <RequestBugReport />
+      </CouldNotLoadAvatarMessage>
+    );
+  } else if (outputImageState.value instanceof Error) {
+    content = (
+      <CouldNotLoadAvatarMessage
+        title="Something went wrong"
+        logErrorContextMessage="Failed to generate output image: "
+        logError={outputImageState.value}
+      >
+        <p>
+          Headgear hit an error while generating the image to be
+          downloaded/copied.
         </p>
         <RequestBugReport />
       </CouldNotLoadAvatarMessage>

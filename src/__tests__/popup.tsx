@@ -823,6 +823,21 @@ describe("<DisplayArea>", () => {
     await screen.findByTestId("error");
     await cleanup();
   });
+
+  test("displays error when in failed OutputImageState", async () => {
+    const {
+      state: { outputImageState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<DisplayArea />);
+
+    outputImageState.value = new Error("oops");
+    renderWithStateContext();
+    const errorContainer = await screen.findByTestId("error");
+    expect(errorContainer).toHaveTextContent(
+      "Headgear hit an error while generating the image to be downloaded/copied."
+    );
+    await cleanup();
+  });
 });
 
 describe("<Controls>", () => {
