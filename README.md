@@ -22,14 +22,17 @@ Builder and NFT shop.
 installed**. See Headgear's [security advice](./docs/security.md) for more.
 
 <dl>
-  <dt>Chrome / Brave</dt>
-  <dd>Install Headgear from the <a href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp" target="_blank">Chrome Web Store</a></dd>
-  <dt>Edge</dt>
-  <dd>Headgear supports Edge in principle, as Edge is compatible with Chrome extensions, but it's not yet been tested with Edge or submitted to the Edge Add-ons site.</dd>
+  <dt>Chrome / Brave / Opera</dt>
+  <dd>
+    Install Headgear from the <a href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp" target="_blank">Chrome Web Store</a>
+    <p>
+  </dd>
+  <dt>Microsoft Edge</dt>
+  <dd>Edge can also install Headgear from the Chrome Web Store link above, but you need to explicitly allow Edge to use the Chrome Web Store. Edge will prompt you to enable it when you first visit. <a href="https://support.microsoft.com/en-us/microsoft-edge/add-turn-off-or-remove-extensions-in-microsoft-edge-9c0ec68c-2fbc-2f2c-9ff0-bdc76f46b026" target="_blank">Microsoft has instructions here</a>.</dd>
   <dt>Firefox</dt>
-  <dd>Firefox is not yet supported, as they've not released support for Manifest V3 extensions in their stable release yet. However they have a developer preview of Manifest V3 support now, and it seems that they'll be releasing it in a few months (as of Oct 2022).</dd>
-  <dt>Other browsers</dt>
-  <dd>Opera and Safari may be able to support Headgear, but this has not been investigated in any detail.</dd>
+  <dd>Headgear does not yet support Firefox because they've not released support for Manifest V3 extensions in their stable release yet. However they have a developer preview of Manifest V3 support now, and it seems that they'll be releasing it in a few months (as of Oct 2022).</dd>
+  <dt>Safari</dt>
+  <dd>Safari may be able to support Headgear, but this has not been investigated in any detail.</dd>
 </dl>
 
 # Quickstart
