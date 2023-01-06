@@ -12,8 +12,15 @@ import merge from "webpack-merge";
 
 import { assert } from "./src/assert";
 
+type BrowserTarget = "chrome" | "firefox";
+type BrowserTargetOptions = { browser: BrowserTarget };
+
 /** Generate manifest.json */
 class GenerateManifestPlugin {
+  public readonly browser: BrowserTarget;
+  constructor(options: BrowserTargetOptions) {
+    this.browser = options.browser;
+  }
   apply(compiler: Compiler): void {
     compiler.hooks.compilation.tap("GenerateManifestPlugin", (compilation) => {
       compilation.hooks.processAssets.tapPromise(
@@ -22,12 +29,16 @@ class GenerateManifestPlugin {
           stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
         async (assets) => {
-          assets["manifest.json"] = await this.generateManifest();
+          assets["manifest.json"] = await this.generateManifest({
+            browser: this.browser,
+          });
         }
       );
     });
   }
-  async generateManifest(): Promise<sources.RawSource> {
+  async generateManifest(
+    options: BrowserTargetOptions
+  ): Promise<sources.RawSource> {
     const packageConfig = JSON.parse(
       await readFile(path.resolve(__dirname, "package.json"), "utf-8")
     );
@@ -46,13 +57,29 @@ class GenerateManifestPlugin {
       manifest.name = `${manifest.name} (${fullVersion})`;
     }
     manifest.version = safeVersion;
+
+    if (options.browser === "firefox") {
+      // Firefox needs an ID for Manifest V3 extensions:
+      // https://extensionworkshop.com/documentation/develop/extensions-and-the-add-on-id/#when-do-you-need-an-add-on-id
+      manifest.browser_specific_settings = {
+        gecko: {
+          id: "headgear@h4l.users.github.com",
+        },
+      };
+      // Firefox doesn't support service_worker, it uses background scripts
+      // ("Event Pages"):
+      // https://blog.mozilla.org/addons/2022/10/31/begin-your-mv3-migration-by-implementing-new-features-today/
+      manifest.background.scripts = [manifest.background.service_worker];
+      delete manifest.background.service_worker;
+    }
+
     return new sources.RawSource(JSON.stringify(manifest, undefined, 2));
   }
 }
 
 export function createConfig(options: {
   mode: "development" | "production";
-  browser: "chrome" | "firefox";
+  browser: BrowserTarget;
 }): Configuration {
   const config: Configuration = {
     name: options.browser,
@@ -98,7 +125,7 @@ export function createConfig(options: {
     },
 
     plugins: [
-      new GenerateManifestPlugin(),
+      new GenerateManifestPlugin({ browser: options.browser }),
       new CopyPlugin({
         patterns: [
           { from: "./src/html/*.html", to: "html/[name].html" },
