@@ -2,6 +2,7 @@ import debounce from "lodash.debounce";
 import isEqual from "lodash.isequal";
 
 import { assert } from "./assert";
+import { polyfillWebExtensionsAPI } from "./compatibility";
 import {
   ControlsStateObject,
   PORT_IMAGE_CONTROLS_CHANGED,
@@ -39,5 +40,6 @@ export function _persistImageControlsOnChange() {
 }
 
 export async function main() {
+  polyfillWebExtensionsAPI();
   _persistImageControlsOnChange();
 }
