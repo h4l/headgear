@@ -1381,7 +1381,7 @@ export async function _getUserCurrentAvatar(
   assert(typeof tabId === "number");
   await chrome.scripting.executeScript({
     target: { tabId },
-    files: ["reddit.js"],
+    files: ["/reddit.js"],
   });
   const [err, avatar] = (await chrome.tabs.sendMessage(
     tabId,
