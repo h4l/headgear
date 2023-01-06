@@ -200,6 +200,9 @@ describe("create & initialise RootState", () => {
   test("avatarDataState becomes AVATAR_LOADED if tab is reddit", async () => {
     const mockAvatarData = { avatar: true };
     jest
+      .mocked(chrome.scripting.executeScript)
+      .mockResolvedValue([{ frameId: 0, result: null }] as never);
+    jest
       .mocked(chrome.tabs.sendMessage)
       .mockResolvedValue([undefined, mockAvatarData]);
     const rootState = createRootState();
@@ -221,6 +224,9 @@ describe("create & initialise RootState", () => {
 
   test("avatarDataState becomes ERROR with type GET_AVATAR_FAILED if get-avatar message responds with an error", async () => {
     jest
+      .mocked(chrome.scripting.executeScript)
+      .mockResolvedValue([{ frameId: 0, result: null }] as never);
+    jest
       .mocked(chrome.tabs.sendMessage)
       .mockResolvedValue([
         { message: "An expected error occurred" },
@@ -241,6 +247,9 @@ describe("create & initialise RootState", () => {
   });
 
   test("avatarDataState becomes ERROR with type UNKNOWN if get-avatar handler throws", async () => {
+    jest
+      .mocked(chrome.scripting.executeScript)
+      .mockResolvedValue([{ frameId: 0, result: null }] as never);
     jest
       .mocked(chrome.tabs.sendMessage)
       .mockRejectedValue(new Error("An unexpected error occurred"));
