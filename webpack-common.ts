@@ -72,6 +72,11 @@ class GenerateManifestPlugin {
       // https://blog.mozilla.org/addons/2022/10/31/begin-your-mv3-migration-by-implementing-new-features-today/
       manifest.background.scripts = [manifest.background.service_worker];
       delete manifest.background.service_worker;
+
+      // Firefox needs the clipboardWrite permission to write images to the
+      // clipboard.
+      // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Interact_with_the_clipboard
+      manifest.permissions.push("clipboardWrite");
     }
 
     return new sources.RawSource(JSON.stringify(manifest, undefined, 2));

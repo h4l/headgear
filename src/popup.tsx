@@ -13,7 +13,10 @@ import {
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
-import { throwIfExecuteScriptResultFailed } from "./compatibility";
+import {
+  throwIfExecuteScriptResultFailed,
+  writeImageToClipboard,
+} from "./compatibility";
 import { computedAsync, serialiseExecutions } from "./computed-async";
 import {
   ControlsStateObject,
@@ -774,8 +777,7 @@ export function CopyImageButton(): JSX.Element {
     }
     copyState.value = CopyState.COPYING;
     const imageBlob = outputImageState.value.blob;
-    navigator.clipboard
-      .write([new ClipboardItem({ [imageBlob.type]: imageBlob })])
+    writeImageToClipboard(imageBlob)
       .then(() => {
         copyState.value = CopyState.COPIED;
       })

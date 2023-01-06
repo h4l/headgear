@@ -41,3 +41,45 @@ export function throwIfExecuteScriptResultFailed(
     }
   }
 }
+
+interface FirefoxWebExtensionsApi {
+  clipboard: {
+    setImageData(
+      imageData: ArrayBuffer,
+      imageType: "png" | "jpeg"
+    ): Promise<void>;
+  };
+}
+
+function isFirefoxWebExtensionsApi(
+  object: unknown
+): object is FirefoxWebExtensionsApi {
+  return (
+    typeof object === "object" &&
+    typeof (object as Partial<FirefoxWebExtensionsApi>).clipboard
+      ?.setImageData === "function"
+  );
+}
+
+export async function writeImageToClipboard(imageBlob: Blob): Promise<void> {
+  if (globalThis.ClipboardItem) {
+    return await navigator.clipboard.write([
+      new ClipboardItem({ [imageBlob.type]: imageBlob }),
+    ]);
+  }
+
+  const browser = (globalThis as WebExtensionApi).browser;
+  if (isFirefoxWebExtensionsApi(browser)) {
+    // Firefox hasn't implemented navigator.clipboard.write for images...
+    if (imageBlob.type !== "image/png") {
+      throw new Error(`Unable to copy non-png image: ${imageBlob.type}`);
+    }
+
+    return await browser.clipboard.setImageData(
+      await imageBlob.arrayBuffer(),
+      "png"
+    );
+  }
+
+  throw new Error("Unable to copy image, no supported clipboard API available");
+}
