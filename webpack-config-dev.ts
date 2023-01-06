@@ -1,7 +1,3 @@
-import { merge } from "webpack-merge";
+import { createConfig } from "./webpack-common";
 
-import commonConfig from "./webpack-common";
-
-export default merge(commonConfig, {
-  mode: "development",
-});
+export default createConfig({ mode: "development" });
