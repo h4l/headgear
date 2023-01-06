@@ -212,7 +212,7 @@ describe("create & initialise RootState", () => {
     assert(avatarDataState.value.type === DataStateType.LOADED);
     expect(chrome.scripting.executeScript).toBeCalledWith({
       target: { tabId: 123 },
-      files: ["reddit.js"],
+      files: ["/reddit.js"],
     });
     expect(chrome.tabs.sendMessage).toBeCalledWith(123, MSG_GET_AVATAR);
     expect(avatarDataState.value.tab).toBe(tab);
