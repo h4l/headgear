@@ -52,8 +52,10 @@ class GenerateManifestPlugin {
 
 export function createConfig(options: {
   mode: "development" | "production";
+  browser: "chrome" | "firefox";
 }): Configuration {
   const config: Configuration = {
+    name: options.browser,
     entry: {
       background: "./src/background-entry.ts",
       popup: "./src/popup-entry.tsx",
@@ -92,7 +94,7 @@ export function createConfig(options: {
     },
     output: {
       filename: "[name].js",
-      path: path.resolve(__dirname, "dist"),
+      path: path.resolve(__dirname, "dist", options.browser),
     },
 
     plugins: [
