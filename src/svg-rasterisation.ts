@@ -1,4 +1,11 @@
 import { assert } from "./assert";
+import { SVGNS } from "./svg";
+
+interface RasteriseSVGOptions {
+  svg: SVGElement;
+  width: number;
+  height: number;
+}
 
 /**
  * Draw the SVG image on a canvas, returning a Blob containing a PNG image.
@@ -11,14 +18,11 @@ export async function rasteriseSVG({
   svg,
   width,
   height,
-}: {
-  svg: SVGElement;
-  width: number;
-  height: number;
-}): Promise<Blob> {
+}: RasteriseSVGOptions): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
+  svg = wrapSvgWithAbsoluteDimensionsIfRequired({ svg, width, height });
   const renderContext = canvas.getContext("2d", {
     alpha: true,
     desynchronized: true,
@@ -56,4 +60,22 @@ export async function rasteriseSVG({
   });
   assert(result !== null);
   return result;
+}
+
+function wrapSvgWithAbsoluteDimensionsIfRequired({
+  svg,
+  width,
+  height,
+}: RasteriseSVGOptions): SVGElement {
+  if (!HeadgearGlobal.FEATURE_CANVAS_SVG_ABSOLUTE_DIMENSIONS) {
+    return svg;
+  }
+
+  // Firefox renders SVG on a canvas with 0x0 size unless it has absolute width
+  // and height: https://bugzilla.mozilla.org/show_bug.cgi?id=700533
+  const wrapper = document.createElementNS(SVGNS, "svg") as SVGElement;
+  wrapper.setAttribute("width", `${width}`);
+  wrapper.setAttribute("height", `${height}`);
+  wrapper.appendChild(wrapper.ownerDocument.importNode(svg, true));
+  return wrapper;
 }

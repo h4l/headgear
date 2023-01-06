@@ -5,6 +5,7 @@ import {
   Compilation,
   Compiler,
   Configuration,
+  DefinePlugin,
   IgnorePlugin,
   sources,
 } from "webpack";
@@ -138,6 +139,11 @@ export function createConfig(options: {
       new IgnorePlugin({
         contextRegExp: /css\/lib\/stringify/,
         resourceRegExp: /source-map-support/,
+      }),
+      new DefinePlugin({
+        HeadgearGlobal: {
+          FEATURE_CANVAS_SVG_ABSOLUTE_DIMENSIONS: options.browser === "firefox",
+        },
       }),
     ],
   };
