@@ -18,3 +18,26 @@ export function polyfillWebExtensionsAPI() {
     globalThis.chrome = browser;
   }
 }
+
+interface FirefoxInjectionResult<T>
+  extends chrome.scripting.InjectionResult<T> {
+  error?: unknown;
+}
+
+/**
+ * Detect and handle errors in an chrome.scripting.executeScript() result array.
+ *
+ * Firefox doesn't reject the executeScript() promise, rather each element in
+ * the returned array can have an error property.
+ */
+export function throwIfExecuteScriptResultFailed(
+  executeScriptResult: chrome.scripting.InjectionResult<unknown>[]
+): void {
+  for (const result of executeScriptResult as FirefoxInjectionResult<unknown>[]) {
+    if (result.error) {
+      throw new Error(
+        `chrome.scripting.executeScript() failed: ${result.error}`
+      );
+    }
+  }
+}

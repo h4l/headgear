@@ -1,4 +1,7 @@
-import {polyfillWebExtensionsAPI} from "../compatibility";
+import {
+  polyfillWebExtensionsAPI,
+  throwIfExecuteScriptResultFailed,
+} from "../compatibility";
 
 describe("polyfillWebExtensionsAPI()", () => {
   afterEach(() => {
@@ -18,5 +21,26 @@ describe("polyfillWebExtensionsAPI()", () => {
     (globalThis as { browser?: unknown }).browser = browser;
     polyfillWebExtensionsAPI();
     expect(globalThis.chrome).toBe(browser);
+  });
+});
+
+describe("throwIfExecuteScriptResultFailed()", () => {
+  test("does not throw for successful results", () => {
+    expect(() =>
+      throwIfExecuteScriptResultFailed([{ frameId: 123, result: undefined }])
+    ).not.toThrow();
+  });
+
+  test("throws if result has an error", () => {
+    const errorResult: chrome.scripting.InjectionResult<unknown> & {
+      error: unknown;
+    } = {
+      frameId: 123,
+      result: undefined,
+      error: "Example error",
+    };
+    expect(() => {
+      throwIfExecuteScriptResultFailed([errorResult]);
+    }).toThrowError("chrome.scripting.executeScript() failed: Example error");
   });
 });

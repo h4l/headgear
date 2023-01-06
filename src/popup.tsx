@@ -13,6 +13,7 @@ import {
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
+import { throwIfExecuteScriptResultFailed } from "./compatibility";
 import { computedAsync, serialiseExecutions } from "./computed-async";
 import {
   ControlsStateObject,
@@ -1379,10 +1380,11 @@ export async function _getUserCurrentAvatar(
 ): Promise<ResolvedAvatar | null> {
   const tabId = tab.id;
   assert(typeof tabId === "number");
-  await chrome.scripting.executeScript({
+  const result = await chrome.scripting.executeScript({
     target: { tabId },
     files: ["/reddit.js"],
   });
+  throwIfExecuteScriptResultFailed(result);
   const [err, avatar] = (await chrome.tabs.sendMessage(
     tabId,
     MSG_GET_AVATAR
