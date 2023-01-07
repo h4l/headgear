@@ -167,6 +167,11 @@ exports[`Avatar SVG Headshot Comments Layout - createHeadshotCommentsAvatarSVG()
     <clippath
       id="avatar-upper"
     >
+      <rect>
+        <desc>
+          This is a workaround for a Firefox SVG rendering bug.
+        </desc>
+      </rect>
       <path
         d="M 190,488 325.52665,413 H 380 V 0 H 0 v 413 h 55 z"
       />

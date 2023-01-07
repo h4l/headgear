@@ -15,6 +15,16 @@
         </linearGradient>
         <path id="hex-frame" stroke="url(#hex-frame-stroke)" stroke-linejoin="round" stroke-width="16" d="m 177.75041,189.74577 c 7.64778,-4.12577 17.10688,-4.12577 24.75465,0 l 118.43998,65.2074 c 7.54715,4.2264 12.07544,11.77355 12.07544,19.72322 v 130.21353 c 0,7.94966 -4.52829,15.49681 -12.07544,19.62259 l -118.43998,65.10677 c -7.64777,4.2264 -17.10687,4.2264 -24.75465,0 L 59.310436,424.41188 A 22.641456,22.641456 0 0 1 47.235,404.78929 V 274.57576 c 0,-7.94967 4.42766,-15.39619 12.075436,-19.72323 z"/>
         <clipPath id="avatar-upper">
+            <rect>
+                <!-- This rect only exists to work around an apparent bug in
+                Firefox's handling of this clipPath in conjuction with the
+                avatar SVG. Without another graphical element in this clipPath,
+                Firefox renders the clipPath as if it starts at ~120 units from
+                the top, instead of at the top, which results in the top of the
+                avatar being clipped off. With this no-op rect here, FF renders
+                the clip in the same way as Chrome, Inkscape, etc. -->
+                <desc>This is a workaround for a Firefox SVG rendering bug.</desc>
+            </rect>
             <path d="M 190,488 325.52665,413 H 380 V 0 H 0 v 413 h 55 z" />
         </clipPath>
         <clipPath id="hex-frame-foreground-clip">
