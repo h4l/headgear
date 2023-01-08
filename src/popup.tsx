@@ -1,4 +1,4 @@
-import { Signal, computed, effect, signal, useSignal } from "@preact/signals";
+import { Signal, effect, signal, useSignal } from "@preact/signals";
 import debounce from "lodash.debounce";
 import memoizeOne from "memoize-one";
 import { ComponentChildren, Fragment, JSX, createContext } from "preact";
@@ -1546,8 +1546,8 @@ export function _createAvatarSvgState({
       imageStyle: ImageStyleType,
       avatar: ResolvedAvatar,
       composedAvatar: SVGElement
-    ): SVGElement => {
-      let svg: SVGElement;
+    ): SVGElement | Promise<SVGElement> => {
+      let svg: Promise<SVGElement> | SVGElement;
       if (imageStyle === ImageStyleType.NFT_CARD) {
         if (!avatar.nftInfo)
           throw new TypeError(
@@ -1572,26 +1572,30 @@ export function _createAvatarSvgState({
     }
   );
 
-  return computed(() => {
-    const avatarData = avatarDataState.value;
-    const controls = controlsState.value;
-    if (avatarData.type !== DataStateType.LOADED || controls === undefined) {
-      return undefined;
-    }
+  return computedAsync({
+    signals: { avatarDataState, controlsState },
+    initial: undefined,
+    async compute({
+      signalValues: { avatarDataState: avatarData, controlsState: controls },
+    }): Promise<AvatarSVGState> {
+      if (avatarData.type !== DataStateType.LOADED || controls === undefined) {
+        return undefined;
+      }
 
-    const avatar = avatarData.avatar;
-    try {
-      // useMemo() doesn't work outside a component context, and this can get
-      // run asynchronously.
-      const composedAvatar = _composeAvatarSVGMemo(avatar);
-      const style = _getPermittedImageStyle({
-        requestedImageStyle: controls.imageStyle,
-        avatarData,
-      });
-      return _createAvatarSVGMemo(style, avatar, composedAvatar);
-    } catch (e) {
-      return e instanceof Error ? e : new Error(`${e}`);
-    }
+      const avatar = avatarData.avatar;
+      try {
+        // useMemo() doesn't work outside a component context, and this can get
+        // run asynchronously.
+        const composedAvatar = _composeAvatarSVGMemo(avatar);
+        const style = _getPermittedImageStyle({
+          requestedImageStyle: controls.imageStyle,
+          avatarData,
+        });
+        return await _createAvatarSVGMemo(style, avatar, composedAvatar);
+      } catch (e) {
+        return e instanceof Error ? e : new Error(`${e}`);
+      }
+    },
   });
 }
 

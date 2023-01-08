@@ -259,7 +259,7 @@ describe("create & initialise RootState", () => {
   });
 });
 
-describe("_createAvatarSvgStateSignal()", () => {
+describe("_createAvatarSvgState()", () => {
   test.each`
     dataStateType            | imageStyleType
     ${DataStateType.LOADING} | ${ImageStyleType.STANDARD}
@@ -289,7 +289,7 @@ describe("_createAvatarSvgStateSignal()", () => {
     }
   );
 
-  test("defaults to available image style if NFT style is requested with non-NFT calendar", () => {
+  test("defaults to available image style if NFT style is requested with non-NFT calendar", async () => {
     jest
       .mocked(createStandardAvatarSVG)
       .mockReturnValue(document.createElementNS(SVGNS, "svg"));
@@ -306,11 +306,14 @@ describe("_createAvatarSvgStateSignal()", () => {
       ...DEFAULT_CONTROLS_STATE,
       imageStyle: ImageStyleType.NFT_CARD,
     };
+    await waitFor(async () => {
+      expect(svgStateSignal.value).not.toBeUndefined();
+    });
     expect(svgStateSignal.value).toMatchInlineSnapshot(`<svg />`);
     expect(createStandardAvatarSVG).toHaveBeenCalledTimes(1);
   });
 
-  test("handles failure to compose avatar accessories into single SVG", () => {
+  test("handles failure to compose avatar accessories into single SVG", async () => {
     const err = new Error("failed to generate SVG");
     jest.mocked(composeAvatarSVG).mockImplementation(() => {
       throw err;
@@ -327,6 +330,9 @@ describe("_createAvatarSvgStateSignal()", () => {
       }),
     });
 
+    await waitFor(async () => {
+      expect(svgSignal.value).not.toBeUndefined();
+    });
     expect(svgSignal.value).toEqual(err);
   });
 
@@ -338,7 +344,7 @@ describe("_createAvatarSvgStateSignal()", () => {
     ${ImageStyleType.HEADSHOT_HEX}    | ${createHeadshotCommentsAvatarSVG}
   `(
     "handles failure to generate styled SVG variant",
-    ({
+    async ({
       imageStyle,
       svgVariantFn,
     }: {
@@ -360,6 +366,9 @@ describe("_createAvatarSvgStateSignal()", () => {
         controlsState: signal({ ...DEFAULT_CONTROLS_STATE, imageStyle }),
       });
 
+      await waitFor(async () => {
+        expect(svgSignal.value).not.toBeUndefined();
+      });
       expect(svgSignal.value).toEqual(err);
     }
   );
@@ -372,7 +381,7 @@ describe("_createAvatarSvgStateSignal()", () => {
     ${ImageStyleType.HEADSHOT_HEX}    | ${createHeadshotCommentsAvatarSVG}
   `(
     "generates SVG",
-    ({
+    async ({
       imageStyle,
       svgVariantFn,
     }: {
@@ -400,6 +409,9 @@ describe("_createAvatarSvgStateSignal()", () => {
         controlsState: signal({ ...DEFAULT_CONTROLS_STATE, imageStyle }),
       });
 
+      await waitFor(async () => {
+        expect(svgSignal.value).not.toBeUndefined();
+      });
       assert(svgSignal.value instanceof SVGElement);
       expect(svgSignal.value.outerHTML).toEqual(
         imageStyle === ImageStyleType.NO_BG
