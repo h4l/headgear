@@ -1,7 +1,11 @@
 import { signal } from "@preact/signals";
 import { waitFor } from "@testing-library/preact";
 
-import { Superseded, computedAsync } from "../computed-async";
+import {
+  Superseded,
+  computedAsync,
+  serialiseExecutions,
+} from "../computed-async";
 
 describe("computedAsync()", () => {
   test("returns state that updates asynchronously as source states change", async () => {
@@ -82,5 +86,104 @@ describe("computedAsync()", () => {
     expect(computeCalls).toEqual([0, 1, 2, 3]);
     expect(supersededCalls).toEqual([0, 1, 2]);
     expect(resultStates).toEqual(["initial value", "3"]);
+  });
+});
+
+describe("serialiseExecutions()", () => {
+  describe("successful calls", () => {
+    let fnCallEvents: { event: "started" | "stopped"; i: number }[] = [];
+    let serialisedFn: typeof fn;
+
+    const fn = async (i: number) => {
+      fnCallEvents.push({ event: "started", i });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      fnCallEvents.push({ event: "stopped", i });
+      return `${i}`;
+    };
+
+    beforeEach(() => {
+      fnCallEvents = [];
+      serialisedFn = serialiseExecutions(fn);
+    });
+
+    test("non-overlapping calls", async () => {
+      expect(await serialisedFn(0)).toBe("0");
+      expect(await serialisedFn(1)).toBe("1");
+      expect(await serialisedFn(2)).toBe("2");
+
+      expect(fnCallEvents).toEqual([
+        { event: "started", i: 0 },
+        { event: "stopped", i: 0 },
+        { event: "started", i: 1 },
+        { event: "stopped", i: 1 },
+        { event: "started", i: 2 },
+        { event: "stopped", i: 2 },
+      ]);
+    });
+
+    test("overlapping calls", async () => {
+      const resultPromises = [0, 1, 2].map((i) => serialisedFn(i));
+      const results = await Promise.all(resultPromises);
+      expect(results).toEqual(["0", "1", "2"]);
+      expect(fnCallEvents).toEqual([
+        { event: "started", i: 0 },
+        { event: "stopped", i: 0 },
+        { event: "started", i: 1 },
+        { event: "stopped", i: 1 },
+        { event: "started", i: 2 },
+        { event: "stopped", i: 2 },
+      ]);
+    });
+  });
+
+  describe("failing calls", () => {
+    let fnCallEvents: { event: "started" | "stopped"; i: number }[] = [];
+    let serialisedFn: typeof fn;
+
+    const fn = async (i: number) => {
+      fnCallEvents.push({ event: "started", i });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      try {
+        throw new Error(`${i} failed`);
+      } finally {
+        fnCallEvents.push({ event: "stopped", i });
+      }
+    };
+
+    beforeEach(() => {
+      fnCallEvents = [];
+      serialisedFn = serialiseExecutions(fn);
+    });
+
+    test("non-overlapping calls", async () => {
+      await expect(serialisedFn(0)).rejects.toThrow("0 failed");
+      await expect(serialisedFn(1)).rejects.toThrow("1 failed");
+      await expect(serialisedFn(2)).rejects.toThrow("2 failed");
+
+      expect(fnCallEvents).toEqual([
+        { event: "started", i: 0 },
+        { event: "stopped", i: 0 },
+        { event: "started", i: 1 },
+        { event: "stopped", i: 1 },
+        { event: "started", i: 2 },
+        { event: "stopped", i: 2 },
+      ]);
+    });
+
+    test("overlapping calls", async () => {
+      const resultPromises = [0, 1, 2].map((i) => serialisedFn(i));
+      const results = await Promise.allSettled(resultPromises);
+      expect(
+        results.map((r) => r.status === "rejected" && `${r.reason.message}`)
+      ).toEqual(["0 failed", "1 failed", "2 failed"]);
+      expect(fnCallEvents).toEqual([
+        { event: "started", i: 0 },
+        { event: "stopped", i: 0 },
+        { event: "started", i: 1 },
+        { event: "stopped", i: 1 },
+        { event: "started", i: 2 },
+        { event: "stopped", i: 2 },
+      ]);
+    });
   });
 });

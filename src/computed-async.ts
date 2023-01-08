@@ -94,3 +94,45 @@ export function computedAsync<
     return value.value;
   });
 }
+
+export function serialiseExecutions<T extends unknown[], U>(
+  fn: (...args: T) => Promise<U>
+): (...args: T) => Promise<U> {
+  let ongoingExecution: Promise<number> | number = -1;
+  let nextWaiterId = 0;
+  const waiters: Map<number, () => void> = new Map();
+
+  return async (...args: T): Promise<U> => {
+    const waiterId = nextWaiterId++;
+    const preWaitExecutionId: number | undefined = await Promise.race([
+      ongoingExecution,
+      undefined,
+    ]);
+    if (preWaitExecutionId !== waiterId - 1) {
+      const accessPermitted = new Promise<void>((resolve) => {
+        waiters.set(waiterId, resolve);
+      });
+      await accessPermitted;
+      waiters.delete(waiterId);
+    }
+
+    const lastExecution = ongoingExecution;
+    let resolveOngoingExecution: undefined | ((id: number) => void);
+    ongoingExecution = new Promise((resolve) => {
+      resolveOngoingExecution = resolve;
+    });
+    assert(resolveOngoingExecution);
+    assert((await Promise.race([lastExecution, undefined])) === waiterId - 1);
+
+    try {
+      return await fn(...args);
+    } finally {
+      resolveOngoingExecution(waiterId);
+      if (waiters.size) {
+        const unblockNextWaiter = waiters.get(waiterId + 1);
+        assert(unblockNextWaiter);
+        unblockNextWaiter();
+      }
+    }
+  };
+}
