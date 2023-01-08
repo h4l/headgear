@@ -52,6 +52,7 @@ const config: Configuration = {
     background: "./src/background-entry.ts",
     popup: "./src/popup-entry.tsx",
     reddit: "./src/reddit.ts",
+    "text-to-path-service": "./src/text-to-path/service-entry.ts",
   },
   devtool: "source-map",
   module: {
