@@ -13,6 +13,7 @@ import {
 
 import { assert, assertNever } from "./assert";
 import { ResolvedAvatar } from "./avatars";
+import { computedAsync, serialiseExecutions } from "./computed-async";
 import {
   ControlsStateObject,
   DEFAULT_CONTROLS_STATE,
@@ -1606,82 +1607,61 @@ export function _createOutputImageState({
   RootState,
   "avatarSvgState" | "controlsState"
 >): Signal<OutputImageState> {
-  interface OutputImageJob {
-    id: number;
-    result: Error | OutputImage | undefined;
-    cleanup?: () => void;
-  }
   // Creating a PNG image is asynchronous. We can receive state updates while
   // an async OutputImage creation is ongoing, so we need to be able behave
   // sensibly when this happens:
   //  - don't allow multiple expensive image creation jobs to run in parallel
   //  - don't start a job if there's a newer one that's superseded it
-  let next: Promise<OutputImageJob> | undefined;
-  let nextId = 0;
-  const state = signal<OutputImageState>(undefined);
 
-  effect(() => {
-    const id = ++nextId;
-    const previous = next;
+  let previousValue: OutputImage | undefined;
+  return computedAsync({
+    signals: {
+      avatarSvgState,
+      controlsState,
+    },
+    initial: undefined,
+    compute: serialiseExecutions(
+      async ({
+        signalValues: { avatarSvgState: svg, controlsState: controls },
+        superseded,
+      }): Promise<OutputImageState> => {
+        if (svg instanceof Error) return svg;
+        if (svg === undefined || controls === undefined) return;
+        // bail out early if we've been superseded
+        if ((await Promise.race([superseded, undefined])) !== undefined) return;
 
-    if (avatarSvgState.value instanceof Error) {
-      state.value = avatarSvgState.value;
-      return;
-    }
-    state.value = undefined;
-    if (
-      controlsState.value === undefined ||
-      avatarSvgState.value === undefined
-    ) {
-      return;
-    }
-    const controls = controlsState.value;
-    const svg = avatarSvgState.value;
+        let blob: Blob;
+        try {
+          if (controls.outputImageFormat === OutputImageFormat.SVG) {
+            blob = new Blob([new XMLSerializer().serializeToString(svg)], {
+              type: "image/svg+xml",
+            });
+          } else {
+            assert(controls.outputImageFormat === OutputImageFormat.PNG);
+            const size = _measureScaledSVG({ svg, controlsState: controls });
+            blob = await rasteriseSVG({ svg, ...size });
+          }
+        } catch (e) {
+          console.error("output image generation failed:", e);
+          return e instanceof Error ? e : new Error(`${e}`);
+        }
 
-    next = (async (): Promise<OutputImageJob> => {
-      const previousResult = await previous;
-      previousResult?.cleanup && previousResult.cleanup();
+        const result: OutputImage = {
+          format: controls.outputImageFormat,
+          blob,
+          mimeType: blob.type,
+          url: URL.createObjectURL(blob),
+        };
 
-      // bail out early if we've been superseded
-      if (nextId !== id) return { id, result: undefined };
+        // We are responsible for releasing blob URLs when they're no longer
+        // in use.
+        if (previousValue) URL.revokeObjectURL(previousValue.url);
+        previousValue = result;
 
-      let blob: Blob;
-      if (controls.outputImageFormat === OutputImageFormat.SVG) {
-        blob = new Blob([new XMLSerializer().serializeToString(svg)], {
-          type: "image/svg+xml",
-        });
-      } else {
-        assert(controls.outputImageFormat === OutputImageFormat.PNG);
-        const size = _measureScaledSVG({ svg, controlsState: controls });
-        blob = await rasteriseSVG({ svg, ...size });
+        return result;
       }
-      // if we've been superseded our result is not needed, throw it away
-      if (nextId !== id) return { id, result: undefined };
-      const result: OutputImage = {
-        format: controls.outputImageFormat,
-        blob,
-        mimeType: blob.type,
-        url: URL.createObjectURL(blob),
-      };
-      const job: OutputImageJob = {
-        id,
-        result,
-        cleanup() {
-          URL.revokeObjectURL(result.url);
-        },
-      };
-      state.value = job.result;
-      return job;
-    })().catch((error) => {
-      console.error("output image generation failed:", error);
-      const job: OutputImageJob = { id, result: error };
-      if (nextId === id) {
-        state.value = job.result;
-      }
-      return job;
-    });
+    ),
   });
-  return state;
 }
 
 const imageSizeScaleFactors: Record<
