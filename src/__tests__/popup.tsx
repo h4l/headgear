@@ -55,7 +55,7 @@ import {
 import { MSG_GET_AVATAR } from "../reddit-interaction";
 import {
   SVGNS,
-  _parseSVG,
+  parseSVG as _parseSVG,
   composeAvatarSVG,
   createHeadshotCircleAvatarSVG,
   createHeadshotCommentsAvatarSVG,
@@ -68,7 +68,7 @@ jest.mock("../svg.ts");
 jest.mock("../svg-rasterisation.ts");
 
 function parseSVG(svg: string): SVGElement {
-  const parse: typeof _parseSVG = jest.requireActual("../svg")._parseSVG;
+  const parse: typeof _parseSVG = jest.requireActual("../svg").parseSVG;
   return parse({ svgSource: svg });
 }
 

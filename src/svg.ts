@@ -225,7 +225,6 @@ export function createAccessoryCustomisationCSSRules(
 }
 
 export class SVGParseError extends Error {
-  readonly parseError: string;
   constructor({
     message,
     parseError,
@@ -233,33 +232,54 @@ export class SVGParseError extends Error {
     message: string;
     parseError: string;
   }) {
-    super(message);
-    this.parseError = parseError;
+    super(SVGParseError._formatMessage(message, parseError));
+  }
+
+  static _formatMessage(
+    message: string,
+    parseError: string | undefined
+  ): string {
+    return parseError ? `${message}: ${parseError}` : message;
   }
 }
 
-export function _parseSVG({
+export function parseSVG({
   svgSource,
   parseErrorMessage,
+  rootElement: _rootElement,
 }: {
   svgSource: string;
   parseErrorMessage?: string;
+  rootElement?: string;
 }): SVGElement {
+  const rootElement = _rootElement ?? "svg";
   const svgDoc = new DOMParser().parseFromString(svgSource, "image/svg+xml");
+  const errorMessage = parseErrorMessage || "Failed to parse SVG XML.";
   const error = svgDoc.querySelector("parsererror");
   if (error)
     throw new SVGParseError({
-      message: parseErrorMessage || "Failed to parse SVG XML.",
+      message: errorMessage,
       parseError: error.textContent || "",
     });
   const svg = svgDoc.firstElementChild;
-  assert(svg instanceof SVGElement);
+  if (!(svg instanceof SVGElement)) {
+    throw new SVGParseError({
+      message: errorMessage,
+      parseError: `Parsed document root element is not an SVGElement (does the parsed source contain an SVG xmlns attribute?)`,
+    });
+  }
+  if (svg?.nodeName !== rootElement) {
+    throw new SVGParseError({
+      message: errorMessage,
+      parseError: `Expected root element to be ${rootElement} but was ${svg?.nodeName}`,
+    });
+  }
   stripWhitespaceAndComments(svg);
   return svg;
 }
 
 function _parseAccessorySVG(accessory: ResolvedAccessory): SVGElement {
-  return _parseSVG({
+  return parseSVG({
     svgSource: accessory.svgData,
     parseErrorMessage: `Accessory ${JSON.stringify(
       accessory.id
@@ -425,7 +445,7 @@ function applyDubbl3beeRecursion(avatarGroup: SVGElement): void {
 }
 
 function redditLogoSVG(): SVGElement {
-  const redditLogo = _parseSVG({ svgSource: redditLogoLightSrc });
+  const redditLogo = parseSVG({ svgSource: redditLogoLightSrc });
   redditLogo.id = "reddit-logo";
   return redditLogo;
 }
@@ -470,9 +490,9 @@ export function createStandardAvatarSVG({
 export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
   let svg;
   if (nftInfo.seriesSize === null) {
-    svg = _parseSVG({ svgSource: nftNameSrc });
+    svg = parseSVG({ svgSource: nftNameSrc });
   } else {
-    svg = _parseSVG({ svgSource: nftNameWithCountSrc });
+    svg = parseSVG({ svgSource: nftNameWithCountSrc });
     const seriesSize = svg.querySelector("#series-size");
     assert(seriesSize);
     seriesSize.textContent =
@@ -501,13 +521,13 @@ export function createNFTCardAvatarSVG({
   nftInfo: NFTInfo;
   variant: NFTCardVariant;
 }): SVGElement {
-  const svg = _parseSVG({ svgSource: nftCardTemplateSrc });
+  const svg = parseSVG({ svgSource: nftCardTemplateSrc });
   const doc = svg.ownerDocument;
 
   composedAvatar = svg.appendChild(doc.importNode(composedAvatar, true));
   const nftName = svg.appendChild(doc.importNode(_nftNameSVG(nftInfo), true));
   const nftIcon = svg.appendChild(
-    doc.importNode(_parseSVG({ svgSource: nftIconSrc }), true)
+    doc.importNode(parseSVG({ svgSource: nftIconSrc }), true)
   );
 
   // Use only 1 style element to help Inkscape.
@@ -560,7 +580,7 @@ export function createHeadshotCircleAvatarSVG({
 }: {
   composedAvatar: SVGElement;
 }): SVGElement {
-  const svg = _parseSVG({ svgSource: headshotCircleTemplateSrc });
+  const svg = parseSVG({ svgSource: headshotCircleTemplateSrc });
   const doc = svg.ownerDocument;
 
   const viewBox = svg.getAttribute("viewBox")?.split(" ");
@@ -604,7 +624,7 @@ export function createHeadshotCommentsAvatarSVG({
 }: {
   composedAvatar: SVGElement;
 }): SVGElement {
-  const svg = _parseSVG({ svgSource: headshotCommentsTemplateSrc });
+  const svg = parseSVG({ svgSource: headshotCommentsTemplateSrc });
   const doc = svg.ownerDocument;
 
   const viewBox = svg.getAttribute("viewBox")?.split(" ");
