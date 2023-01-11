@@ -51,8 +51,8 @@
             <rect width="59" height="45.5" x="2.5" y="50%" rx="11" ry="11" fill="#000"/>
             <rect width="59" height="11" x="2.5" y="50%" fill="#000"/>
         </g>
-        <text style="font-family:'Reddit Sans';font-weight:800;fill:#f1f3f5;stroke:black;stroke-opacity:0.4;stroke-width:2;paint-order:stroke fill;" filter="url(#shadow)" text-anchor="middle" x="50%" y="38%" font-size="27">1</text>
-        <text id="series-size" style="font-family:'Reddit Sans';font-weight:800;fill:#f1f3f5;" text-anchor="middle" x="50%" y="85%" font-size="27">∞</text>
+        <text id="series-size" style="font-family:'Reddit Sans';fill:#f1f3f5;" text-anchor="middle" x="50%" y="85%" font-weight="800" font-size="27">∞</text>
+        <text id="series-size-numerator" style="font-family:'Reddit Sans';fill:#f1f3f5;stroke:black;stroke-opacity:0.4;stroke-width:2;paint-order:stroke fill;" filter="url(#shadow)" text-anchor="middle" x="50%" y="38%" font-weight="800" font-size="27">1</text>
     </svg>
-    <text id="nft-name" style="font-family:'Reddit Sans';font-weight:bold;fill:#f1f3f5;stroke:black;stroke-opacity:0.4;stroke-width:2;paint-order:stroke fill;" filter="url(#shadow)" mask="url(#mask)" text-anchor="left" x="120" y="60" font-size="37">Placeholder Name</text>
+    <text id="nft-name" style="font-family:'Reddit Sans';fill:#f1f3f5;stroke:black;stroke-opacity:0.4;stroke-width:2;paint-order:stroke fill;" filter="url(#shadow)" mask="url(#mask)" text-anchor="start" x="120" y="60" font-weight="bold" font-size="37">Placeholder Name</text>
 </svg>

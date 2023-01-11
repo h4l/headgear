@@ -98,6 +98,7 @@ const config: Configuration = {
       patterns: [
         { from: "./src/html/*.html", to: "html/[name].html" },
         { from: "./src/img/*", to: "img/[name][ext]" },
+        { from: "./src/font/*", to: "font/[name][ext]" },
       ],
     }),
     // This is a conditional import that we don't trigger, and if it's included

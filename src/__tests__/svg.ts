@@ -1,4 +1,4 @@
-import { assert } from "../assert";
+import { AssertionError, assert } from "../assert";
 import {
   NFTInfo,
   ResolvedAccessory,
@@ -9,8 +9,11 @@ import {
   NFTCardVariant,
   PrefixedCSSSelector,
   PrefixedCSSStylesheet,
+  SVGNS,
   SVGParseError,
+  _internals,
   _nftNameSVG,
+  parseSVG as _parseSVG,
   addPrefixesToCSSSelectorClasses,
   addPrefixesToCSSStylesheetSelectorClasses,
   addPrefixesToElementClassAttribute,
@@ -25,6 +28,13 @@ import {
   safeId,
   stripWhitespaceAndComments,
 } from "../svg";
+
+jest.mock("../text-to-path");
+jest.mock("../text-to-path/font-loading");
+
+function parseSVG(svg: string): SVGElement {
+  return _parseSVG({ svgSource: svg });
+}
 
 test.each([
   [
@@ -418,7 +428,7 @@ describe("Avatar SVG", () => {
       ${1000}    | ${"1k"}            | ${"regular"}
     `(
       "renders $nftType NFT avatar in styled container (seriesSize $seriesSize)",
-      ({
+      async ({
         seriesSize,
         renderedSeriesSize,
       }: {
@@ -428,7 +438,7 @@ describe("Avatar SVG", () => {
         const _avatar = avatar();
         assert(_avatar.nftInfo);
         const composedAvatar = composeAvatarSVG({ avatar: _avatar });
-        const nftCard = createNFTCardAvatarSVG({
+        const nftCard = await createNFTCardAvatarSVG({
           composedAvatar,
           nftInfo: { ..._avatar.nftInfo, seriesSize },
           variant: NFTCardVariant.SHOP_INVENTORY,
@@ -456,7 +466,7 @@ describe("Avatar SVG", () => {
       ${1289}    | ${"1.3k"}
     `(
       "nftNameSVG() renders seriesSize $seriesSize",
-      ({
+      async ({
         seriesSize,
         renderedSeriesSize,
       }: {
@@ -466,7 +476,10 @@ describe("Avatar SVG", () => {
         const _avatar = avatar();
         assert(_avatar.nftInfo);
         const nftInfo: NFTInfo = { ..._avatar.nftInfo, seriesSize };
-        const nftName = _nftNameSVG(nftInfo);
+        const nftName = await _nftNameSVG({
+          nftInfo,
+          variant: NFTCardVariant.SHOP_INVENTORY,
+        });
 
         if (renderedSeriesSize === null) {
           // eslint-disable-next-line jest/no-conditional-expect
@@ -523,5 +536,48 @@ describe("Avatar SVG", () => {
       expect(layout.querySelector("#avatar")).toBeTruthy();
       expect(layout).toMatchSnapshot();
     });
+  });
+});
+
+describe("_internals", () => {
+  test("parseViewBox()", () => {
+    expect(
+      _internals.parseViewBox(
+        parseSVG(`<svg xmlns="${SVGNS}" viewBox="-10 20 12.2 30"/>`)
+      )
+    ).toEqual({ x: -10, y: 20, w: 12.2, h: 30 });
+    expect(() =>
+      _internals.parseViewBox(parseSVG(`<svg xmlns="${SVGNS}"/>`))
+    ).toThrow("el has no viewBox attribute");
+    expect(() =>
+      _internals.parseViewBox(
+        parseSVG(`<svg xmlns="${SVGNS}" viewBox="-10 20 12.2 foo"/>`)
+      )
+    ).toThrow("invalid viewBox: -10 20 12.2 foo");
+  });
+
+  test("getAbsolutePosition()", () => {
+    const svg = parseSVG(`
+    <svg xmlns="${SVGNS}" viewBox="-10 20 20 30">
+      <text id="a" x="5" y="50%"/>
+      <text id="b" x="50%" y="100"/>
+      <g>
+        <text id="c" x="100%"/>
+      </g>
+    </svg>`);
+    const a = svg.querySelector("#a");
+    const b = svg.querySelector("#b");
+    const c = svg.querySelector("#c");
+    assert(a && b && c);
+    expect(_internals.getAbsolutePosition(a, "x")).toEqual(5);
+    expect(_internals.getAbsolutePosition(a, "y")).toEqual(35);
+    expect(_internals.getAbsolutePosition(b, "x")).toEqual(0);
+    expect(_internals.getAbsolutePosition(b, "y")).toEqual(100);
+    expect(() => _internals.getAbsolutePosition(c, "x")).toThrow(
+      AssertionError
+    );
+    expect(() => _internals.getAbsolutePosition(c, "y")).toThrow(
+      "el has no y attribute"
+    );
   });
 });

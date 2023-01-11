@@ -15,6 +15,12 @@ import { default as nftIconSrc } from "./img/avatar-svg/nft-icon.svg";
 import { default as nftNameWithCountSrc } from "./img/avatar-svg/nft-name-with-count.svg";
 import { default as nftNameSrc } from "./img/avatar-svg/nft-name.svg";
 import { default as redditLogoLightSrc } from "./img/avatar-svg/reddit-logo-light.svg";
+import {
+  FONT_REDDIT_SANS_BOLD,
+  FONT_REDDIT_SANS_EXTRABOLD,
+  textToPath,
+} from "./text-to-path";
+import { isTextAnchor } from "./text-to-path/interface";
 
 export const SVGNS = "http://www.w3.org/2000/svg";
 const XLINKNS = "http://www.w3.org/1999/xlink";
@@ -487,13 +493,59 @@ export function createStandardAvatarSVG({
   return svg;
 }
 
-export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
+export function parseViewBox(el: Element): {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+} {
+  const viewBoxStr = el.getAttribute("viewBox");
+  if (viewBoxStr === null) throw new Error("el has no viewBox attribute");
+  const viewBoxPieces = viewBoxStr.split(" ").map(parseFloat);
+  if (
+    viewBoxPieces.length !== 4 ||
+    viewBoxPieces.filter(Number.isNaN).length !== 0
+  ) {
+    throw new Error(`invalid viewBox: ${viewBoxStr}`);
+  }
+  const [x, y, w, h] = viewBoxPieces;
+  return { x, y, w, h };
+}
+
+function getAbsolutePosition(el: Element, axis: "x" | "y"): number {
+  const valueStr = el.getAttribute(axis);
+  if (valueStr === null) throw new Error(`el has no ${axis} attribute`);
+  if (!valueStr.endsWith("%")) {
+    const value = parseFloat(valueStr);
+    assert(!Number.isNaN(value));
+    return value;
+  }
+  // % values are resolved to absolute values by resolving the % value against
+  // the viewBox they're nested under.
+  // In our use cases the parent element is always an svg el with a viewBox
+  assert(el.parentElement && el.parentElement.hasAttribute("viewBox"));
+  const { x, y, w, h } = parseViewBox(el.parentElement);
+  const [base, size] = axis === "x" ? [x, w] : [y, h];
+  const fraction = parseFloat(valueStr.replace("%", "")) / 100;
+  return base + size * fraction;
+}
+
+export async function _nftNameSVG(options: {
+  nftInfo: NFTInfo;
+  variant: NFTCardVariant;
+}): Promise<SVGElement> {
+  const { nftInfo, variant } = options;
+  const invisibleTextStyle =
+    "fill-opacity:0;stroke-opacity:0;font-family:Arial";
   let svg;
+  let seriesSizeNumerator: Element | null | undefined;
+  let seriesSize: Element | null | undefined;
   if (nftInfo.seriesSize === null) {
     svg = parseSVG({ svgSource: nftNameSrc });
   } else {
     svg = parseSVG({ svgSource: nftNameWithCountSrc });
-    const seriesSize = svg.querySelector("#series-size");
+    seriesSizeNumerator = svg.querySelector("#series-size-numerator");
+    seriesSize = svg.querySelector("#series-size");
     assert(seriesSize);
     seriesSize.textContent =
       nftInfo.seriesSize < 1000
@@ -503,8 +555,77 @@ export function _nftNameSVG(nftInfo: NFTInfo): SVGElement {
   const name = svg.querySelector("#nft-name");
   assert(name);
   name.textContent = nftInfo.name;
+
+  // The series size badge and name text are smaller in SHOP_INVENTORY.
+  if (variant === NFTCardVariant.SHOP_INVENTORY) {
+    assert(svg.getAttribute("viewBox") === "0 0 552 94");
+    svg.setAttribute("viewBox", "0 0 552 58");
+    name.setAttribute("x", nftInfo.seriesSize === null ? "32.5" : "87");
+    name.setAttribute("y", "68%");
+    name.setAttribute("font-size", "29.1");
+  }
+
+  // Generate concrete SVG <path> elements for all the <text>, so that we don't
+  // need to embed or reference the web fonts.
+  const textEls = [name, seriesSize, seriesSizeNumerator].filter(
+    (x): x is Element => !!x
+  );
+  await Promise.all(
+    textEls.map((textEl) =>
+      (async () => {
+        const text = textEl.textContent;
+        assert(text !== null);
+        const textAnchor = textEl.getAttribute("text-anchor") ?? undefined;
+        assert(
+          isTextAnchor(textAnchor) || textAnchor === undefined,
+          `invalid textAnchor: ${textAnchor}`
+        );
+        const fontSize = parseFloat(textEl.getAttribute("font-size") ?? "");
+        assert(!Number.isNaN(fontSize));
+        const fontWeight = textEl.getAttribute("font-weight");
+        assert(fontWeight === "800" || fontWeight === "bold");
+        const x = getAbsolutePosition(textEl, "x");
+        const y = getAbsolutePosition(textEl, "y");
+        const fontUrl =
+          fontWeight === "bold"
+            ? FONT_REDDIT_SANS_BOLD
+            : FONT_REDDIT_SANS_EXTRABOLD;
+
+        const textPath = await textToPath({
+          fontUrl,
+          fontSize,
+          x,
+          y,
+          text,
+          textAnchor,
+        });
+        textEl.insertAdjacentElement("beforebegin", textPath);
+
+        const textStyle = textEl.getAttribute("style");
+        assert(textStyle !== null);
+        const textFilter = textEl.getAttribute("filter");
+        const textMask = textEl.getAttribute("mask");
+
+        textPath.setAttribute("style", _removeFontStyles(textStyle));
+        textFilter && textPath.setAttribute("filter", textFilter);
+        textMask && textPath.setAttribute("mask", textMask);
+
+        // Retain the real <text> el for metadata and to allow the text to be
+        // copied.
+        textEl.setAttribute("style", invisibleTextStyle);
+        textEl.removeAttribute("filter");
+        textEl.removeAttribute("mask");
+      })()
+    )
+  );
+
+  // The style just contains web font references which aren't needed.
   svg.querySelector("style")?.remove();
   return svg;
+}
+
+function _removeFontStyles(cssStyle: string): string {
+  return cssStyle.replace(/(?<=(^|;))font-[^;]+(;|$)/g, "");
 }
 
 export enum NFTCardVariant {
@@ -512,7 +633,7 @@ export enum NFTCardVariant {
   SHOP_INVENTORY,
 }
 
-export function createNFTCardAvatarSVG({
+export async function createNFTCardAvatarSVG({
   composedAvatar,
   nftInfo,
   variant,
@@ -520,25 +641,18 @@ export function createNFTCardAvatarSVG({
   composedAvatar: SVGElement;
   nftInfo: NFTInfo;
   variant: NFTCardVariant;
-}): SVGElement {
+}): Promise<SVGElement> {
   const svg = parseSVG({ svgSource: nftCardTemplateSrc });
   const doc = svg.ownerDocument;
 
   composedAvatar = svg.appendChild(doc.importNode(composedAvatar, true));
-  const nftName = svg.appendChild(doc.importNode(_nftNameSVG(nftInfo), true));
+  const nftName = svg.appendChild(
+    doc.importNode(await _nftNameSVG({ nftInfo, variant }), true)
+  );
   const nftIcon = svg.appendChild(
     doc.importNode(parseSVG({ svgSource: nftIconSrc }), true)
   );
 
-  // Use only 1 style element to help Inkscape.
-  const style = svg.querySelector("style");
-  const avatarStyle = composedAvatar.querySelector("style");
-  assert(style && avatarStyle);
-  style.textContent =
-    (style.textContent || "") + (avatarStyle.textContent || "");
-  avatarStyle.remove();
-
-  nftName.setAttribute("preserveAspectRatio", "xMidYMin");
   composedAvatar.setAttribute("y", "63");
   composedAvatar.setAttribute("height", `${ACC_H}`);
 
@@ -556,14 +670,6 @@ export function createNFTCardAvatarSVG({
 
   nftName.setAttribute("preserveAspectRatio", "xMinYMax");
   nftName.setAttribute("y", "-32.5");
-  if (variant === NFTCardVariant.SHOP_INVENTORY) {
-    nftName.setAttribute("viewBox", "0 0 552 58");
-    const name = nftName.querySelector("#nft-name");
-    assert(name);
-    name.setAttribute("x", nftInfo.seriesSize === null ? "32.5" : "87");
-    name.setAttribute("y", "68%");
-    name.setAttribute("font-size", "29.1");
-  }
 
   const cardBgImg = svg.querySelector("#nft-card-bg") as SVGImageElement;
   assert(cardBgImg);
@@ -657,3 +763,8 @@ export function createHeadshotCommentsAvatarSVG({
 
   return svg;
 }
+
+export const _internals = {
+  parseViewBox,
+  getAbsolutePosition,
+};
