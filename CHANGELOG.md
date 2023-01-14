@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Nothing yet
+
+## [0.4.0] - 2022-10-26
+
 - Firefox support. Headgear supports Firefox, from version 109, due to be
   released on 2023-01-17. (This is the first version of Firefox with Manifest V3
   support, which allows Headgear to work without significant changes.)
@@ -76,6 +80,7 @@ The first release.
 
 [unreleased]:
   https://github.com/olivierlacan/keep-a-changelog/compare/v0.3.0...HEAD
+[0.4.0]: https://github.com/h4l/headgear/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/h4l/headgear/compare/v0.2.2...v0.3.0
 [0.2.1]: https://github.com/h4l/headgear/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/h4l/headgear/compare/v0.1.0...v0.2.0
