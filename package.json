@@ -11,7 +11,9 @@
     "test-watch": "jest --watch",
     "eslint": "eslint src",
     "prettier-check": "prettier --check .",
-    "create-release-zip": "test ! -e dist.zip && test -d dist && cd dist && find . -type f | sort | xargs sha256sum | tee ../dist-files.sha256 && find . -type f -exec touch --no-dereference --date=1970-01-01T00:00:00Z {} + -print | sort | zip -9 -X -@ ../dist.zip"
+    "create-release-zip": "scripts/create-release-zip.sh",
+    "create-release-zips": "npm run create-release-zip chrome && npm run create-release-zip firefox",
+    "assemble-release-files": "scripts/assemble-release-files.sh"
   },
   "author": "Hal Blackburn",
   "license": "MIT",

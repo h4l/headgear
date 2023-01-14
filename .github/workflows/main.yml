@@ -28,25 +28,8 @@ jobs:
         run: |
           rm -rf dist
           npm run webpack-prod
-      - name: Create Chrome Extension zip archive
-        run: |
-          PACKAGE_JSON_VERSION="$(jq -r .version package.json)"
-          [[ v$PACKAGE_JSON_VERSION = ${{ github.ref_name }} ]] || {
-              echo "The package.json version does not match the tag. The tag must be the version with a 'v' prefix, e.g. 'v0.0.0'.";
-              exit 1;
-          }
-          npm run create-release-zip
-          mv dist.zip "headgear-${{ github.ref_name }}.zip"
-          mv dist-files.sha256 "headgear-files-${{ github.ref_name }}.sha256"
-          cat > RELEASE.txt << EOF
-          # Name: Headgear
-          # Version: $PACKAGE_JSON_VERSION
-          # Tag: ${{ github.ref_name }}
-          # Commit: ${{ github.sha }}
-          # Built-by: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          EOF
-          sha256sum "headgear-${{ github.ref_name }}.zip" "headgear-files-${{ github.ref_name }}.sha256" | tee -a RELEASE.txt
-          sha256sum RELEASE.txt | tee RELEASE.txt.sha256
+      - name: Create Browser Extension zip archives
+        run: npm run assemble-release-files
         if: startsWith(github.ref, 'refs/tags/') || github.ref_name == 'ci'
       - name: Create GitHub Release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
