@@ -10,4 +10,6 @@
 !.prettierrc.json
 /data
 /dist*
+/headgear-*
+/RELEASE*
 node_modules
