@@ -121,6 +121,72 @@ export class MockEvent<T extends (...args: any) => void>
   });
 }
 
+type ExtensionMessageEventCallback = (
+  message: any,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: any) => void
+) => void;
+
+class MockExtensionMessageEvent
+  extends MockEvent<ExtensionMessageEventCallback>
+  implements chrome.runtime.ExtensionMessageEvent
+{
+  sender: chrome.runtime.MessageSender = Object.freeze({});
+  sendMessage: typeof chrome.runtime.sendMessage<any, any>;
+
+  constructor() {
+    super();
+
+    /**
+     * An a partial implementation of chrome.runtime.sendMessage - just the
+     * (message: any) => Promise<any> signature. The implementation enforces the
+     * Chrome behaviour, which is to only allow values to be returned via the
+     * sendResponse() callback provided to the listener, and the listener has to
+     * return `true` synchronously. Otherwise values are ignored.
+     */
+    this.sendMessage = async (
+      message: any,
+      ...__otherArgs: any[]
+    ): Promise<any> => {
+      if (__otherArgs.length !== 0) {
+        throw new TypeError(
+          "The only signature implemented is function sendMessage<M = any, R = any>(message: M): Promise<R> "
+        );
+      }
+
+      const asyncResults = this.listeners
+        .map((listener): Promise<unknown> | undefined => {
+          let resolve: ((result?: unknown) => void) | undefined;
+          let syncListenerResult: unknown;
+          const asyncListenerResult = new Promise((_resolve) => {
+            resolve = _resolve;
+            syncListenerResult = listener(message, this.sender, resolve);
+          });
+          if (syncListenerResult === true) {
+            return asyncListenerResult;
+          } else if (
+            syncListenerResult === false ||
+            syncListenerResult === undefined
+          ) {
+            resolve && resolve(); // async result not used
+            return undefined;
+          }
+          throw new TypeError(
+            "ExtensionMessageEvent listener synchronously returned unexpected " +
+              "value. Expected true, false or undefined but got: " +
+              `${syncListenerResult}`
+          );
+        })
+        .filter((x): x is Promise<unknown> => x !== undefined);
+
+      if (asyncResults.length === 0) {
+        return undefined;
+      }
+      return Promise.race(asyncResults);
+    };
+  }
+}
+
 export function mockExtensionConnectEvent(): MockEvent<
   (port: chrome.runtime.Port) => void
 > {
@@ -152,7 +218,7 @@ export function mockChrome(): chrome {
     sync: new MockSyncStorageArea(),
   };
   const onConnect = new MockEvent<(port: chrome.runtime.Port) => void>();
-  const onMessage = new MockEvent();
+  const onMessage = new MockExtensionMessageEvent();
   const connect: typeof chrome.runtime.connect = jest.fn<
     chrome.runtime.Port,
     any
@@ -187,6 +253,11 @@ export function mockChrome(): chrome {
       connect,
       onConnect: onConnect as chrome.runtime.ExtensionConnectEvent,
       onMessage: onMessage as chrome.runtime.ExtensionMessageEvent,
+      sendMessage: jest
+        .fn()
+        .mockImplementation(
+          onMessage.sendMessage
+        ) as typeof chrome.runtime.sendMessage,
     } as typeof chrome.runtime,
     tabs: tabs as typeof chrome.tabs,
     scripting: scripting as typeof chrome.scripting,
