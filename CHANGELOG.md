@@ -8,7 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Nothing yet
+- Text using custom fonts is now rendered with SVG paths instead of referencing
+  web fonts from the SVG file. This removes all external dependencies, so SVG
+  files are entirely stand-alone (no dependencies on Reddit keeping resources
+  available). It also allows them to be rendered correctly by programs not
+  capable of rendering web fonts in SVG (e.g. Inkscape).
 
 ## [0.3.0] - 2022-10-26
 
