@@ -10,6 +10,12 @@ and this project adheres to
 
 - Nothing yet
 
+## [0.4.1] - 2023-01-14
+
+### Fixed
+
+- Enforce minimum Firefox version of 109 in the Firefox build.
+
 ## [0.4.0] - 2023-01-14
 
 ### Added
@@ -84,6 +90,7 @@ The first release.
 
 [unreleased]:
   https://github.com/olivierlacan/keep-a-changelog/compare/v0.3.0...HEAD
+[0.4.1]: https://github.com/h4l/headgear/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/h4l/headgear/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/h4l/headgear/compare/v0.2.2...v0.3.0
 [0.2.1]: https://github.com/h4l/headgear/compare/v0.2.0...v0.2.1
