@@ -16,6 +16,12 @@ import { assert } from "./src/assert";
 type BrowserTarget = "chrome" | "firefox";
 type BrowserTargetOptions = { browser: BrowserTarget };
 
+function validateStrictMinVersion(version: string): string {
+  // https://github.com/h4l/headgear/issues/22
+  assert(/^[0-9]{1,3}(\.[a-z0-9]+)+$/.test(version));
+  return version;
+}
+
 /** Generate manifest.json */
 class GenerateManifestPlugin {
   public readonly browser: BrowserTarget;
@@ -65,7 +71,7 @@ class GenerateManifestPlugin {
       manifest.browser_specific_settings = {
         gecko: {
           id: "headgear@h4l.users.github.com",
-          strict_min_version: "109",
+          strict_min_version: validateStrictMinVersion("109.0"),
         },
       };
       // Firefox doesn't support service_worker, it uses background scripts
