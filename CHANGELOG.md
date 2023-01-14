@@ -8,6 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Firefox support. Headgear supports Firefox, from version 109, due to be
+  released on 2023-01-17. (This is the first version of Firefox with Manifest V3
+  support, which allows Headgear to work without significant changes.)
 - Text using custom fonts is now rendered with SVG paths instead of referencing
   web fonts from the SVG file. This removes all external dependencies, so SVG
   files are entirely stand-alone (no dependencies on Reddit keeping resources
