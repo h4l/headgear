@@ -2,13 +2,17 @@
 
 # Headgear
 
+[![Available in the Chrome Web Store](./docs/chrome-web-store-button.png)](https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![Available from Firefox Browser Add-Ons](./docs/addons-mozilla-org-button.png)](#install)
+
 Headgear creates high-quality, resolution-independent images of your Reddit
 Avatar (NFT or regular), allowing you to use it beyond Reddit. With images from
 Headgear you can create high-quality prints, images for other social media
 sites, or extract Avatar accessories to create image macros/memes or general
 mash-ups.
 
-![Screenshot of Headgear](./docs/headgear-0.2.0-screenshot.png "The Headgear UI")
+![Screenshot of Headgear](./docs/headgear-0.4.2-screenshot.png "The Headgear UI")
 
 Headgear is a browser extension that works in Chrome or Brave. Currently
 Headgear needs to be a browser extension rather than a separate website because
@@ -22,17 +26,25 @@ Builder and NFT shop.
 installed**. See Headgear's [security advice](./docs/security.md) for more.
 
 <dl>
-  <dt>Chrome / Brave / Opera</dt>
+  <dt>Chrome / Edge / Brave / Opera</dt>
+  <dd><a target="_blank" href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp"><img alt="Available in the Chrome Web Store" src="./docs/chrome-web-store-button.png"></a></dd>
+
+  <dt>Firefox</dt>
   <dd>
-    Install Headgear from the <a href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp" target="_blank">Chrome Web Store</a>
-    <p>
+  <p>
+  <ul>
+  <li><strong>PENDING RELEASE OF FIREFOX 109 (expected 2023-01-17)</strong></li>
+  <li><strong>PENDING Review & approval from Firefox Add-Ons (see <a href="https://github.com/h4l/headgear/issues/21">#21</a>)</strong></li>
+  </ul>
+  </p>
+  <p><a  target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img alt="Available from Firefox Browser Add-Ons" src="./docs/addons-mozilla-org-button.png"></a></p>
+  <p>Headgear supports Firefox from version 109 onwards — the first version with Manifest V3 extension support.</p></dd>
+<p>
   </dd>
   <dt>Microsoft Edge</dt>
   <dd>Edge can also install Headgear from the Chrome Web Store link above, but you need to explicitly allow Edge to use the Chrome Web Store. Edge will prompt you to enable it when you first visit. <a href="https://support.microsoft.com/en-us/microsoft-edge/add-turn-off-or-remove-extensions-in-microsoft-edge-9c0ec68c-2fbc-2f2c-9ff0-bdc76f46b026" target="_blank">Microsoft has instructions here</a>.</dd>
-  <dt>Firefox</dt>
-  <dd>Headgear does not yet support Firefox because they've not released support for Manifest V3 extensions in their stable release yet. However they have a developer preview of Manifest V3 support now, and it seems that they'll be releasing it in a few months (as of Oct 2022).</dd>
   <dt>Safari</dt>
-  <dd>Safari may be able to support Headgear, but this has not been investigated in any detail.</dd>
+  <dd>Safari can support Headgear, but Apple requires a $99/year Apple Developer Program membership to publish Safari extensions, so it's not practical to publish it with Apple.</dd>
 </dl>
 
 # Quickstart
@@ -49,7 +61,7 @@ installed**. See Headgear's [security advice](./docs/security.md) for more.
 
 Here's a brief screencast demonstrating Headgear:
 
-[![Headgear demo screencast](./docs/headgear-demo-youtube.png)](https://www.youtube.com/watch?v=b94k_5f2Cmw "Headgear demo screencast")
+[![Headgear demo screencast](./docs/headgear-video-screenshot.jpg)](https://www.youtube.com/watch?v=mOUus4B1EZA "Headgear demo screencast")
 
 ## Background & Goals
 
