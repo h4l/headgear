@@ -47,7 +47,7 @@ installed**. See Headgear's [security advice](./docs/security.md) for more.
   <dd>Safari can support Headgear, but Apple requires a $99/year Apple Developer Program membership to publish Safari extensions, so it's not practical to publish it with Apple.</dd>
 </dl>
 
-# Quickstart
+## Quickstart
 
 - After installing, open the Reddit website, then click Headgear under the
   Extensions toolbar item
@@ -57,9 +57,9 @@ installed**. See Headgear's [security advice](./docs/security.md) for more.
 - To uninstall Headgear, click _Manage Extensions_ under the Extensions toolbar
   icon
 
-### Demo Video
+## Demo Video
 
-Here's a brief screencast demonstrating Headgear:
+A brief screencast demonstrating Headgear:
 
 [![Headgear demo screencast](./docs/headgear-video-screenshot.jpg)](https://www.youtube.com/watch?v=mOUus4B1EZA "Headgear demo screencast")
 
@@ -95,3 +95,7 @@ other users.
 
 [snoovatars]:
   https://venturebeat.com/business/reddit-now-lets-you-make-your-own-snoo-avatar-adds-two-new-features/
+
+## Developing Headgear
+
+See [docs/developing.md](docs/developing.md).
