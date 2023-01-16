@@ -4,7 +4,7 @@
 
 [![Available in the Chrome Web Store](./docs/chrome-web-store-button.png)](https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp)
 &nbsp;&nbsp;&nbsp;&nbsp;
-[![Available from Firefox Browser Add-Ons](./docs/addons-mozilla-org-button.png)](#install)
+[![Available from Firefox Browser Add-Ons](./docs/addons-mozilla-org-button.png)](https://addons.mozilla.org/en-GB/firefox/addon/headgear/)
 
 Headgear creates high-quality, resolution-independent images of your Reddit
 Avatar (NFT or regular), allowing you to use it beyond Reddit. With images from
@@ -31,14 +31,8 @@ installed**. See Headgear's [security advice](./docs/security.md) for more.
 
   <dt>Firefox</dt>
   <dd>
-  <p>
-  <ul>
-  <li><strong>PENDING RELEASE OF FIREFOX 109 (expected 2023-01-17)</strong></li>
-  <li><strong>PENDING Review & approval from Firefox Add-Ons (see <a href="https://github.com/h4l/headgear/issues/21">#21</a>)</strong></li>
-  </ul>
-  </p>
-  <p><a  target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img alt="Available from Firefox Browser Add-Ons" src="./docs/addons-mozilla-org-button.png"></a></p>
-  <p>Headgear supports Firefox from version 109 onwards — the first version with Manifest V3 extension support.</p></dd>
+  <p><a target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img alt="Available from Firefox Browser Add-Ons" src="./docs/addons-mozilla-org-button.png"></a></p>
+  <p>Headgear supports Firefox from version 109 onwards (the first version with Manifest V3 extension support).</p></dd>
 <p>
   </dd>
   <dt>Microsoft Edge</dt>
