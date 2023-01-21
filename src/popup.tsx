@@ -1,6 +1,7 @@
 import { Signal, effect, signal, useSignal } from "@preact/signals";
 import debounce from "lodash.debounce";
 import memoizeOne from "memoize-one";
+import { PostHog, posthog } from "posthog-js";
 import { ComponentChildren, Fragment, JSX } from "preact";
 import {
   useContext,
@@ -18,6 +19,7 @@ import {
 } from "./compatibility";
 import { computedAsync, serialiseExecutions } from "./computed-async";
 import {
+  AnalyticsPreference,
   ControlsStateObject,
   DEFAULT_CONTROLS_STATE,
   ImageStyleType,
@@ -28,7 +30,10 @@ import {
   isControlsStateObject,
 } from "./popup-state-persistence";
 import { AnalyticsConsent } from "./popup/analytics-consent";
+import { getIsIncognitoSignal } from "./popup/incognito";
 import {
+  AnalyticsContext,
+  AnalyticsState,
   AvatarDataContext,
   AvatarDataError,
   AvatarDataErrorType,
@@ -1223,6 +1228,15 @@ export function App() {
       _initialiseRootState(rootState);
     }
   }, [rootState]);
+  const [analyticsStateSignal] = useState<Signal<AnalyticsState>>(
+    signal(undefined)
+  );
+  useEffect(() => {
+    _initAnalyticsState({
+      analyticsStateSignal,
+      controlsStateSignal: rootState.controlsState,
+    });
+  }, [rootState, analyticsStateSignal]);
 
   if (error.value) {
     return <HeadgearIsVeryBrokenMessage />;
@@ -1233,9 +1247,11 @@ export function App() {
       <ControlsContext.Provider value={rootState.controlsState}>
         <AvatarSvgContext.Provider value={rootState.avatarSvgState}>
           <OutputImageContext.Provider value={rootState.outputImageState}>
-            <ErrorBoundary errorState={error}>
-              <Headgear />
-            </ErrorBoundary>
+            <AnalyticsContext.Provider value={analyticsStateSignal}>
+              <ErrorBoundary errorState={error}>
+                <Headgear />
+              </ErrorBoundary>
+            </AnalyticsContext.Provider>
           </OutputImageContext.Provider>
         </AvatarSvgContext.Provider>
       </ControlsContext.Provider>
@@ -1595,4 +1611,69 @@ export function _getBaseSize(avatarSVG: SVGElement): {
     );
   }
   return { width: viewBox[2], height: viewBox[3] };
+}
+
+/**
+ * Subscribe to a ControlsState Signal, propagating changes to an AnalyticsState
+ * Signal.
+ *
+ * The analytics PostHog instance is created, and opted in/out as the
+ * ControlsState.analyticsPreference value changes.
+ */
+export function _initAnalyticsState({
+  analyticsStateSignal,
+  controlsStateSignal,
+}: {
+  analyticsStateSignal: Signal<AnalyticsState>;
+  controlsStateSignal: Signal<ControlsState>;
+}): Signal<AnalyticsState> {
+  let postHog: PostHog | undefined = analyticsStateSignal.value;
+  let lastPref: AnalyticsPreference | undefined;
+  const isIncognito = getIsIncognitoSignal();
+  effect(() => {
+    // Only enable analytics in non-incognito windows.
+    if (isIncognito.value !== false) return;
+
+    const pref = controlsStateSignal.value?.analyticsPreference;
+    if (lastPref === pref) return;
+    lastPref = pref;
+    if (pref === AnalyticsPreference.OPTED_IN) {
+      // We only init() a PostHog instance at the point that a user opts in.
+      // Another approach would be to init() it with opt out on by default, but
+      // I prefer the harder approach of just not touching the analytics code if
+      // it's not enabled. Also ensures the app works without some subtle
+      // dependency on analytics features (like feature flags if we start using
+      // them.)
+      if (postHog === undefined) {
+        postHog =
+          posthog.init("phc_K9Dy2B8IvBa1kToYWXN6wuvdkmnBHWqkz6o2hmJZl1e", {
+            api_host: "https://eu.posthog.com",
+            persistence: "localStorage",
+            debug: HeadgearGlobal.HEADGEAR_BUILD.mode === "development",
+          }) ?? undefined;
+        assert(postHog);
+        posthog.register({
+          ...(HeadgearGlobal.HEADGEAR_BUILD.mode === "development"
+            ? { headgearDev: true }
+            : {}),
+          headgearVersion: HeadgearGlobal.HEADGEAR_BUILD.version,
+          headgearBrowser: HeadgearGlobal.HEADGEAR_BUILD.browserTarget,
+        });
+      } else {
+        postHog.opt_in_capturing();
+      }
+      analyticsStateSignal.value = postHog;
+    } else if (pref === AnalyticsPreference.OPTED_OUT) {
+      // When opting out, we keep the PostHog instance around (in case it gets
+      // opted in again), but we remove it from the published state, so that
+      // nothing in the app will report events to it. Even if we did report
+      // events. they wouldn't do anything because of the opt out. Next time the
+      // user opens the app we won't init a PostHog instance.
+      if (postHog) {
+        postHog.opt_out_capturing();
+      }
+      analyticsStateSignal.value = undefined;
+    }
+  });
+  return analyticsStateSignal;
 }

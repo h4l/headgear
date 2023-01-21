@@ -7,6 +7,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/preact";
+import { posthog } from "posthog-js";
 import { ComponentChildren } from "preact";
 import { Fragment, JSX } from "preact/jsx-runtime";
 
@@ -28,11 +29,13 @@ import {
   _createAvatarSvgState,
   _createOutputImageState,
   _getBaseSize,
+  _initAnalyticsState,
   _initialiseRootState,
   _measureScaledSVG,
   createRootState,
 } from "../popup";
 import {
+  AnalyticsPreference,
   ControlsStateObject,
   DEFAULT_CONTROLS_STATE,
   ImageStyleType,
@@ -41,7 +44,9 @@ import {
   RasterImageSize,
   STORAGE_KEY_IMAGE_CONTROLS,
 } from "../popup-state-persistence";
+import { getIsIncognitoSignal } from "../popup/incognito";
 import {
+  AnalyticsState,
   AvatarDataContext,
   AvatarDataErrorType,
   AvatarDataState,
@@ -66,6 +71,7 @@ import {
 } from "../svg";
 import { rasteriseSVG } from "../svg-rasterisation";
 
+jest.mock("../popup/incognito.ts");
 jest.mock("../svg.ts");
 jest.mock("../svg-rasterisation.ts");
 
@@ -1406,4 +1412,178 @@ test("_getBaseSize()", () => {
   expect(
     _getBaseSize(parseSVG(`<svg viewBox="0 0 10 20" xmlns="${SVGNS}"/>`))
   ).toEqual({ width: 10, height: 20 });
+});
+
+describe("_initAnalyticsState", () => {
+  const setupElementWithUndefinedState = () => {
+    const analyticsStateSignal = signal<AnalyticsState>(undefined);
+    const controlsStateSignal = signal<ControlsState>(undefined);
+    _initAnalyticsState({ analyticsStateSignal, controlsStateSignal });
+
+    expect(analyticsStateSignal.value).toBeUndefined();
+    expect(posthog.init).not.toHaveBeenCalled();
+    return { analyticsStateSignal, controlsStateSignal };
+  };
+  describe("when user has previously provided an analytics consent decision", () => {
+    test("when a user is opted in, posthog.init() is called on load", async () => {
+      const { analyticsStateSignal, controlsStateSignal } =
+        setupElementWithUndefinedState();
+
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.OPTED_IN,
+      };
+      await waitFor(() => {
+        expect(analyticsStateSignal.value).not.toBeUndefined();
+        expect(posthog.init).toHaveBeenCalled();
+        // We don't opt in because we were never opted out.
+        expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+        expect(posthog.opt_out_capturing).not.toHaveBeenCalled();
+      });
+    });
+
+    test("when running in an incognito window, analytics is not enabled, even if a user is opted in", async () => {
+      jest.mocked(getIsIncognitoSignal).mockReturnValueOnce(signal(true));
+      const { analyticsStateSignal, controlsStateSignal } =
+        setupElementWithUndefinedState();
+
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.OPTED_IN,
+      };
+      await waitFor(() => {
+        expect(analyticsStateSignal.value).toBeUndefined();
+        expect(posthog.init).not.toHaveBeenCalled();
+        expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+        expect(posthog.opt_out_capturing).not.toHaveBeenCalled();
+      });
+    });
+
+    test("when a user is opted out, posthog.init() is not called on load", async () => {
+      const { analyticsStateSignal, controlsStateSignal } =
+        setupElementWithUndefinedState();
+
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.OPTED_OUT,
+      };
+      await await new Promise((r) => setTimeout(r, 100));
+      expect(analyticsStateSignal.value).toBeUndefined();
+      expect(posthog.init).not.toHaveBeenCalled();
+      expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+      // We don't opt out because we never actually init() when a user is opted
+      // out.
+      expect(posthog.opt_out_capturing).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when user is yet to provide an analytics consent decision", () => {
+    test("posthog.init() is only called after a user consents to analytics", async () => {
+      const { analyticsStateSignal, controlsStateSignal } =
+        setupElementWithUndefinedState();
+
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.NOT_YET_DECIDED,
+      };
+      await await new Promise((r) => setTimeout(r, 100));
+      expect(analyticsStateSignal.value).toBeUndefined();
+      expect(posthog.init).not.toHaveBeenCalled();
+
+      // consent is granted
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.OPTED_IN,
+      };
+      await waitFor(() => {
+        expect(analyticsStateSignal.value).not.toBeUndefined();
+        expect(posthog.init).toHaveBeenCalled();
+        expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+        expect(posthog.opt_out_capturing).not.toHaveBeenCalled();
+      });
+    });
+
+    test("posthog.init() is not called when a user does not consent to analytics", async () => {
+      const { analyticsStateSignal, controlsStateSignal } =
+        setupElementWithUndefinedState();
+
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.NOT_YET_DECIDED,
+      };
+      await await new Promise((r) => setTimeout(r, 100));
+
+      // consent is not granted
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference: AnalyticsPreference.OPTED_OUT,
+      };
+      await await new Promise((r) => setTimeout(r, 100));
+
+      expect(analyticsStateSignal.value).toBeUndefined();
+      expect(posthog.init).not.toHaveBeenCalled();
+      expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+      expect(posthog.opt_out_capturing).not.toHaveBeenCalled();
+    });
+  });
+
+  test("user is opted out and in when toggling their share preference", async () => {
+    const { analyticsStateSignal, controlsStateSignal } =
+      setupElementWithUndefinedState();
+    const changePreference = (analyticsPreference: AnalyticsPreference) => {
+      controlsStateSignal.value = {
+        ...DEFAULT_CONTROLS_STATE,
+        analyticsPreference,
+      };
+    };
+    changePreference(AnalyticsPreference.OPTED_IN);
+    await waitFor(() => {
+      expect(analyticsStateSignal.value).not.toBeUndefined();
+      expect(posthog.init).toHaveBeenCalledTimes(1);
+      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(0);
+      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(0);
+    });
+
+    changePreference(AnalyticsPreference.OPTED_OUT);
+    await waitFor(() => {
+      expect(analyticsStateSignal.value).toBeUndefined();
+      expect(posthog.init).toHaveBeenCalledTimes(1);
+      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(0);
+      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
+    });
+
+    changePreference(AnalyticsPreference.OPTED_IN);
+    await waitFor(() => {
+      expect(analyticsStateSignal.value).not.toBeUndefined();
+      expect(posthog.init).toHaveBeenCalledTimes(1);
+      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(1);
+      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
+    });
+
+    changePreference(AnalyticsPreference.OPTED_OUT);
+    await waitFor(() => {
+      expect(analyticsStateSignal.value).toBeUndefined();
+      expect(posthog.init).toHaveBeenCalledTimes(1);
+      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(1);
+      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  test("super properties are registered when enabling analytics", async () => {
+    const { controlsStateSignal } = setupElementWithUndefinedState();
+
+    controlsStateSignal.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      analyticsPreference: AnalyticsPreference.OPTED_IN,
+    };
+    await waitFor(() => {
+      // Mock values set automatically via jest-setup.ts and
+      // src/__tests__/headgear-global.mock.ts.
+      expect(posthog.register).toHaveBeenCalledWith({
+        headgearDev: true,
+        headgearBrowser: "chrome",
+        headgearVersion: "1.2.3",
+      });
+    });
+  });
 });

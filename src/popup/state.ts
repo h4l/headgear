@@ -1,4 +1,5 @@
 import { Signal, signal } from "@preact/signals";
+import { PostHog } from "posthog-js";
 import { createContext } from "preact";
 
 import { ResolvedAvatar } from "../avatars";
@@ -61,6 +62,8 @@ export type OutputImageState = Error | OutputImage | undefined;
 // undefined while loading from storage
 export type ControlsState = undefined | ControlsStateObject;
 
+export type AnalyticsState = PostHog | undefined;
+
 export interface RootState {
   avatarDataState: Signal<AvatarDataState>;
   avatarSvgState: Signal<AvatarSVGState>;
@@ -78,5 +81,8 @@ export const AvatarSvgContext = createContext<Signal<AvatarSVGState>>(
   signal(undefined)
 );
 export const OutputImageContext = createContext<Signal<OutputImageState>>(
+  signal(undefined)
+);
+export const AnalyticsContext = createContext<Signal<AnalyticsState>>(
   signal(undefined)
 );
