@@ -1154,6 +1154,28 @@ describe("<ImageOptions>", () => {
       });
     }
   );
+
+  test('The "Usage Sharing Options" button opens the Usage Sharing Consent popup', async () => {
+    const {
+      state: { controlsState },
+      renderWithStateContext,
+    } = statefulElementRenderer(<ImageOptions />);
+
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageOptionsUIOpen: true,
+    };
+    renderWithStateContext();
+    expect(controlsState.value.analyticsConsentUIOpen).toBeFalsy();
+
+    fireEvent.click(
+      await screen.getByRole("button", { name: "Usage Sharing Options" })
+    );
+
+    await waitFor(() => {
+      expect(controlsState.value?.analyticsConsentUIOpen).toBeTruthy();
+    });
+  });
 });
 
 describe("_createOutputImageState()", () => {

@@ -809,6 +809,14 @@ export function ImageOptions(): JSX.Element {
     };
   };
 
+  const openAnalyticsConsentUI = () => {
+    if (controlsState.value === undefined) return;
+    controlsState.value = {
+      ...controlsState.value,
+      analyticsConsentUIOpen: true,
+    };
+  };
+
   const uiOpen = !!controlsState.value?.imageOptionsUIOpen;
 
   return (
@@ -837,7 +845,7 @@ export function ImageOptions(): JSX.Element {
         aria-label="Image Output Options"
         aria-hidden={!uiOpen}
         open={uiOpen}
-        class={`absolute ${
+        class={`absolute z-10 shadow-xl ${
           uiOpen
             ? "right-4"
             : fadingOut.value
@@ -846,9 +854,10 @@ export function ImageOptions(): JSX.Element {
         }
         ${!wasClosed && uiOpen ? "transition-none" : "transition-[right]"}
         rounded-md
-        bottom-20 w-80 px-4 _py-0
+        bottom-4 w-80 px-4 py-4
         flex flex-col
-        bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50`}
+        bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50
+        dark:border dark:border-slate-700`}
       >
         <button
           class="absolute right-0 top-0 m-1 p-2 cursor-pointer text-gray-700 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
@@ -863,8 +872,8 @@ export function ImageOptions(): JSX.Element {
         >
           {iconCross}
         </button>
-        <h2 class="text-lg font-medium mx-2 mt-4">Download/copy images as:</h2>
-        <div class="flex my-2">
+        <h2 class="text-lg font-medium">Download/copy images as:</h2>
+        <div class="flex my-2 ml-2">
           <div class="flex items-center h-5">
             <input
               id="output-image-format-svg"
@@ -903,7 +912,7 @@ export function ImageOptions(): JSX.Element {
           </div>
         </div>
 
-        <div class="flex my-2">
+        <div class="flex my-2 ml-2">
           <div class="flex items-center h-5">
             <input
               id="output-image-format-png"
@@ -942,6 +951,16 @@ export function ImageOptions(): JSX.Element {
               <OutputImageScaleOptions />
             </div>
           </div>
+        </div>
+
+        <div>
+          <button
+            type="button"
+            class={`rounded py-1 px-2 text-xs font-medium mt-4 ${BUTTON_STYLES}`}
+            onClick={openAnalyticsConsentUI}
+          >
+            Usage Sharing Options
+          </button>
         </div>
       </div>
     </Fragment>
