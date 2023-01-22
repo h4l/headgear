@@ -88,7 +88,7 @@ function readBlobAsText(blob: Blob): Promise<string> {
 }
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  jest.clearAllMocks();
 });
 
 describe("create & initialise RootState", () => {
