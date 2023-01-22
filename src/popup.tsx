@@ -1,7 +1,7 @@
 import { Signal, effect, signal, useSignal } from "@preact/signals";
 import debounce from "lodash.debounce";
 import memoizeOne from "memoize-one";
-import { ComponentChildren, Fragment, JSX, createContext } from "preact";
+import { ComponentChildren, Fragment, JSX } from "preact";
 import {
   useContext,
   useEffect,
@@ -28,6 +28,21 @@ import {
   STORAGE_KEY_IMAGE_CONTROLS,
   isControlsStateObject,
 } from "./popup-state-persistence";
+import {
+  AvatarDataContext,
+  AvatarDataError,
+  AvatarDataErrorType,
+  AvatarDataState,
+  AvatarSVGState,
+  AvatarSvgContext,
+  ControlsContext,
+  ControlsState,
+  DataStateType,
+  OutputImage,
+  OutputImageContext,
+  OutputImageState,
+  RootState,
+} from "./popup/state";
 import { GetAvatarMessageResponse, MSG_GET_AVATAR } from "./reddit-interaction";
 import {
   NFTCardVariant,
@@ -41,81 +56,7 @@ import { rasteriseSVG } from "./svg-rasterisation";
 
 const HEADGEAR_ADDRESS = "0xcF4CbFd13BCAc9E30d4fd666BD8d2a81536C01d5";
 
-export enum AvatarDataErrorType {
-  UNKNOWN,
-  NOT_REDDIT_TAB,
-  GET_AVATAR_FAILED,
-  USER_HAS_NO_AVATAR,
-}
-export type AvatarDataError =
-  | { type: AvatarDataErrorType.UNKNOWN; exception: Error }
-  | { type: AvatarDataErrorType.GET_AVATAR_FAILED; message: string }
-  | {
-      type: AvatarDataErrorType.NOT_REDDIT_TAB;
-      tab: chrome.tabs.Tab;
-    }
-  | { type: AvatarDataErrorType.USER_HAS_NO_AVATAR };
-
-export enum DataStateType {
-  BEFORE_LOAD,
-  LOADING,
-  ERROR,
-  LOADED,
-}
-
-/**
- * The state of Avatar data (obtained from the Reddit tab we're associated
- * with).
- */
-export type AvatarDataState =
-  | { type: DataStateType.BEFORE_LOAD }
-  | { type: DataStateType.LOADING }
-  | { type: DataStateType.ERROR; error: AvatarDataError }
-  | {
-      type: DataStateType.LOADED;
-      tab: chrome.tabs.Tab;
-      avatar: ResolvedAvatar;
-    };
-
-/**
- * The Avatar SVG image (serialised as an XML string), created from the Avatar
- * data, depending on the UI controls state. `undefined` while data or UI
- * controls are loading, or if an error occurs.
- */
-export type AvatarSVGState = Error | SVGElement | undefined;
-
-export interface OutputImage {
-  format: OutputImageFormat;
-  blob: Blob;
-  url: string;
-  mimeType: string;
-}
-export type OutputImageState = Error | OutputImage | undefined;
-
-// undefined while loading from storage
-export type ControlsState = undefined | ControlsStateObject;
-
-export interface RootState {
-  avatarDataState: Signal<AvatarDataState>;
-  avatarSvgState: Signal<AvatarSVGState>;
-  outputImageState: Signal<OutputImageState>;
-  controlsState: Signal<ControlsState>;
-}
-
 class GetAvatarError extends Error {}
-
-export const AvatarDataContext = createContext<Signal<AvatarDataState>>(
-  signal({ type: DataStateType.BEFORE_LOAD })
-);
-export const ControlsContext = createContext<Signal<ControlsState>>(
-  signal(undefined)
-);
-export const AvatarSvgContext = createContext<Signal<AvatarSVGState>>(
-  signal(undefined)
-);
-export const OutputImageContext = createContext<Signal<OutputImageState>>(
-  signal(undefined)
-);
 
 const iconArrowDown = (
   <svg
@@ -314,7 +255,7 @@ export function CouldNotLoadAvatarMessage(props: {
   );
 }
 
-export function AvatarDataError({
+export function AvatarDataErrorMessage({
   error,
 }: {
   error: AvatarDataError;
@@ -424,7 +365,7 @@ export function DisplayArea() {
 
   let content: JSX.Element;
   if (avatarDataState.value.type === DataStateType.ERROR) {
-    content = <AvatarDataError error={avatarDataState.value.error} />;
+    content = <AvatarDataErrorMessage error={avatarDataState.value.error} />;
   } else if (avatarSvgState.value instanceof Error) {
     content = (
       <CouldNotLoadAvatarMessage

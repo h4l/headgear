@@ -14,28 +14,17 @@ import { mockChrome } from "./chrome.mock";
 
 import { assert } from "../assert";
 import {
-  AvatarDataContext,
-  AvatarDataErrorType,
-  AvatarDataState,
   AvatarSVG,
-  AvatarSVGState,
-  AvatarSvgContext,
   ClosePopupButton,
   Controls,
-  ControlsContext,
-  ControlsState,
   CopyImageButton,
   CouldNotLoadAvatarMessage,
-  DataStateType,
   DisplayArea,
   DownloadImageButton,
   ErrorBoundary,
   ImageOptions,
   ImageStyleOption,
-  OutputImageContext,
   OutputImageScaleRadio,
-  OutputImageState,
-  RootState,
   _createAvatarSvgState,
   _createOutputImageState,
   _getBaseSize,
@@ -52,6 +41,19 @@ import {
   RasterImageSize,
   STORAGE_KEY_IMAGE_CONTROLS,
 } from "../popup-state-persistence";
+import {
+  AvatarDataContext,
+  AvatarDataErrorType,
+  AvatarDataState,
+  AvatarSVGState,
+  AvatarSvgContext,
+  ControlsContext,
+  ControlsState,
+  DataStateType,
+  OutputImageContext,
+  OutputImageState,
+  RootState,
+} from "../popup/state";
 import { MSG_GET_AVATAR } from "../reddit-interaction";
 import {
   SVGNS,
