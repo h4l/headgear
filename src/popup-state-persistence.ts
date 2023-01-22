@@ -23,6 +23,12 @@ export enum RasterImageSize {
   EXACT_HEIGHT = "width",
 }
 
+export enum AnalyticsPreference {
+  NOT_YET_DECIDED = "not-yet-decided",
+  OPTED_IN = "opted-in",
+  OPTED_OUT = "opted-out",
+}
+
 /** The state of the image controls panel. */
 export interface ControlsStateObject {
   imageStyle: ImageStyleType;
@@ -32,6 +38,8 @@ export interface ControlsStateObject {
   rasterImageExactWidth: number;
   rasterImageExactHeight: number;
   rasterImageSize: RasterImageSize;
+  analyticsPreference: AnalyticsPreference;
+  analyticsConsentUIOpen: boolean;
 }
 
 export const DEFAULT_CONTROLS_STATE: ControlsStateObject = Object.freeze({
@@ -42,11 +50,14 @@ export const DEFAULT_CONTROLS_STATE: ControlsStateObject = Object.freeze({
   rasterImageExactWidth: 1000,
   rasterImageExactHeight: 1000,
   rasterImageSize: RasterImageSize.MEDIUM,
+  analyticsPreference: AnalyticsPreference.NOT_YET_DECIDED,
+  analyticsConsentUIOpen: false,
 });
 
 const _imageStyleTypeValues = Object.freeze(Object.values(ImageStyleType));
 const _imageFormats = Object.freeze(Object.values(OutputImageFormat));
 const _imageSizes = Object.freeze(Object.values(RasterImageSize));
+const _analyticsPreferences = Object.freeze(Object.values(AnalyticsPreference));
 
 export function isControlsStateObject(
   obj: unknown
@@ -60,6 +71,10 @@ export function isControlsStateObject(
     _imageFormats.includes(_obj.outputImageFormat as OutputImageFormat) &&
     typeof _obj.rasterImageExactWidth === "number" &&
     typeof _obj.rasterImageExactHeight === "number" &&
-    _imageSizes.includes(_obj.rasterImageSize as RasterImageSize)
+    _imageSizes.includes(_obj.rasterImageSize as RasterImageSize) &&
+    _analyticsPreferences.includes(
+      _obj.analyticsPreference as AnalyticsPreference
+    ) &&
+    typeof _obj.analyticsConsentUIOpen === "boolean"
   );
 }
