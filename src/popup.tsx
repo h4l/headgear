@@ -27,6 +27,7 @@ import {
   STORAGE_KEY_IMAGE_CONTROLS,
   isControlsStateObject,
 } from "./popup-state-persistence";
+import { AnalyticsConsent } from "./popup/analytics-consent";
 import {
   AvatarDataContext,
   AvatarDataError,
@@ -1133,6 +1134,7 @@ export function Headgear() {
       <DisplayArea />
       <Controls />
       <ImageOptions />
+      <AnalyticsConsent />
     </div>
   );
 }
