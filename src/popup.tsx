@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useErrorBoundary,
-  useReducer,
   useRef,
   useState,
 } from "preact/hooks";
@@ -801,93 +800,17 @@ export function ClosePopupButton() {
   );
 }
 
-type UninitialisedValue = {
-  hasChanged: false;
-  isInitial: false;
-  current: undefined;
-  previous: undefined;
-};
-type InitialisedValue<T> = {
-  hasChanged: false;
-  isInitial: true;
-  current: T;
-  previous: undefined;
-};
-type ChangedValue<T> = {
-  hasChanged: true;
-  isInitial: false;
-  current: T;
-  previous: T;
-};
-type ValueHistory<T> =
-  | UninitialisedValue
-  | InitialisedValue<T>
-  | ChangedValue<T>;
-function useValueHistory<T>(
-  initial?: T
-): [ValueHistory<T>, (value: T) => void] {
-  return useReducer(
-    (state: ValueHistory<T>, value: T): ValueHistory<T> => {
-      // 3 possible states, uninitialised -> initialised -> changed
-      // uninitialised:
-      if (!state.hasChanged && !state.isInitial) {
-        assert(state.previous === undefined);
-        return value === undefined
-          ? state
-          : {
-              current: value,
-              previous: undefined,
-              isInitial: true,
-              hasChanged: false,
-            };
-      }
-      // initialised
-      else if (!state.hasChanged && state.isInitial) {
-        return value === state.current
-          ? state
-          : {
-              current: value,
-              previous: state.current,
-              isInitial: false,
-              hasChanged: true,
-            };
-      }
-      // changed
-      return value === state.current
-        ? state
-        : {
-            current: value,
-            previous: state.current,
-            isInitial: false,
-            hasChanged: true,
-          };
-    },
-    initial === undefined
-      ? {
-          current: undefined,
-          previous: undefined,
-          isInitial: false,
-          hasChanged: false,
-        }
-      : {
-          current: initial,
-          previous: undefined,
-          isInitial: true,
-          hasChanged: false,
-        }
-  );
-}
-
 export function ImageOptions(): JSX.Element {
   const controlsState = useContext(ControlsContext);
   const fadingOut = useSignal(false);
 
-  const [uiOpenValue, dispatch] = useValueHistory<boolean | undefined>(
-    controlsState.value?.imageOptionsUIOpen
-  );
+  // We disable transitions if the UI is starting with the dialog open.
+  const [wasClosed, setWasClosed] = useState<boolean>(false);
   useEffect(() => {
-    dispatch(controlsState.value?.imageOptionsUIOpen);
-  }, [dispatch, controlsState.value?.imageOptionsUIOpen]);
+    if (!wasClosed && controlsState.value?.imageOptionsUIOpen === false) {
+      setWasClosed(true);
+    }
+  }, [wasClosed, controlsState.value?.imageOptionsUIOpen]);
   useEffect(() => {
     if (controlsState.value?.imageOptionsUIOpen) {
       fadingOut.value = true;
@@ -901,6 +824,8 @@ export function ImageOptions(): JSX.Element {
       imageOptionsUIOpen: false,
     };
   };
+
+  const uiOpen = !!controlsState.value?.imageOptionsUIOpen;
 
   return (
     <Fragment>
@@ -926,20 +851,16 @@ export function ImageOptions(): JSX.Element {
         role="dialog"
         aria-modal="true"
         aria-label="Image Output Options"
-        aria-hidden={!uiOpenValue.current}
-        open={uiOpenValue.current}
+        aria-hidden={!uiOpen}
+        open={uiOpen}
         class={`absolute ${
-          uiOpenValue.current
+          uiOpen
             ? "right-4"
             : fadingOut.value
             ? "-right-80"
             : "-right-80 invisible"
         }
-        ${
-          uiOpenValue.isInitial && uiOpenValue.current
-            ? "transition-none"
-            : "transition-[right]"
-        }
+        ${!wasClosed && uiOpen ? "transition-none" : "transition-[right]"}
         rounded-md
         bottom-20 w-80 px-4 _py-0
         flex flex-col
