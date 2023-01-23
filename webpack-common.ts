@@ -12,9 +12,26 @@ import {
 import merge from "webpack-merge";
 
 import { assert } from "./src/assert";
+import { HeadgearGlobalObject } from "./src/headgear-global";
 
 type BrowserTarget = "chrome" | "firefox";
 type BrowserTargetOptions = { browser: BrowserTarget };
+
+async function getHeadgearVersion(): Promise<{
+  safeVersion: string;
+  fullVersion: string;
+}> {
+  const packageConfig = JSON.parse(
+    await readFile(path.resolve(__dirname, "package.json"), "utf-8")
+  );
+  const match = /^((\d+\.\d+\.\d+).*)$/.exec(packageConfig.version);
+  if (!match)
+    throw new Error(
+      `package.json version is invalid: ${packageConfig.version}`
+    );
+  const [fullVersion, safeVersion] = match.slice(1);
+  return { fullVersion, safeVersion };
+}
 
 function validateStrictMinVersion(version: string): string {
   // https://github.com/h4l/headgear/issues/22
@@ -46,20 +63,12 @@ class GenerateManifestPlugin {
   async generateManifest(
     options: BrowserTargetOptions
   ): Promise<sources.RawSource> {
-    const packageConfig = JSON.parse(
-      await readFile(path.resolve(__dirname, "package.json"), "utf-8")
-    );
     const manifest = JSON.parse(
       await readFile(path.resolve(__dirname, "src/manifest.json"), "utf-8")
     );
     // The version in manifest.json must only be a simple version like 1.2.3,
     // it can't have modifiers like 1.2.3-rc1.
-    const match = /^((\d+\.\d+\.\d+).*)$/.exec(packageConfig.version);
-    if (!match)
-      throw new Error(
-        `package.json version is invalid: ${packageConfig.version}`
-      );
-    const [fullVersion, safeVersion] = match.slice(1);
+    const { fullVersion, safeVersion } = await getHeadgearVersion();
     if (fullVersion !== safeVersion) {
       manifest.name = `${manifest.name} (${fullVersion})`;
     }
@@ -90,10 +99,29 @@ class GenerateManifestPlugin {
   }
 }
 
-export function createConfig(options: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function asDefinePluginCodeValues<T extends Record<string, any>>(
+  object: T
+): { [P in keyof T]: string } {
+  return Object.fromEntries(
+    Object.entries(object).map(([k, v]) => [k, JSON.stringify(v)])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) as any;
+}
+
+export async function createConfig(options: {
   mode: "development" | "production";
   browser: BrowserTarget;
-}): Configuration {
+}): Promise<Configuration> {
+  const HeadgearGlobal: HeadgearGlobalObject = {
+    FEATURE_CANVAS_SVG_ABSOLUTE_DIMENSIONS: options.browser === "firefox",
+    HEADGEAR_BUILD: {
+      version: (await getHeadgearVersion()).fullVersion,
+      mode: options.mode,
+      browserTarget: options.browser,
+    },
+  };
+
   const config: Configuration = {
     name: options.browser,
     entry: {
@@ -154,9 +182,7 @@ export function createConfig(options: {
         resourceRegExp: /source-map-support/,
       }),
       new DefinePlugin({
-        HeadgearGlobal: {
-          FEATURE_CANVAS_SVG_ABSOLUTE_DIMENSIONS: options.browser === "firefox",
-        },
+        HeadgearGlobal: asDefinePluginCodeValues(HeadgearGlobal),
       }),
     ],
   };
