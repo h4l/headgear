@@ -4,9 +4,10 @@ class PostHog
   implements
     Pick<
       _PostHog,
-      "init" | "opt_in_capturing" | "opt_out_capturing" | "register"
+      "capture" | "init" | "opt_in_capturing" | "opt_out_capturing" | "register"
     >
 {
+  capture: _PostHog["capture"] = jest.fn();
   init: _PostHog["init"] = jest.fn();
   opt_in_capturing: _PostHog["opt_in_capturing"] = jest.fn();
   opt_out_capturing: _PostHog["opt_out_capturing"] = jest.fn();

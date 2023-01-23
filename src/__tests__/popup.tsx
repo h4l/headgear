@@ -46,6 +46,7 @@ import {
 } from "../popup-state-persistence";
 import { getIsIncognitoSignal } from "../popup/incognito";
 import {
+  AnalyticsContext,
   AnalyticsState,
   AvatarDataContext,
   AvatarDataErrorType,
@@ -767,6 +768,7 @@ function statefulElementRenderer(children: ComponentChildren): {
   const controlsState = signal<ControlsState>(undefined);
   const avatarSvgState = signal<AvatarSVGState>(undefined);
   const outputImageState = signal<OutputImageState>(undefined);
+  const analyticsStateSignal = signal<AnalyticsState>(posthog);
 
   const renderWithStateContext = () =>
     render(
@@ -774,7 +776,9 @@ function statefulElementRenderer(children: ComponentChildren): {
         <ControlsContext.Provider value={controlsState}>
           <AvatarSvgContext.Provider value={avatarSvgState}>
             <OutputImageContext.Provider value={outputImageState}>
-              {children}
+              <AnalyticsContext.Provider value={analyticsStateSignal}>
+                {children}
+              </AnalyticsContext.Provider>
             </OutputImageContext.Provider>
           </AvatarSvgContext.Provider>
         </ControlsContext.Provider>

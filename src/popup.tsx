@@ -29,6 +29,10 @@ import {
   STORAGE_KEY_IMAGE_CONTROLS,
   isControlsStateObject,
 } from "./popup-state-persistence";
+import {
+  getAvatarEventProperties,
+  getImageEventProperties,
+} from "./popup/analytics";
 import { AnalyticsConsent } from "./popup/analytics-consent";
 import { getIsIncognitoSignal } from "./popup/incognito";
 import {
@@ -632,6 +636,8 @@ const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
 ]);
 
 export function DownloadImageButton(): JSX.Element {
+  const analyticsState = useContext(AnalyticsContext).value;
+  const avatarDataState = useContext(AvatarDataContext).value;
   const controlsState = useContext(ControlsContext).value;
   const outputImageState = useContext(OutputImageContext).value;
 
@@ -647,13 +653,25 @@ export function DownloadImageButton(): JSX.Element {
     assert(imgStyleName);
     filename = `Reddit Avatar ${imgStyleName}.${controlsState.outputImageFormat}`;
   }
+  const captureAvatarImageSaved = () => {
+    if (
+      analyticsState &&
+      avatarDataState.type === DataStateType.LOADED &&
+      controlsState
+    ) {
+      analyticsState.capture("avatar-image_saved", {
+        ...getAvatarEventProperties(avatarDataState.avatar),
+        ...getImageEventProperties(controlsState),
+      });
+    }
+  };
 
   return (
     <a
       role="button"
       aria-disabled={disabled || undefined}
-      class={`flex-grow ${bottomBarButtonStyle(disabled)}`}
-      onClick={disabled ? () => false : undefined}
+      class={`flex-grow ${bottomBarButtonStyle(disabled)} ph-no-capture`}
+      onClick={disabled ? () => false : captureAvatarImageSaved}
       href={downloadUri}
       download={disabled ? undefined : filename}
     >
@@ -686,6 +704,9 @@ enum CopyState {
 }
 
 export function CopyImageButton(): JSX.Element {
+  const analyticsState = useContext(AnalyticsContext);
+  const avatarDataState = useContext(AvatarDataContext);
+  const controlsState = useContext(ControlsContext);
   const outputImageState = useContext(OutputImageContext);
   const hovering = useSignal(false);
   const copyState = useSignal(CopyState.BEFORE_COPY);
@@ -719,6 +740,18 @@ export function CopyImageButton(): JSX.Element {
         copyState.value = CopyState.FAILED;
       });
   };
+  const captureAvatarImageCopied = () => {
+    if (
+      analyticsState.value &&
+      avatarDataState.value.type === DataStateType.LOADED &&
+      controlsState.value
+    ) {
+      analyticsState.value.capture("avatar-image_copied", {
+        ...getAvatarEventProperties(avatarDataState.value.avatar),
+        ...getImageEventProperties(controlsState.value),
+      });
+    }
+  };
   const labels = {
     [CopyState.BEFORE_COPY]: "Copy Image",
     [CopyState.COPYING]: "Copy Image",
@@ -727,7 +760,7 @@ export function CopyImageButton(): JSX.Element {
   };
 
   return (
-    <span class="relative flex-shrink">
+    <span class="relative flex-shrink ph-no-capture">
       <div
         aria-role="tooltip"
         class={`-top-10 -left-[2.7rem] flex absolute w-36
@@ -749,7 +782,14 @@ export function CopyImageButton(): JSX.Element {
       <button
         aria-label="Copy Image"
         disabled={disabled || undefined}
-        onClick={disabled ? () => false : copyImage}
+        onClick={
+          disabled
+            ? () => false
+            : () => {
+                copyImage();
+                captureAvatarImageCopied();
+              }
+        }
         onTransitionEnd={() => {
           if (!hovering.value) hidden.value = true;
         }}
