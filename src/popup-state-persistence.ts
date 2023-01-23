@@ -19,8 +19,8 @@ export enum RasterImageSize {
   MEDIUM = "md",
   LARGE = "lg",
   XLARGE = "xl",
-  EXACT_WIDTH = "height",
-  EXACT_HEIGHT = "width",
+  EXACT_WIDTH = "width",
+  EXACT_HEIGHT = "height",
 }
 
 export enum AnalyticsPreference {
