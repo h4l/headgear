@@ -344,6 +344,7 @@ function avatar(): ResolvedAvatar {
       { className: "zzz", fill: "#111111" },
     ],
     nftInfo: {
+      nftId: "nft_eip155:123_0000000000000000000000000000000000000000_0",
       seriesSize: 600,
       name: "Example Avatar #123",
       backgroundImage: {

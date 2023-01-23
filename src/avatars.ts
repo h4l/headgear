@@ -260,6 +260,13 @@ export interface ResolvedAvatar {
 }
 
 export interface NFTInfo {
+  /**
+   * The unique ID of this specific NFT (i.e. including the serial numebr).
+   *
+   * Expected to be of the form:
+   * `nft_eip155:${CHAIN_ID}_${CONTRACT_ID}_${TOKEN_ID}`
+   */
+  nftId: string;
   /** NFT Avatar name, including serial number, e.g. "Les Rock #478" */
   name: string;
   /**
@@ -358,6 +365,7 @@ export async function _resolveNftInfo({
   const nftInfoResponse = await _fetchAvatarNFTData({ apiToken, nftId });
 
   return {
+    nftId,
     name: nftInfoResponse.name,
     seriesSize: nftInfoResponse.drop.size,
     backgroundImage: {
@@ -434,7 +442,7 @@ export async function _resolveAvatar({
  * Include this in cache keys that hold avatar data to invalidate the cache when
  * getCurrentAvatar() could return a different result.
  */
-export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 4;
+export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 5;
 
 export async function getCurrentAvatar({
   apiToken,

@@ -258,6 +258,9 @@ test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () 
   // This is an NFT avatar
   const nftInfo = resolvedAvatar.nftInfo;
   assert(nftInfo);
+  expect(nftInfo.nftId).toEqual(
+    "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477"
+  );
   expect(nftInfo.backgroundImage.httpUrl).toBe(
     "https://i.redd.it/snoovatar/snoo_assets/UI4W3ys3XdI_BGC_les_rock_001.png"
   );
