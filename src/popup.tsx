@@ -582,7 +582,7 @@ export function BottomButtons() {
       {/* Chrome does not allow SVG (image/svg+xml) to be copied to the
           clipboard. We could copy it as text/plain, but that would be
           inconsistent with the expectation of copying an image, so I think it's
-          best to just now allow copying SVG. */}
+          best to just not allow copying SVG. */}
       {!(controlsState.value?.outputImageFormat === OutputImageFormat.SVG) && (
         <CopyImageButton />
       )}
