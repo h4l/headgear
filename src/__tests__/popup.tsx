@@ -96,6 +96,12 @@ function readBlobAsText(blob: Blob): Promise<string> {
 
 beforeEach(() => {
   window.chrome = mockChrome();
+  jest.spyOn(console, "error").mockImplementation((...args) => {
+    throw new Error(`unexpected console.error() call: ${args}`);
+  });
+});
+afterEach(() => {
+  jest.mocked(console.error).mockRestore();
   jest.clearAllMocks();
 });
 
@@ -106,11 +112,6 @@ describe("create & initialise RootState", () => {
       id: 123,
       url: "https://www.reddit.com/",
     };
-    const console: Partial<Console> = {
-      error: jest.fn(),
-    };
-    window.console = console as Console;
-
     jest
       .mocked(window.chrome.tabs.query)
       .mockResolvedValue([tab as chrome.tabs.Tab]);
@@ -554,7 +555,7 @@ test("<AvatarSVG>", async () => {
 
 describe("<CouldNotLoadAvatarMessage>", () => {
   test("logs errors ONCE with console.error", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    jest.mocked(console.error).mockImplementation(() => undefined);
     const title = signal("Initial Title");
     function TitleChanger(): JSX.Element {
       return (
@@ -861,6 +862,7 @@ describe("<DisplayArea>", () => {
   });
 
   test("displays error when in failed OutputImageState", async () => {
+    jest.mocked(console.error).mockImplementationOnce(() => undefined);
     const {
       state: { outputImageState },
       renderWithStateContext,
@@ -872,6 +874,7 @@ describe("<DisplayArea>", () => {
     expect(errorContainer).toHaveTextContent(
       "Headgear hit an error while generating the image to be downloaded/copied."
     );
+    expect(console.error).toBeCalled();
     await cleanup();
   });
 });
