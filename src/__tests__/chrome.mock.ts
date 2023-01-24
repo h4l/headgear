@@ -243,8 +243,17 @@ export function mockChrome(): chrome {
       .mockRejectedValue(new Error("Not implemented")),
   };
 
-  const scripting: Partial<typeof _chrome.scripting> = {
+  const scripting: Partial<typeof chrome.scripting> = {
     executeScript: jest.fn<any, any>(),
+  };
+
+  const currentWindowMock: Partial<chrome.windows.Window> = {
+    incognito: false,
+  };
+  const windows: Partial<typeof chrome.windows> = {
+    getCurrent: jest
+      .fn()
+      .mockImplementation(() => currentWindowMock as chrome.windows.Window),
   };
 
   const _chrome: Partial<chrome> = {
@@ -261,6 +270,7 @@ export function mockChrome(): chrome {
     } as typeof chrome.runtime,
     tabs: tabs as typeof chrome.tabs,
     scripting: scripting as typeof chrome.scripting,
+    windows: windows as typeof chrome.windows,
   };
   return _chrome as chrome;
 }
