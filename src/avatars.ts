@@ -203,7 +203,7 @@ async function _graphqlJsonApiRequest<T>({
  *   change.
  */
 // AvatarBuilderCatalogWithStorefront GQL query
-export const _GQL_QUERY_ID_AVATAR_DATA = "18f86c0ecf82";
+export const _GQL_QUERY_ID_AVATAR_DATA = "e60eb3c641f1";
 // GetNftDetails GQL query
 export const _GQL_QUERY_ID_NFT_INFO = "e9865cc4d93d";
 
