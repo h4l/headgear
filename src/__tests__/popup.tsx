@@ -14,6 +14,7 @@ import { Fragment, JSX } from "preact/jsx-runtime";
 import { mockChrome } from "./chrome.mock";
 
 import { assert } from "../assert";
+import { NFTInfo, ResolvedAvatar } from "../avatars";
 import {
   AvatarSVG,
   ClosePopupButton,
@@ -31,6 +32,7 @@ import {
   _getBaseSize,
   _initAnalyticsState,
   _initialiseRootState,
+  _internals,
   _measureScaledSVG,
   createRootState,
 } from "../popup";
@@ -599,6 +601,16 @@ describe("<ErrorBoundary>", () => {
 });
 
 describe("<DownloadImageButton>", () => {
+  beforeEach(() => {
+    jest
+      .spyOn(_internals, "_getAvatarFilename")
+      .mockReturnValueOnce("example at time 1.img")
+      .mockReturnValueOnce("example at time 2.img");
+  });
+  afterEach(() => {
+    jest.mocked(_internals._getAvatarFilename).mockRestore();
+  });
+
   test.each`
     format                   | extension | label
     ${OutputImageFormat.PNG} | ${"png"}  | ${"Download Image"}
@@ -612,7 +624,7 @@ describe("<DownloadImageButton>", () => {
     }) => {
       const {
         renderWithStateContext,
-        state: { controlsState, outputImageState },
+        state: { controlsState, outputImageState, avatarDataState },
       } = statefulElementRenderer(<DownloadImageButton />);
       renderWithStateContext();
 
@@ -621,6 +633,7 @@ describe("<DownloadImageButton>", () => {
       expect(button).toHaveAttribute("href", "#");
       expect(button).not.toHaveAttribute("download");
 
+      avatarDataState.value = { type: DataStateType.LOADED } as AvatarDataState;
       controlsState.value = {
         ...DEFAULT_CONTROLS_STATE,
         imageStyle: ImageStyleType.STANDARD,
@@ -639,13 +652,80 @@ describe("<DownloadImageButton>", () => {
       button = await screen.findByRole("button", {
         name: options.label,
       });
-      expect(button).toHaveAttribute(
-        "download",
-        `Reddit Avatar Standard.${options.extension}`
-      );
+      expect(button).toHaveAttribute("download", `example at time 1.img`);
       expect(button.getAttribute("href")).toBe("example://0");
     }
   );
+
+  test("updates the download filename to the current time when clicked", async () => {
+    const {
+      renderWithStateContext,
+      state: { controlsState, outputImageState, avatarDataState },
+    } = statefulElementRenderer(<DownloadImageButton />);
+    renderWithStateContext();
+
+    avatarDataState.value = {
+      type: DataStateType.LOADED,
+      avatar: {},
+    } as AvatarDataState;
+    controlsState.value = {
+      ...DEFAULT_CONTROLS_STATE,
+      imageStyle: ImageStyleType.STANDARD,
+      outputImageFormat: OutputImageFormat.PNG,
+    };
+    outputImageState.value = {
+      format: OutputImageFormat.PNG,
+      mimeType: "image/foo",
+      blob: new Blob([]),
+      url: "example://0",
+    };
+
+    const button = await screen.getByRole("button");
+
+    // Hack: JSDom asynchronously logs an error if it tries to navigate as a
+    // result of a click on an <a> occurring. So cancel the event to avoid this.
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+    });
+
+    await waitFor(async () => {
+      expect(button).not.toHaveAttribute("aria-disabled");
+    });
+    expect(button).toHaveAttribute("download", `example at time 1.img`);
+    fireEvent.click(button);
+    expect(button).toHaveAttribute("download", `example at time 2.img`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  });
+});
+
+describe("Avatar Image Download Filename", () => {
+  test("Download Filename has expected format", async () => {
+    const controlsState: ControlsStateObject = {
+      ...DEFAULT_CONTROLS_STATE,
+    };
+    const avatar: ResolvedAvatar = {
+      accessories: [],
+      styles: [],
+      nftInfo: undefined,
+    };
+    const timestamp = Date.parse("2023-01-23T19:30:34.819Z");
+
+    expect(
+      _internals._getAvatarFilename({ controlsState, avatar, timestamp })
+    ).toMatchInlineSnapshot(
+      `"Reddit Avatar Standard 2023-1-23 at 19.30.34.png"`
+    );
+
+    controlsState.outputImageFormat = OutputImageFormat.SVG;
+    controlsState.imageStyle = ImageStyleType.NFT_CARD;
+    avatar.nftInfo = { name: "Super Rare #1" } as NFTInfo;
+
+    expect(
+      _internals._getAvatarFilename({ controlsState, avatar, timestamp })
+    ).toMatchInlineSnapshot(
+      `"Super Rare #1 NFT Card 2023-1-23 at 19.30.34.svg"`
+    );
+  });
 });
 
 describe("<CopyImageButton>", () => {

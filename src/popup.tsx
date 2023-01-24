@@ -2,7 +2,7 @@ import { Signal, effect, signal, useSignal } from "@preact/signals";
 import debounce from "lodash.debounce";
 import memoizeOne from "memoize-one";
 import { PostHog, posthog } from "posthog-js";
-import { ComponentChildren, Fragment, JSX } from "preact";
+import { ComponentChildren, Fragment, JSX, createRef } from "preact";
 import {
   useContext,
   useEffect,
@@ -627,13 +627,39 @@ function bottomBarButtonStyle(disabled: boolean): string {
   flex text-lg text-slate-50 p-3`;
 }
 
-const IMAGE_STYLE_NAMES: Map<ImageStyleType, string> = new Map([
-  [ImageStyleType.STANDARD, "Standard"],
-  [ImageStyleType.NFT_CARD, "NFT Card"],
-  [ImageStyleType.NO_BG, "No Background"],
-  [ImageStyleType.HEADSHOT_CIRCLE, "UI Headshot"],
-  [ImageStyleType.HEADSHOT_HEX, "Comment Headshot"],
-]);
+const IMAGE_STYLE_NAMES: Record<ImageStyleType, string> = {
+  [ImageStyleType.STANDARD]: "Standard",
+  [ImageStyleType.NFT_CARD]: "NFT Card",
+  [ImageStyleType.NO_BG]: "No Background",
+  [ImageStyleType.HEADSHOT_CIRCLE]: "UI Headshot",
+  [ImageStyleType.HEADSHOT_HEX]: "Comment Headshot",
+};
+
+function _formatTimeForFilename(timestamp: number): string {
+  const d = new Date(timestamp);
+  // e.g. "2023-1-23 at 18.23.8" — the format MacOS uses for screenshots. Sorts
+  // lexicographically with time and does not contain / or : (which are commonly
+  // used in paths/URLs).
+  return `${d.getFullYear()}-${
+    d.getMonth() + 1
+  }-${d.getDate()} at ${d.getHours()}.${d.getMinutes()}.${d.getSeconds()}`;
+}
+
+function _getAvatarFilename({
+  controlsState,
+  avatar,
+  timestamp,
+}: {
+  controlsState: ControlsStateObject;
+  avatar: ResolvedAvatar;
+  timestamp: number;
+}): string {
+  const name = avatar.nftInfo?.name ?? "Reddit Avatar";
+  const imgStyleName = IMAGE_STYLE_NAMES[controlsState.imageStyle];
+  const dateTime = _formatTimeForFilename(timestamp);
+  const extension = controlsState.outputImageFormat;
+  return `${name} ${imgStyleName} ${dateTime}.${extension}`;
+}
 
 export function DownloadImageButton(): JSX.Element {
   const analyticsState = useContext(AnalyticsContext).value;
@@ -648,11 +674,28 @@ export function DownloadImageButton(): JSX.Element {
   const downloadUri = isImageReady ? outputImageState.url : "#";
 
   let filename: string | undefined;
-  if (controlsState) {
-    const imgStyleName = IMAGE_STYLE_NAMES.get(controlsState?.imageStyle);
-    assert(imgStyleName);
-    filename = `Reddit Avatar ${imgStyleName}.${controlsState.outputImageFormat}`;
+  if (controlsState && avatarDataState.type === DataStateType.LOADED) {
+    filename = _internals._getAvatarFilename({
+      controlsState,
+      avatar: avatarDataState.avatar,
+      timestamp: Date.now(),
+    });
   }
+  const downloadLinkElement = createRef<HTMLAnchorElement>();
+  const setDownloadFilenameToCurrentTime = () => {
+    if (
+      downloadLinkElement.current &&
+      controlsState &&
+      avatarDataState.type === DataStateType.LOADED
+    ) {
+      const filename = _internals._getAvatarFilename({
+        controlsState,
+        avatar: avatarDataState.avatar,
+        timestamp: Date.now(),
+      });
+      downloadLinkElement.current.setAttribute("download", filename);
+    }
+  };
   const captureAvatarImageSaved = () => {
     if (
       analyticsState &&
@@ -668,10 +711,18 @@ export function DownloadImageButton(): JSX.Element {
 
   return (
     <a
+      ref={downloadLinkElement}
       role="button"
       aria-disabled={disabled || undefined}
       class={`flex-grow ${bottomBarButtonStyle(disabled)} ph-no-capture`}
-      onClick={disabled ? () => false : captureAvatarImageSaved}
+      onClick={
+        disabled
+          ? () => false
+          : () => {
+              setDownloadFilenameToCurrentTime();
+              captureAvatarImageSaved();
+            }
+      }
       href={downloadUri}
       download={disabled ? undefined : filename}
     >
@@ -1717,3 +1768,7 @@ export function _initAnalyticsState({
   });
   return analyticsStateSignal;
 }
+
+export const _internals = {
+  _getAvatarFilename,
+};
