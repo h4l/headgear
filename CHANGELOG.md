@@ -10,6 +10,56 @@ and this project adheres to
 
 - Nothing yet
 
+## [0.5.0] - 2023-01-24
+
+### Added
+
+- Headgear now has optional, opt-in analytics, to share usage information.
+
+  If a user agrees, Headgear will share details of how the user interface is
+  being used. For example, which buttons are clicked, which type of image is
+  being generated, and which Avatar is being used. This information is collected
+  with the aim of guiding future development work to improve Headgear. See
+  [Headgear's Privacy Policy](docs/privacy-policy.md) for more info.
+
+### Changed
+
+- Filenames have been improved for downloaded/saved images.
+
+  Previously the filenames were `Reddit Avatar ${avatar-style}.${ext}` which
+  results in conflicting filenames when you download more than one, so lots of
+  files with `(1)`, `(2)`, `(...n)` appended.
+
+  The filenames now include the NFT name & serial, plus a timestamp, e.g.
+  `Super Rare #1 NFT Card 2023-1-23 at 19.30.34.svg`. The timestamp is not
+  localised, but its stolen from how MacOS names screenshots/recordings etc.
+  Similar to ISO 8601 dates, but a bit more readable, and more importantly
+  excluding / and : chars. Also sorts lexicographically with the time value,
+  which is nice for filenames.
+
+- People using the exact width/height setting will have this setting reversed.
+
+  The serialisation of the exact image width/height has changed to fix a mistake
+  in the code. If a user has the exact width/height option selected, their
+  preference will be flipped from width to height or vice versa, due to the
+  change in [de]serialisation introduced to fix the code. (It's not worth
+  maintaining a long-term versioned migration for this minor issue in the
+  codebase, sorry.)
+
+- The most recent Reddit GQL API used to fetch Avatar data.
+
+  This has no visible effect for users, but reduces the risk of
+  Avatar-data-fetching becoming broken due to Reddit disabling an API they no
+  longer use themselves. (Headgear depends on non-public APIs.)
+
+### Fixed
+
+- Shadows are no longer clipped on NFT Card Avatar name text.
+
+  The change in 4.0.2 to render text as SVG paths introduced a subtle defect in
+  the text shadow rendering — shadows were clipped with a hard edge before
+  they'd fully faded out above and below the text.
+
 ## [0.4.2] - 2023-01-14
 
 ### Fixed
@@ -96,7 +146,8 @@ The first release.
 - Support for Chrome-based browsers
 
 [unreleased]:
-  https://github.com/olivierlacan/keep-a-changelog/compare/v0.3.0...HEAD
+  https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/h4l/headgear/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/h4l/headgear/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/h4l/headgear/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/h4l/headgear/compare/v0.3.0...v0.4.0
