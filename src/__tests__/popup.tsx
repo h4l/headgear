@@ -88,6 +88,7 @@ function readBlobAsText(blob: Blob): Promise<string> {
 }
 
 beforeEach(() => {
+  window.chrome = mockChrome();
   jest.clearAllMocks();
 });
 
@@ -98,7 +99,6 @@ describe("create & initialise RootState", () => {
       id: 123,
       url: "https://www.reddit.com/",
     };
-    window.chrome = mockChrome();
     const console: Partial<Console> = {
       error: jest.fn(),
     };
