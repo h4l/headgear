@@ -412,9 +412,12 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
   >
     <defs>
       <filter
+        filterUnits="userSpaceOnUse"
+        height="100%"
         id="shadow"
-        width="200%"
-        x="-50%"
+        width="100%"
+        x="0"
+        y="0"
       >
         <fegaussianblur
           in="SourceAlpha"
@@ -453,7 +456,12 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
         />
       </lineargradient>
       <mask
+        height="100%"
         id="mask"
+        maskUnits="userSpaceOnUse"
+        width="100%"
+        x="0"
+        y="0"
       >
         <rect
           fill="url(#gradient)"
@@ -664,9 +672,12 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
   >
     <defs>
       <filter
+        filterUnits="userSpaceOnUse"
+        height="100%"
         id="shadow"
-        width="200%"
-        x="-50%"
+        width="100%"
+        x="0"
+        y="0"
       >
         <fegaussianblur
           in="SourceAlpha"
@@ -705,7 +716,12 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
         />
       </lineargradient>
       <mask
+        height="100%"
         id="mask"
+        maskUnits="userSpaceOnUse"
+        width="100%"
+        x="0"
+        y="0"
       >
         <rect
           fill="url(#gradient)"
