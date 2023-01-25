@@ -15,6 +15,7 @@ and this project adheres to
 ### Added
 
 - Headgear now has optional, opt-in analytics, to share usage information.
+  ([#24](https://github.com/h4l/headgear/pull/24))
 
   If a user agrees, Headgear will share details of how the user interface is
   being used. For example, which buttons are clicked, which type of image is
@@ -25,6 +26,7 @@ and this project adheres to
 ### Changed
 
 - Filenames have been improved for downloaded/saved images.
+  ([#25](https://github.com/h4l/headgear/pull/25))
 
   Previously the filenames were `Reddit Avatar ${avatar-style}.${ext}` which
   results in conflicting filenames when you download more than one, so lots of
@@ -55,6 +57,7 @@ and this project adheres to
 ### Fixed
 
 - Shadows are no longer clipped on NFT Card Avatar name text.
+  ([#26](https://github.com/h4l/headgear/pull/26))
 
   The change in 4.0.2 to render text as SVG paths introduced a subtle defect in
   the text shadow rendering — shadows were clipped with a hard edge before
@@ -65,7 +68,7 @@ and this project adheres to
 ### Fixed
 
 - Correct invalid `strict_min_version` value in Firefox manifest.
-  ([22](https://github.com/h4l/headgear/issues/22))
+  ([#22](https://github.com/h4l/headgear/issues/22))
 
 ## [0.4.1] - 2023-01-14
 
@@ -80,13 +83,13 @@ and this project adheres to
 - Firefox support. Headgear supports Firefox, from version 109, due to be
   released on 2023-01-17. (This is the first version of Firefox with Manifest V3
   support, which allows Headgear to work without significant changes.)
-  ([19](https://github.com/h4l/headgear/pull/19))
+  ([#19](https://github.com/h4l/headgear/pull/19))
 - Text using custom fonts is now rendered with SVG paths instead of referencing
   web fonts from the SVG file. This removes all external dependencies, so SVG
   files are entirely stand-alone (no dependencies on Reddit keeping resources
   available). It also allows them to be rendered correctly by programs not
   capable of rendering web fonts in SVG (e.g. Inkscape).
-  ([20](https://github.com/h4l/headgear/pull/20))
+  ([#20](https://github.com/h4l/headgear/pull/20))
 
 ## [0.3.0] - 2022-10-26
 
