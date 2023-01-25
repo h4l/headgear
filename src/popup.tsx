@@ -1750,7 +1750,8 @@ export function _initAnalyticsState({
           headgearVersion: HeadgearGlobal.HEADGEAR_BUILD.version,
           headgearBrowser: HeadgearGlobal.HEADGEAR_BUILD.browserTarget,
         });
-      } else {
+      }
+      if (!postHog.has_opted_in_capturing()) {
         postHog.opt_in_capturing();
       }
       analyticsStateSignal.value = postHog;

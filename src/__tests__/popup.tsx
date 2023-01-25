@@ -12,6 +12,7 @@ import { ComponentChildren } from "preact";
 import { Fragment, JSX } from "preact/jsx-runtime";
 
 import { mockChrome } from "./chrome.mock";
+import { OptInOut, resetMockPostHog } from "./posthog-js.mock";
 
 import { assert } from "../assert";
 import { NFTInfo, ResolvedAvatar } from "../avatars";
@@ -1502,6 +1503,9 @@ test("_getBaseSize()", () => {
 });
 
 describe("_initAnalyticsState", () => {
+  beforeEach(() => {
+    resetMockPostHog(posthog);
+  });
   const setupElementWithUndefinedState = () => {
     const analyticsStateSignal = signal<AnalyticsState>(undefined);
     const controlsStateSignal = signal<ControlsState>(undefined);
@@ -1614,47 +1618,97 @@ describe("_initAnalyticsState", () => {
     });
   });
 
-  test("user is opted out and in when toggling their share preference", async () => {
-    const { analyticsStateSignal, controlsStateSignal } =
-      setupElementWithUndefinedState();
-    const changePreference = (analyticsPreference: AnalyticsPreference) => {
-      controlsStateSignal.value = {
-        ...DEFAULT_CONTROLS_STATE,
-        analyticsPreference,
+  const prefChangeToggleSequence = (options: {
+    from: OptInOut;
+    count: number;
+  }): OptInOut[] => {
+    const prefs: OptInOut[] =
+      options.from === AnalyticsPreference.OPTED_IN
+        ? [AnalyticsPreference.OPTED_IN, AnalyticsPreference.OPTED_OUT]
+        : [AnalyticsPreference.OPTED_OUT, AnalyticsPreference.OPTED_IN];
+    const seq = [...new Array(options.count).keys()].map((n) => prefs[n % 2]);
+    assert(options.count > 0);
+    assert(seq.length === options.count);
+    return seq;
+  };
+
+  test.each`
+    startingPreference                     | nextPreference                   | postHogInitialCapturingPreference
+    ${AnalyticsPreference.OPTED_IN}        | ${AnalyticsPreference.OPTED_OUT} | ${AnalyticsPreference.OPTED_IN}
+    ${AnalyticsPreference.OPTED_OUT}       | ${AnalyticsPreference.OPTED_IN}  | ${AnalyticsPreference.OPTED_IN}
+    ${AnalyticsPreference.NOT_YET_DECIDED} | ${AnalyticsPreference.OPTED_IN}  | ${AnalyticsPreference.OPTED_IN}
+    ${AnalyticsPreference.NOT_YET_DECIDED} | ${AnalyticsPreference.OPTED_OUT} | ${AnalyticsPreference.OPTED_IN}
+    ${AnalyticsPreference.OPTED_IN}        | ${AnalyticsPreference.OPTED_OUT} | ${AnalyticsPreference.OPTED_OUT}
+    ${AnalyticsPreference.OPTED_OUT}       | ${AnalyticsPreference.OPTED_IN}  | ${AnalyticsPreference.OPTED_OUT}
+    ${AnalyticsPreference.NOT_YET_DECIDED} | ${AnalyticsPreference.OPTED_IN}  | ${AnalyticsPreference.OPTED_OUT}
+    ${AnalyticsPreference.NOT_YET_DECIDED} | ${AnalyticsPreference.OPTED_OUT} | ${AnalyticsPreference.OPTED_OUT}
+  `(
+    "User's preference is applied when toggling their share preference to $nextPreference, starting from $startingPreference, when PostHog's persisted opt-out state is $postHogInitialCapturingPreference",
+    async (options: {
+      startingPreference: AnalyticsPreference;
+      nextPreference: OptInOut;
+      postHogInitialCapturingPreference: OptInOut;
+    }) => {
+      resetMockPostHog(posthog, {
+        capturingPreference: options.postHogInitialCapturingPreference,
+      });
+      expect(posthog.has_opted_in_capturing()).toBe(
+        options.postHogInitialCapturingPreference ===
+          AnalyticsPreference.OPTED_IN
+      );
+      expect(posthog.has_opted_out_capturing()).toBe(
+        options.postHogInitialCapturingPreference ===
+          AnalyticsPreference.OPTED_OUT
+      );
+
+      const { analyticsStateSignal, controlsStateSignal } =
+        setupElementWithUndefinedState();
+
+      const changePreference = (analyticsPreference: AnalyticsPreference) => {
+        controlsStateSignal.value = {
+          ...DEFAULT_CONTROLS_STATE,
+          analyticsPreference,
+        };
       };
-    };
-    changePreference(AnalyticsPreference.OPTED_IN);
-    await waitFor(() => {
-      expect(analyticsStateSignal.value).not.toBeUndefined();
-      expect(posthog.init).toHaveBeenCalledTimes(1);
-      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(0);
-      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(0);
-    });
 
-    changePreference(AnalyticsPreference.OPTED_OUT);
-    await waitFor(() => {
-      expect(analyticsStateSignal.value).toBeUndefined();
-      expect(posthog.init).toHaveBeenCalledTimes(1);
-      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(0);
-      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
-    });
+      for (const preference of prefChangeToggleSequence({
+        from: options.nextPreference,
+        count: 4,
+      })) {
+        changePreference(preference);
+        await waitFor(() => {
+          expect(posthog.has_opted_in_capturing()).toBe(
+            !posthog.has_opted_out_capturing()
+          );
 
-    changePreference(AnalyticsPreference.OPTED_IN);
-    await waitFor(() => {
-      expect(analyticsStateSignal.value).not.toBeUndefined();
-      expect(posthog.init).toHaveBeenCalledTimes(1);
-      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(1);
-      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
-    });
+          /* eslint-disable jest/no-conditional-expect */
+          if (preference === AnalyticsPreference.OPTED_IN) {
+            expect(posthog.init).toHaveBeenCalledTimes(1);
+            expect(analyticsStateSignal.value).not.toBeUndefined();
+            expect(posthog.has_opted_in_capturing()).toBeTruthy();
+          } else {
+            expect(analyticsStateSignal.value).toBeUndefined();
 
-    changePreference(AnalyticsPreference.OPTED_OUT);
-    await waitFor(() => {
-      expect(analyticsStateSignal.value).toBeUndefined();
+            const initCalled = jest.mocked(posthog.init).mock.calls.length > 0;
+            // If init hasn't been called (e.g. because we never opted in) then
+            // we may not have explicitly opted-out posthog, but that's moot
+            // because it's not running.
+            expect(
+              !initCalled || posthog.has_opted_out_capturing()
+            ).toBeTruthy();
+
+            // However if init has ever been called, then we must have
+            // explicitly opted out.
+            if (initCalled) {
+              expect(posthog.has_opted_out_capturing()).toBeTruthy();
+            }
+          }
+          /* eslint-enable jest/no-conditional-expect */
+        });
+      }
       expect(posthog.init).toHaveBeenCalledTimes(1);
-      expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(1);
-      expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(2);
-    });
-  });
+    }
+  );
 
   test("super properties are registered when enabling analytics", async () => {
     const { controlsStateSignal } = setupElementWithUndefinedState();
