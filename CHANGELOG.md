@@ -10,7 +10,7 @@ and this project adheres to
 
 - Nothing yet
 
-## [0.5.0] - 2023-01-24
+## [0.5.0] - 2023-01-25
 
 ### Added
 
