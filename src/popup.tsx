@@ -637,12 +637,14 @@ const IMAGE_STYLE_NAMES: Record<ImageStyleType, string> = {
 
 function _formatTimeForFilename(timestamp: number): string {
   const d = new Date(timestamp);
+  const pad = (s: number | string) => `${s}`.padStart(2, "0");
   // e.g. "2023-1-23 at 18.23.8" — the format MacOS uses for screenshots. Sorts
   // lexicographically with time and does not contain / or : (which are commonly
   // used in paths/URLs).
-  return `${d.getFullYear()}-${
-    d.getMonth() + 1
-  }-${d.getDate()} at ${d.getHours()}.${d.getMinutes()}.${d.getSeconds()}`;
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `at ${pad(d.getHours())}.${pad(d.getMinutes())}.${pad(d.getSeconds())}`
+  );
 }
 
 function _getAvatarFilename({
@@ -1771,5 +1773,6 @@ export function _initAnalyticsState({
 }
 
 export const _internals = {
+  _formatTimeForFilename,
   _getAvatarFilename,
 };

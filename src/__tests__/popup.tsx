@@ -700,6 +700,21 @@ describe("<DownloadImageButton>", () => {
 });
 
 describe("Avatar Image Download Filename", () => {
+  test.each`
+    inputTime                     | formattedTime
+    ${"2023-10-23T19:30:34.819Z"} | ${"2023-10-23 at 19.30.34"}
+    ${"2023-01-02T03:04:05.819Z"} | ${"2023-01-02 at 03.04.05"}
+  `(
+    "_formatTimeForFilename() formats $inputTime as $formattedTime",
+    async (options: { inputTime: string; formattedTime: string }) => {
+      const timestamp = Date.parse(options.inputTime);
+
+      expect(_internals._formatTimeForFilename(timestamp)).toEqual(
+        options.formattedTime
+      );
+    }
+  );
+
   test("Download Filename has expected format", async () => {
     const controlsState: ControlsStateObject = {
       ...DEFAULT_CONTROLS_STATE,
@@ -709,12 +724,12 @@ describe("Avatar Image Download Filename", () => {
       styles: [],
       nftInfo: undefined,
     };
-    const timestamp = Date.parse("2023-01-23T19:30:34.819Z");
+    const timestamp = Date.parse("2023-01-23T09:30:34.819Z");
 
     expect(
       _internals._getAvatarFilename({ controlsState, avatar, timestamp })
     ).toMatchInlineSnapshot(
-      `"Reddit Avatar Standard 2023-1-23 at 19.30.34.png"`
+      `"Reddit Avatar Standard 2023-01-23 at 09.30.34.png"`
     );
 
     controlsState.outputImageFormat = OutputImageFormat.SVG;
@@ -724,7 +739,7 @@ describe("Avatar Image Download Filename", () => {
     expect(
       _internals._getAvatarFilename({ controlsState, avatar, timestamp })
     ).toMatchInlineSnapshot(
-      `"Super Rare #1 NFT Card 2023-1-23 at 19.30.34.svg"`
+      `"Super Rare #1 NFT Card 2023-01-23 at 09.30.34.svg"`
     );
   });
 });
