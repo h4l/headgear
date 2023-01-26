@@ -5,6 +5,7 @@ import {
   RuleSet,
   Selectors,
 } from "css-selector-parser";
+import countBy from "lodash.countby";
 
 import { assert, assertNever } from "./assert";
 import { NFTInfo, ResolvedAccessory, ResolvedAvatar } from "./avatars";
@@ -357,6 +358,30 @@ export function prepareAccessorySVG({
   return { svg: accessoryGroup, stylesheet: cssStylesheet };
 }
 
+/**
+ * Create a list of unique ID values for each accessory.
+ *
+ * This implementation aims to maintain the original accessory ID value, but
+ * will append the slotNumber (layer position) and (if necessary) the index in
+ * the accessories list to distinguish duplicates.
+ *
+ * Duplicates are named consistently, e.g. "thing_a" occurring twice in slots 10
+ * and 30 are named thing_a_10 and thing_a_30 respectively (not thing_a and
+ * thing_a_30).
+ */
+export function createDistinctAccessoryIds(accessories: ResolvedAccessory[]) {
+  const slotId = (a: ResolvedAccessory) => `${a.id}_${a.slotNumber}`;
+  const idDuplicates = countBy(accessories, (a) => a.id);
+  const slotDuplicates = countBy(accessories, slotId);
+  return accessories.map((a, i) =>
+    idDuplicates[a.id] === 1
+      ? a.id
+      : slotDuplicates[slotId(a)] === 1
+      ? slotId(a)
+      : `${slotId(a)}_${i}`
+  );
+}
+
 const ACC_W = 380;
 const ACC_H = 600;
 
@@ -384,8 +409,12 @@ export function composeAvatarSVG({
   // a unique prefix to guarantee uniqueness. Then we just merge the
   // stylesheets.
 
+  const distinctIds = createDistinctAccessoryIds(accessories);
   const preparedAccessories = accessories.map((accessory, index) =>
-    prepareAccessorySVG({ accessory, index })
+    prepareAccessorySVG({
+      accessory: { ...accessory, id: distinctIds[index] },
+      index,
+    })
   );
   const customisationStyles = createAccessoryCustomisationCSSRules(avatar);
 

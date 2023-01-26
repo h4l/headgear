@@ -20,6 +20,7 @@ import {
   addPrefixesToSVGClassAttributes,
   composeAvatarSVG,
   createAccessoryCustomisationCSSRules,
+  createDistinctAccessoryIds,
   createHeadshotCircleAvatarSVG,
   createHeadshotCommentsAvatarSVG,
   createNFTCardAvatarSVG,
@@ -298,6 +299,9 @@ describe("prepareAccessorySVG()", () => {
 function avatar(): ResolvedAvatar {
   return {
     accessories: [
+      // Accessories (like hair) can be made up of multiple layers, which have
+      // different layer orders (slotNumber), but share the same id.
+      // `accessory-b` is such a two-part accessory, this is a foreground layer:
       {
         id: "accessory-b",
         slotNumber: 30,
@@ -315,6 +319,26 @@ function avatar(): ResolvedAvatar {
   <circle class="bar color-yyy" cx="5" cy="6" r="1"/>
 </g>
 <circle class="foo" cx="2" cy="3" r="4"/>
+</svg>`,
+      },
+      // This is the background layer of a two-part accessory:
+      {
+        id: "accessory-b",
+        slotNumber: 10,
+        customizableClasses: [],
+        svgData: `\
+<svg xmlns="http://www.w3.org/2000/svg">
+<rect width="5" height="6" class="foo" />
+<defs>
+  <style>
+    .foo { stroke: DeepPink }
+    .boz { stroke: DeepBlue }
+  </style>
+</defs>
+<g>
+  <circle class="boz" cx="4.5" cy="4.5" r="1"/>
+</g>
+<circle class="foo" cx="2.5" cy="3.5" r="4"/>
 </svg>`,
       },
       {
@@ -355,13 +379,37 @@ function avatar(): ResolvedAvatar {
   };
 }
 
+describe("createDistinctAccessoryIds()", () => {
+  test("assigns unique ids to accessories with multiple layers and multiple layers per-slot", () => {
+    const accessories: ResolvedAccessory[] = [
+      { id: "thing_a", slotNumber: 10, customizableClasses: [], svgData: "" },
+      { id: "thing_b", slotNumber: 20, customizableClasses: [], svgData: "" },
+      // Multiple instances of the same accessory at the same layer position.
+      // Probably never happens in practice, but we handle this by including the
+      // index in the ID if it does.
+      { id: "thing_a", slotNumber: 30, customizableClasses: [], svgData: "" },
+      { id: "thing_a", slotNumber: 30, customizableClasses: [], svgData: "" },
+    ];
+    const distinctIds = createDistinctAccessoryIds(accessories);
+    expect(new Set(distinctIds).size).toEqual(accessories.length);
+    expect(distinctIds).toMatchInlineSnapshot(`
+      [
+        "thing_a_10",
+        "thing_b",
+        "thing_a_30_2",
+        "thing_a_30_3",
+      ]
+    `);
+  });
+});
+
 describe("composeAvatarSVG()", () => {
   test("merges avatar accessories into single SVG doc", () => {
     const svg = composeAvatarSVG({ avatar: avatar() });
-    // The baz class in "accessory-b" is not referenced by any CSS rule, so it's
-    // not rewritten.
+    // The baz class in "accessory-b", slot 30 is not referenced by any CSS
+    //  rule, so it's not rewritten.
     expect(svg.querySelectorAll(".baz").length).toBe(1);
-    expect(svg.querySelectorAll("#avatar #accessory-b .baz").length).toBe(1);
+    expect(svg.querySelectorAll("#avatar #accessory-b_30 .baz").length).toBe(1);
     // Similarly, the color- classes are not referenced and not rewritten.
     // Although this could be a problem if an internal style also referenced
     // a colour- customisation class, as currently that would namespace the

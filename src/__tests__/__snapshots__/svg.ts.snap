@@ -36,16 +36,42 @@ exports[`Avatar SVG Headshot Circle Layout - createHeadshotCircleAvatarSVG() ren
     xmlns="http://www.w3.org/2000/svg"
   >
     <style>
-      /* accessory-a */
+      /* accessory-b */
+.accessory-b_10-foo{stroke:DeepPink;}.accessory-b_10-boz{stroke:DeepBlue;}
+/* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
-.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+.accessory-b_30-foo{stroke:red;}.accessory-b_30-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
     </style>
     <g
       id="avatar"
     >
+      <g
+        id="accessory-b_10"
+      >
+        <rect
+          class="accessory-b_10-foo"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="accessory-b_10-boz"
+            cx="4.5"
+            cy="4.5"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b_10-foo"
+          cx="2.5"
+          cy="3.5"
+          r="4"
+        />
+      </g>
       <g
         id="accessory-a"
       >
@@ -71,10 +97,10 @@ exports[`Avatar SVG Headshot Circle Layout - createHeadshotCircleAvatarSVG() ren
         />
       </g>
       <g
-        id="accessory-b"
+        id="accessory-b_30"
       >
         <rect
-          class="accessory-b-foo bar baz color-xxx"
+          class="accessory-b_30-foo bar baz color-xxx"
           height="6"
           width="5"
         />
@@ -88,7 +114,7 @@ exports[`Avatar SVG Headshot Circle Layout - createHeadshotCircleAvatarSVG() ren
           />
         </g>
         <circle
-          class="accessory-b-foo"
+          class="accessory-b_30-foo"
           cx="2"
           cy="3"
           r="4"
@@ -200,16 +226,42 @@ exports[`Avatar SVG Headshot Comments Layout - createHeadshotCommentsAvatarSVG()
     xmlns="http://www.w3.org/2000/svg"
   >
     <style>
-      /* accessory-a */
+      /* accessory-b */
+.accessory-b_10-foo{stroke:DeepPink;}.accessory-b_10-boz{stroke:DeepBlue;}
+/* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
-.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+.accessory-b_30-foo{stroke:red;}.accessory-b_30-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
     </style>
     <g
       id="avatar"
     >
+      <g
+        id="accessory-b_10"
+      >
+        <rect
+          class="accessory-b_10-foo"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="accessory-b_10-boz"
+            cx="4.5"
+            cy="4.5"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b_10-foo"
+          cx="2.5"
+          cy="3.5"
+          r="4"
+        />
+      </g>
       <g
         id="accessory-a"
       >
@@ -235,10 +287,10 @@ exports[`Avatar SVG Headshot Comments Layout - createHeadshotCommentsAvatarSVG()
         />
       </g>
       <g
-        id="accessory-b"
+        id="accessory-b_30"
       >
         <rect
-          class="accessory-b-foo bar baz color-xxx"
+          class="accessory-b_30-foo bar baz color-xxx"
           height="6"
           width="5"
         />
@@ -252,7 +304,7 @@ exports[`Avatar SVG Headshot Comments Layout - createHeadshotCommentsAvatarSVG()
           />
         </g>
         <circle
-          class="accessory-b-foo"
+          class="accessory-b_30-foo"
           cx="2"
           cy="3"
           r="4"
@@ -344,16 +396,42 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
     y="63"
   >
     <style>
-      /* accessory-a */
+      /* accessory-b */
+.accessory-b_10-foo{stroke:DeepPink;}.accessory-b_10-boz{stroke:DeepBlue;}
+/* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
-.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+.accessory-b_30-foo{stroke:red;}.accessory-b_30-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
     </style>
     <g
       id="avatar"
     >
+      <g
+        id="accessory-b_10"
+      >
+        <rect
+          class="accessory-b_10-foo"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="accessory-b_10-boz"
+            cx="4.5"
+            cy="4.5"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b_10-foo"
+          cx="2.5"
+          cy="3.5"
+          r="4"
+        />
+      </g>
       <g
         id="accessory-a"
       >
@@ -379,10 +457,10 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
         />
       </g>
       <g
-        id="accessory-b"
+        id="accessory-b_30"
       >
         <rect
-          class="accessory-b-foo bar baz color-xxx"
+          class="accessory-b_30-foo bar baz color-xxx"
           height="6"
           width="5"
         />
@@ -396,7 +474,7 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders free NFT 
           />
         </g>
         <circle
-          class="accessory-b-foo"
+          class="accessory-b_30-foo"
           cx="2"
           cy="3"
           r="4"
@@ -604,16 +682,42 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
     y="63"
   >
     <style>
-      /* accessory-a */
+      /* accessory-b */
+.accessory-b_10-foo{stroke:DeepPink;}.accessory-b_10-boz{stroke:DeepBlue;}
+/* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
-.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+.accessory-b_30-foo{stroke:red;}.accessory-b_30-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
     </style>
     <g
       id="avatar"
     >
+      <g
+        id="accessory-b_10"
+      >
+        <rect
+          class="accessory-b_10-foo"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="accessory-b_10-boz"
+            cx="4.5"
+            cy="4.5"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b_10-foo"
+          cx="2.5"
+          cy="3.5"
+          r="4"
+        />
+      </g>
       <g
         id="accessory-a"
       >
@@ -639,10 +743,10 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
         />
       </g>
       <g
-        id="accessory-b"
+        id="accessory-b_30"
       >
         <rect
-          class="accessory-b-foo bar baz color-xxx"
+          class="accessory-b_30-foo bar baz color-xxx"
           height="6"
           width="5"
         />
@@ -656,7 +760,7 @@ exports[`Avatar SVG NFT Card Layout - createNFTCardAvatarSVG() renders regular N
           />
         </g>
         <circle
-          class="accessory-b-foo"
+          class="accessory-b_30-foo"
           cx="2"
           cy="3"
           r="4"
@@ -874,16 +978,42 @@ exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar i
     y="35"
   >
     <style>
-      /* accessory-a */
+      /* accessory-b */
+.accessory-b_10-foo{stroke:DeepPink;}.accessory-b_10-boz{stroke:DeepBlue;}
+/* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
-.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+.accessory-b_30-foo{stroke:red;}.accessory-b_30-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
     </style>
     <g
       id="avatar"
     >
+      <g
+        id="accessory-b_10"
+      >
+        <rect
+          class="accessory-b_10-foo"
+          height="6"
+          width="5"
+        />
+        <defs />
+        <g>
+          <circle
+            class="accessory-b_10-boz"
+            cx="4.5"
+            cy="4.5"
+            r="1"
+          />
+        </g>
+        <circle
+          class="accessory-b_10-foo"
+          cx="2.5"
+          cy="3.5"
+          r="4"
+        />
+      </g>
       <g
         id="accessory-a"
       >
@@ -909,10 +1039,10 @@ exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar i
         />
       </g>
       <g
-        id="accessory-b"
+        id="accessory-b_30"
       >
         <rect
-          class="accessory-b-foo bar baz color-xxx"
+          class="accessory-b_30-foo bar baz color-xxx"
           height="6"
           width="5"
         />
@@ -926,7 +1056,7 @@ exports[`Avatar SVG Standard Layout - createStandardAvatarSVG() renders avatar i
           />
         </g>
         <circle
-          class="accessory-b-foo"
+          class="accessory-b_30-foo"
           cx="2"
           cy="3"
           r="4"
@@ -1017,16 +1147,42 @@ exports[`composeAvatarSVG() merges avatar accessories into single SVG doc 1`] = 
   xmlns="http://www.w3.org/2000/svg"
 >
   <style>
-    /* accessory-a */
+    /* accessory-b */
+.accessory-b_10-foo{stroke:DeepPink;}.accessory-b_10-boz{stroke:DeepBlue;}
+/* accessory-a */
 .accessory-a-baz{stroke:orange;}.accessory-a-boz{stroke:blue;}
 /* accessory-b */
-.accessory-b-foo{stroke:red;}.accessory-b-boz{stroke:blue;}
+.accessory-b_30-foo{stroke:red;}.accessory-b_30-boz{stroke:blue;}
 /* customisation styles */
 .color-xxx{fill:red}.color-yyy{fill:#aabbcc}.color-zzz{fill:#111111}
   </style>
   <g
     id="avatar"
   >
+    <g
+      id="accessory-b_10"
+    >
+      <rect
+        class="accessory-b_10-foo"
+        height="6"
+        width="5"
+      />
+      <defs />
+      <g>
+        <circle
+          class="accessory-b_10-boz"
+          cx="4.5"
+          cy="4.5"
+          r="1"
+        />
+      </g>
+      <circle
+        class="accessory-b_10-foo"
+        cx="2.5"
+        cy="3.5"
+        r="4"
+      />
+    </g>
     <g
       id="accessory-a"
     >
@@ -1052,10 +1208,10 @@ exports[`composeAvatarSVG() merges avatar accessories into single SVG doc 1`] = 
       />
     </g>
     <g
-      id="accessory-b"
+      id="accessory-b_30"
     >
       <rect
-        class="accessory-b-foo bar baz color-xxx"
+        class="accessory-b_30-foo bar baz color-xxx"
         height="6"
         width="5"
       />
@@ -1069,7 +1225,7 @@ exports[`composeAvatarSVG() merges avatar accessories into single SVG doc 1`] = 
         />
       </g>
       <circle
-        class="accessory-b-foo"
+        class="accessory-b_30-foo"
         cx="2"
         cy="3"
         r="4"
