@@ -10,6 +10,26 @@ and this project adheres to
 
 - Nothing yet
 
+## [0.5.1] - 2023-01-26
+
+### Fixed
+
+- The hair of "Persephone, Aspect of Hades" should display correctly
+  ([#30](https://github.com/h4l/headgear/pull/30))
+
+  Avatars with complex multi-layer accessories were being rendered incorrectly,
+  as the CSS styles could conflict across their layers. These are not commonly
+  seen, but Persephone's hair is one example.
+
+  Thanks to [u/SpiceWeaselBAM](https://www.reddit.com/user/SpiceWeaselBAM/) for
+  reporting this issue and providing SVG data to diagnose the problem.
+
+- The numbers in download filenames are now 0-padded to 2 digits.
+  ([#32](https://github.com/h4l/headgear/pull/32))
+
+  The new filename format introduced in 0.5.0 was supposed to sort according to
+  date, but they need to be 0-padded to do that.
+
 ## [0.5.0] - 2023-01-25
 
 ### Added
@@ -149,7 +169,8 @@ The first release.
 - Support for Chrome-based browsers
 
 [unreleased]:
-  https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.0...HEAD
+  https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/h4l/headgear/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/h4l/headgear/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/h4l/headgear/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/h4l/headgear/compare/v0.4.0...v0.4.1
