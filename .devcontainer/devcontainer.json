@@ -41,7 +41,11 @@
         "[xml]": {
           "editor.defaultFormatter": "DotJoshJohnson.xml"
         },
-        "editor.detectIndentation": false
+        "editor.detectIndentation": true,
+        "jest.jestCommandLine": "npx jest",
+        "jest.autoRun": "off",
+        "cSpell.enabled": true,
+        "cSpell.enableFiletypes": ["git-commit"]
       }
     }
   },
