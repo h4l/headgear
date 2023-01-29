@@ -2,10 +2,6 @@
 ARG VARIANT=16-bullseye
 FROM mcr.microsoft.com/vscode/devcontainers/typescript-node:0-${VARIANT}
 
-COPY git-from-src-debian.sh /tmp/git-from-src-debian.sh
-RUN chmod +x /tmp/git-from-src-debian.sh
-RUN /tmp/git-from-src-debian.sh
-
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 #     && apt-get -y install --no-install-recommends <package>
