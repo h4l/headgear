@@ -8,6 +8,12 @@
       "VARIANT": "18-bullseye"
     }
   },
+  "mounts": [
+    // If you're not using a bind mount for the workspace, you probably want to
+    // bind mount the dist dir, so that you can load the built files into a
+    // browser as a development-mode extension. E.g:
+    // "source=${localEnv:HOME}/headgear-dist,target=${containerWorkspaceFolder}/dist,type=bind,consistency=delegated",
+  ],
   // Configure tool-specific properties.
   "customizations": {
     // Configure properties specific to VS Code.
