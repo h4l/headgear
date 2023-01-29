@@ -1,8 +1,13 @@
 name: main
 
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 jobs:
   build:
