@@ -6,11 +6,19 @@
 &nbsp;&nbsp;&nbsp;&nbsp;
 [![Available from Firefox Browser Add-Ons](./docs/addons-mozilla-org-button.png)](https://addons.mozilla.org/en-GB/firefox/addon/headgear/)
 
-Headgear creates high-quality, resolution-independent images of your Reddit
-Avatar (NFT or regular), allowing you to use it beyond Reddit. With images from
-Headgear you can create high-quality prints, images for other social media
-sites, or extract Avatar accessories to create image macros/memes or general
-mash-ups.
+Headgear makes it quick and easy to get high-quality images of your Reddit
+Avatar (NFT or regular). Copy & paste a clean image of your Avatar in two clicks
+from any Reddit page.
+
+Headgear creates high-quality, resolution-independent images of Reddit Avatars
+using the original vector SVG images from Reddit's Avatar Builder. The results
+are sharper and more detailed than the Avatar images Reddit itself shows.
+
+By owning an NFT Avatar, you have the right to use its images as you like.
+Headgear helps you make the most of your Avatar by giving you access to the
+best-possible quality images. You can create high-quality prints, images for
+other social media sites, or extract Avatar accessories to create image
+macros/memes or general mash-ups.
 
 ![Screenshot of Headgear](./docs/headgear-0.4.2-screenshot.png "The Headgear UI")
 
