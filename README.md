@@ -35,11 +35,20 @@ installed**. See Headgear's [security advice](./docs/security.md) for more.
 
 <dl>
   <dt>Chrome / Edge / Brave / Opera</dt>
-  <dd><a target="_blank" href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp"><img alt="Available in the Chrome Web Store" src="./docs/chrome-web-store-button.png"></a></dd>
+
+  <dd>
+  <a target="_blank" href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp"><img align="right" src="https://img.shields.io/chrome-web-store/stars/enohpjpndpodijgkfibkcpfdchjhfljp?color=%23267dff&label=stars"></a>
+  <a target="_blank" href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp"><img align="right" src="https://img.shields.io/chrome-web-store/users/enohpjpndpodijgkfibkcpfdchjhfljp?color=%23267dff"></a>
+  <a target="_blank" href="https://chrome.google.com/webstore/detail/headgear/enohpjpndpodijgkfibkcpfdchjhfljp"><img alt="Available in the Chrome Web Store" src="./docs/chrome-web-store-button.png"></a>
+  </dd>
 
   <dt>Firefox</dt>
-  <dd>
-  <p><a target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img alt="Available from Firefox Browser Add-Ons" src="./docs/addons-mozilla-org-button.png"></a></p>
+
+  <dd><p>
+  <a target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img align="right" src="https://img.shields.io/amo/stars/headgear?color=%23267dff"></a>
+  <a target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img align="right" src="https://img.shields.io/amo/users/headgear?color=%23267dff"></a>
+  <a target="_blank" href="https://addons.mozilla.org/en-GB/firefox/addon/headgear/"><img alt="Available from Firefox Browser Add-Ons" src="./docs/addons-mozilla-org-button.png"></a></p>
+
   <p>Headgear supports Firefox from version 109 onwards (the first version with Manifest V3 extension support).</p></dd>
 <p>
   </dd>
