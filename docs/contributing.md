@@ -7,7 +7,7 @@
 
 [<img src="./headgear-GitPOAP-2023_278x300.png" align="right">][git-poap]
 
-You an contribute to the development of Headgear with or without knowing how to
+You can contribute to the development of Headgear with or without knowing how to
 program.
 
 - Reporting problems you've found in Headgear.
