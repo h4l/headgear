@@ -1,5 +1,10 @@
 # Headgear Developer Instructions
 
+[![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/h4l/headgear/main.yml?branch=main)](https://github.com/h4l/headgear/actions)
+[![GitPOAPs](https://public-api.gitpoap.io/v1/repo/h4l/headgear/badge)][git-poap]
+
+[git-poap]: https://www.gitpoap.io/gh/h4l/headgear
+
 ## Dev Environment
 
 We use Node JS 16 to build & test Headgear. Newer versions should work too
