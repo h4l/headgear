@@ -107,11 +107,12 @@ other users.
 [snoovatars]:
   https://venturebeat.com/business/reddit-now-lets-you-make-your-own-snoo-avatar-adds-two-new-features/
 
-## Developing Headgear
+## Contributing to & Developing Headgear
 
 [![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/h4l/headgear/main.yml?branch=main)](https://github.com/h4l/headgear/actions)
 [![GitPOAPs](https://public-api.gitpoap.io/v1/repo/h4l/headgear/badge)][git-poap]
 
 [git-poap]: https://www.gitpoap.io/gh/h4l/headgear
 
-See [docs/developing.md](docs/developing.md).
+See [docs/contributing.md](docs/contributing.md). And
+[docs/developing.md](docs/developing.md) for more technical info.
