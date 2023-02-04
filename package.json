@@ -1,6 +1,6 @@
 {
   "name": "headgear",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Chrome browser extension for exporting your Reddit Avatar",
   "repository": "https://github.com/h4l/headgear.git",
   "scripts": {
