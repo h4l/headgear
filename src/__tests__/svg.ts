@@ -507,12 +507,22 @@ describe("Avatar SVG", () => {
     );
 
     test.each`
-      seriesSize | renderedSeriesSize
-      ${null}    | ${null}
-      ${600}     | ${"600"}
-      ${1000}    | ${"1k"}
-      ${1200}    | ${"1.2k"}
-      ${1289}    | ${"1.3k"}
+      seriesSize   | renderedSeriesSize
+      ${null}      | ${undefined}
+      ${600}       | ${"600"}
+      ${999}       | ${"999"}
+      ${1000}      | ${"1k"}
+      ${1200}      | ${"1.2k"}
+      ${1289}      | ${"1.3k"}
+      ${10000}     | ${"10k"}
+      ${10200}     | ${"10k"}
+      ${10600}     | ${"11k"}
+      ${2e6}       | ${"2m"}
+      ${2.2e6}     | ${"2.2m"}
+      ${1e6 - 1}   | ${"1m"}
+      ${1e6 - 501} | ${"999k"}
+      ${10.2e6}    | ${"10m"}
+      ${10.6e6}    | ${"11m"}
     `(
       "nftNameSVG() renders seriesSize $seriesSize",
       async ({
@@ -520,7 +530,7 @@ describe("Avatar SVG", () => {
         renderedSeriesSize,
       }: {
         seriesSize: null | number;
-        renderedSeriesSize: null | string;
+        renderedSeriesSize: undefined | string;
       }) => {
         const _avatar = avatar();
         assert(_avatar.nftInfo);
@@ -530,15 +540,9 @@ describe("Avatar SVG", () => {
           variant: NFTCardVariant.SHOP_INVENTORY,
         });
 
-        if (renderedSeriesSize === null) {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(nftName.querySelector("#series-size")).toBeFalsy();
-        } else {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(nftName.querySelector("#series-size")?.textContent).toEqual(
-            renderedSeriesSize
-          );
-        }
+        expect(nftName.querySelector("#series-size")?.textContent).toEqual(
+          renderedSeriesSize
+        );
       }
     );
   });

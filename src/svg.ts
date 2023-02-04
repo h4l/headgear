@@ -559,6 +559,18 @@ function getAbsolutePosition(el: Element, axis: "x" | "y"): number {
   return base + size * fraction;
 }
 
+function formatSeriesSize(seriesSize: number) {
+  return seriesSize < 1000
+    ? seriesSize.toFixed(0)
+    : Math.round(seriesSize / 1000) < 10
+    ? `${(seriesSize / 1000).toFixed(1).replace(/\.0$/, "")}k`
+    : Math.round(seriesSize / 1000) < 1000
+    ? `${(seriesSize / 1000).toFixed(0).replace(/\.0$/, "")}k`
+    : Math.round(seriesSize / 1e6) < 10
+    ? `${(seriesSize / 1e6).toFixed(1).replace(/\.0$/, "")}m`
+    : `${(seriesSize / 1e6).toFixed(0).replace(/\.0$/, "")}m`;
+}
+
 export async function _nftNameSVG(options: {
   nftInfo: NFTInfo;
   variant: NFTCardVariant;
@@ -576,10 +588,7 @@ export async function _nftNameSVG(options: {
     seriesSizeNumerator = svg.querySelector("#series-size-numerator");
     seriesSize = svg.querySelector("#series-size");
     assert(seriesSize);
-    seriesSize.textContent =
-      nftInfo.seriesSize < 1000
-        ? nftInfo.seriesSize.toFixed(0)
-        : `${(nftInfo.seriesSize / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+    seriesSize.textContent = formatSeriesSize(nftInfo.seriesSize);
   }
   const name = svg.querySelector("#nft-name");
   assert(name);
@@ -794,6 +803,6 @@ export function createHeadshotCommentsAvatarSVG({
 }
 
 export const _internals = {
-  parseViewBox,
   getAbsolutePosition,
+  parseViewBox,
 };
