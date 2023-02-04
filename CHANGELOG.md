@@ -10,6 +10,13 @@ and this project adheres to
 
 - Nothing yet
 
+## [0.6.0] - 2023-01-26
+
+### Added
+
+- The NFT Card layout now supports million-sized series (e.g. 2m)
+  ([#43](https://github.com/h4l/headgear/pull/43))
+
 ## [0.5.1] - 2023-01-26
 
 ### Fixed
@@ -168,8 +175,8 @@ The first release.
 - Download these SVG Avatar images
 - Support for Chrome-based browsers
 
-[unreleased]:
-  https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.1...HEAD
+[unreleased]: https://github.com/h4l/headgear/compare/v0.5.1...HEAD
+[0.6.0]: https://github.com/h4l/headgear/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/h4l/headgear/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/h4l/headgear/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/h4l/headgear/compare/v0.4.1...v0.4.2
