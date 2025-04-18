@@ -53,7 +53,11 @@ import {
   RootState,
 } from "./popup/state";
 import { BUTTON_STYLES } from "./popup/styles";
-import { GetAvatarMessageResponse, MSG_GET_AVATAR } from "./reddit-interaction";
+import {
+  GetAvatarMessage,
+  GetAvatarMessageResponse,
+  MSG_GET_AVATAR,
+} from "./reddit-interaction";
 import {
   NFTCardVariant,
   composeAvatarSVG,
@@ -67,6 +71,7 @@ import { rasteriseSVG } from "./svg-rasterisation";
 const HEADGEAR_ADDRESS = "0xcF4CbFd13BCAc9E30d4fd666BD8d2a81536C01d5";
 
 class GetAvatarError extends Error {}
+class UserAuthTokenNotAvailableError extends GetAvatarError {}
 
 const iconArrowDown = (
   <svg
@@ -292,6 +297,32 @@ export function AvatarDataErrorMessage({
         <p>
           If Reddit is working and this keeps happening, there could be
           something wrong with Headgear. Let{" "}
+          <a
+            href="https://www.reddit.com/user/h4l"
+            target="_blank"
+            rel="noreferrer"
+          >
+            /u/h4l
+          </a>{" "}
+          know about this if it keeps happening.
+        </p>
+      </CouldNotLoadAvatarMessage>
+    );
+  } else if (error.type === AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE) {
+    return (
+      <CouldNotLoadAvatarMessage
+        title="Are you logged in?"
+        logErrorContextMessage="UI-side Avatar Data fetcher reported failure: "
+        logError={error.message}
+      >
+        <p>
+          Headgear could not load your Avatar because it can't find a logged-in
+          user.
+        </p>
+        <p>Check you are logged in on the Reddit website and try again.</p>
+        <p>
+          If you are logged in, there could be something wrong with Headgear.
+          Let{" "}
           <a
             href="https://www.reddit.com/user/h4l"
             target="_blank"
@@ -1362,12 +1393,32 @@ export async function _getUserCurrentAvatar(
     files: ["/reddit.js"],
   });
   throwIfExecuteScriptResultFailed(result);
+
+  const authToken = await _getUserAuthToken();
+  const getAvatarMessage: GetAvatarMessage = {
+    type: MSG_GET_AVATAR,
+    apiToken: authToken,
+  };
+
   const [err, avatar] = (await chrome.tabs.sendMessage(
     tabId,
-    MSG_GET_AVATAR
+    getAvatarMessage
   )) as GetAvatarMessageResponse;
   if (err) throw new GetAvatarError(err.message);
   return avatar;
+}
+
+export async function _getUserAuthToken(): Promise<string> {
+  const authTokenCookie = await chrome.cookies.get({
+    url: "https://www.reddit.com/",
+    name: "token_v2",
+  });
+  const authToken = authTokenCookie?.value;
+  if (!authToken)
+    throw new UserAuthTokenNotAvailableError(
+      "reddit.com token_v2 cookie not available"
+    );
+  return authToken;
 }
 
 export function createRootState(): RootState {
@@ -1409,7 +1460,12 @@ export function _loadAvatarDataState(state: Signal<AvatarDataState>) {
     .catch((err) => {
       const exception = err instanceof Error ? err : new Error(err);
       let error: AvatarDataError;
-      if (exception instanceof GetAvatarError) {
+      if (exception instanceof UserAuthTokenNotAvailableError) {
+        error = {
+          type: AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE,
+          message: exception.message,
+        };
+      } else if (exception instanceof GetAvatarError) {
         error = {
           type: AvatarDataErrorType.GET_AVATAR_FAILED,
           message: exception.message,

@@ -63,7 +63,7 @@ import {
   OutputImageState,
   RootState,
 } from "../popup/state";
-import { MSG_GET_AVATAR } from "../reddit-interaction";
+import { GetAvatarMessage, MSG_GET_AVATAR } from "../reddit-interaction";
 import {
   SVGNS,
   parseSVG as _parseSVG,
@@ -118,6 +118,10 @@ describe("create & initialise RootState", () => {
     jest
       .mocked(window.chrome.tabs.query)
       .mockResolvedValue([tab as chrome.tabs.Tab]);
+    jest.mocked(chrome.cookies.get).mockResolvedValue({
+      name: "token_v2",
+      value: "__token__",
+    } as chrome.cookies.Cookie);
   });
 
   test("controlsState changes trigger messages on image-controls-changed channel", () => {
@@ -210,6 +214,41 @@ describe("create & initialise RootState", () => {
     });
   });
 
+  test.each([[null], [{ name: "token_v2", value: "" }]])(
+    "avatarDataState becomes AUTH_TOKEN_NOT_AVAILABLE error state if an auth cookie is not available",
+    async (getCookieResult: Partial<chrome.cookies.Cookie> | null) => {
+      jest
+        .mocked(chrome.cookies.get)
+        .mockResolvedValue(getCookieResult as chrome.cookies.Cookie | null);
+      jest
+        .mocked(chrome.scripting.executeScript)
+        .mockResolvedValue([{ frameId: 0, result: null }] as never);
+
+      const rootState = createRootState();
+      _initialiseRootState(rootState);
+      const { avatarDataState } = rootState;
+
+      await waitFor(() => {
+        expect(avatarDataState.value.type).toBe(DataStateType.ERROR);
+      });
+      expect(chrome.tabs.query).toBeCalledWith({
+        currentWindow: true,
+        active: true,
+      });
+      expect(chrome.cookies.get).toBeCalledWith({
+        url: "https://www.reddit.com/",
+        name: "token_v2",
+      });
+      expect(avatarDataState.value).toEqual({
+        type: DataStateType.ERROR,
+        error: {
+          type: AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE,
+          message: "reddit.com token_v2 cookie not available",
+        },
+      });
+    }
+  );
+
   test("avatarDataState becomes AVATAR_LOADED if tab is reddit", async () => {
     const mockAvatarData = { avatar: true };
     jest
@@ -230,7 +269,11 @@ describe("create & initialise RootState", () => {
       target: { tabId: 123 },
       files: ["/reddit.js"],
     });
-    expect(chrome.tabs.sendMessage).toBeCalledWith(123, MSG_GET_AVATAR);
+    const getAvatarMessage: GetAvatarMessage = {
+      type: MSG_GET_AVATAR,
+      apiToken: "__token__",
+    };
+    expect(chrome.tabs.sendMessage).toBeCalledWith(123, getAvatarMessage);
     expect(avatarDataState.value.tab).toBe(tab);
     expect(avatarDataState.value.avatar).toBe(mockAvatarData);
   });

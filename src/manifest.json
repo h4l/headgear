@@ -7,7 +7,8 @@
   "manifest_version": 3,
   "version": "__generated_in_webpack_build__",
   "description": "Unleash your Reddit Avatar.",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["*://*.reddit.com/"],
+  "permissions": ["scripting", "storage", "cookies"],
   "background": {
     "service_worker": "background.js"
   },

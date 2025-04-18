@@ -257,6 +257,9 @@ export function mockChrome(): chrome {
   };
 
   const _chrome: Partial<chrome> = {
+    cookies: {
+      get: jest.fn() as typeof chrome.cookies.get,
+    } as typeof chrome.cookies,
     storage: storage as typeof chrome.storage,
     runtime: {
       connect,

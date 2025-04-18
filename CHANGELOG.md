@@ -8,7 +8,21 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Nothing yet
+### Fixed
+
+- Loading avatars works again. It had
+  [stopped working as a result of reddit restructuring some of its web pages](https://github.com/h4l/headgear/issues/45).
+  ([#46](https://github.com/h4l/headgear/pull/46))
+
+### Changed
+
+- Headgear now requests the `cookies` permission and host permissions for
+  `*.reddit.com` on install, because the user auth token it needs to fetch
+  avatar needs to be read from cookies, rather than from in-page data as it was
+  [before this stopped working](https://github.com/h4l/headgear/issues/45).
+  ([#46](https://github.com/h4l/headgear/pull/46))
+  - This will result in extension users being prompted to approve the new
+    permissions when they next use Headgear.
 
 ## [0.6.0] - 2023-01-26
 

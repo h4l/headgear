@@ -3,10 +3,23 @@ import {
   ResolvedAvatar,
   getCurrentAvatar,
 } from "./avatars";
-import { fetchPageData } from "./page-data";
 
 export const MSG_GET_AVATAR = "get-avatar";
+export interface GetAvatarMessage {
+  type: typeof MSG_GET_AVATAR;
+  apiToken: string;
+}
 const AVATAR_CACHE_KEY = "cached-current-avatar";
+
+export function isGetAvatarMessage(obj: unknown): obj is GetAvatarMessage {
+  if (!(typeof obj === "object" && obj)) return false;
+  const msg = obj as Partial<GetAvatarMessage>;
+  return (
+    msg.type === MSG_GET_AVATAR &&
+    typeof msg.apiToken === "string" &&
+    !!msg.apiToken
+  );
+}
 
 /**
  * Get a string value that changes when the user's avatar is modified.
@@ -32,10 +45,6 @@ export async function _sha256(text: string): Promise<string> {
   return hexDigest;
 }
 
-export async function _fetchUserAPIToken() {
-  return (await fetchPageData()).user.session.accessToken;
-}
-
 export type GetAvatarMessageResponse =
   | [undefined, ResolvedAvatar | null]
   | [{ message: string }, undefined];
@@ -45,13 +54,19 @@ interface CachedAvatar {
   avatar: ResolvedAvatar | null;
 }
 
+interface GetAvatarOptions {
+  apiToken: string;
+}
+
 /**
  * Get the user's current avatar.
  *
  * The result is cached in local storage — the Reddit API requests required to
  * assemble the Avatar data are pretty heavy.
  */
-export async function _getAvatar(): Promise<ResolvedAvatar | null> {
+export async function _getAvatar({
+  apiToken,
+}: GetAvatarOptions): Promise<ResolvedAvatar | null> {
   const versionTag = await _avatarVersionTag();
   if (versionTag !== undefined) {
     const cachedAvatar = (await chrome.storage.local.get(AVATAR_CACHE_KEY))[
@@ -67,7 +82,6 @@ export async function _getAvatar(): Promise<ResolvedAvatar | null> {
     );
   }
 
-  const apiToken = await _fetchUserAPIToken();
   const avatar = await getCurrentAvatar({ apiToken });
   if (versionTag !== undefined) {
     const cachedAvatar: CachedAvatar = { versionTag, avatar };
@@ -81,10 +95,10 @@ export function _handleMessage(
   sender: chrome.runtime.MessageSender,
   sendResponse: (response: GetAvatarMessageResponse) => void
 ): true | undefined {
-  if (message !== MSG_GET_AVATAR) {
+  if (!isGetAvatarMessage(message)) {
     throw new Error(`unexpected message: ${message}`);
   }
-  _getAvatar()
+  _getAvatar({ apiToken: message.apiToken })
     .then((avatar) => sendResponse([undefined, avatar]))
     .catch((err) => sendResponse([{ message: err.message }, undefined]));
   // indicate we call sendResponse asynchronously

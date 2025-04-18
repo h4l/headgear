@@ -6,8 +6,8 @@ import {
   ResolvedAvatar,
   getCurrentAvatar,
 } from "../avatars";
-import { fetchPageData } from "../page-data";
 import {
+  GetAvatarMessage,
   MSG_GET_AVATAR,
   _avatarVersionTag,
   _getAvatar,
@@ -18,9 +18,6 @@ import {
 
 jest.mock("../avatars", () => ({
   getCurrentAvatar: jest.fn(),
-}));
-jest.mock("../page-data", () => ({
-  fetchPageData: jest.fn(),
 }));
 
 beforeEach(() => {
@@ -36,6 +33,11 @@ const USER_AVATAR_IMG_HTML = `
   <div><img alt="User avatar" src="https://styles.redditmedia.com/example/user-avatar-image-123.png?width=256&amp;height=256&amp;crop=256:256,smart&amp;s=xxxxxxxxx"></div>
   <div><img alt="User avatar" src="https://styles.redditmedia.com/example/user-avatar-image-123.png?width=256&amp;height=256&amp;crop=256:256,smart&amp;s=xxxxxxxxx"></div>
 <div>`;
+
+const GET_AVATAR_MESSAGE: Readonly<GetAvatarMessage> = {
+  type: MSG_GET_AVATAR,
+  apiToken: "__token__",
+};
 
 test("_sha256", async () => {
   await expect(_sha256("")).resolves.toEqual(
@@ -72,10 +74,6 @@ describe("avatar fetching", () => {
   beforeEach(() => {
     avatar = { accessories: [], styles: [] };
     window.chrome = mockChrome();
-    jest
-      .mocked(fetchPageData)
-      .mockReset()
-      .mockResolvedValue({ user: { session: { accessToken: "123" } } });
     jest.mocked(getCurrentAvatar).mockReset().mockResolvedValue(avatar);
   });
 
@@ -83,13 +81,11 @@ describe("avatar fetching", () => {
     test("caches requests", async () => {
       document.body.innerHTML = USER_AVATAR_IMG_HTML;
 
-      await expect(_getAvatar()).resolves.toBe(avatar);
-      expect(fetchPageData).toHaveBeenCalledTimes(1);
+      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);
 
       // avatar is now cached, so subsequent calls will not re-fetch
-      await expect(_getAvatar()).resolves.toBe(avatar);
-      expect(fetchPageData).toHaveBeenCalledTimes(1);
+      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);
     });
 
@@ -97,13 +93,11 @@ describe("avatar fetching", () => {
       // page with no avatar image to use as a cache key
       document.body.innerHTML = "";
 
-      await expect(_getAvatar()).resolves.toBe(avatar);
-      expect(fetchPageData).toHaveBeenCalledTimes(1);
+      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);
 
       // avatar is NOT cached, so subsequent calls will re-fetch
-      await expect(_getAvatar()).resolves.toBe(avatar);
-      expect(fetchPageData).toHaveBeenCalledTimes(2);
+      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(2);
     });
   });
@@ -128,7 +122,7 @@ describe("avatar fetching", () => {
     // eslint-disable-next-line jest/no-done-callback
     test("_handleMessage() responds with avatar", (done) => {
       const result = _handleMessage(
-        MSG_GET_AVATAR,
+        GET_AVATAR_MESSAGE,
         undefined as unknown as chrome.runtime.MessageSender,
         ([err, _avatar]) => {
           expect(err).toBeFalsy();
@@ -143,7 +137,7 @@ describe("avatar fetching", () => {
     test("_handleMessage() responds with error on failure", (done) => {
       jest.mocked(getCurrentAvatar).mockRejectedValue(new Error("boom!"));
       _handleMessage(
-        MSG_GET_AVATAR,
+        GET_AVATAR_MESSAGE,
         undefined as unknown as chrome.runtime.MessageSender,
         ([err, _avatar]) => {
           expect(err).not.toBeFalsy();
