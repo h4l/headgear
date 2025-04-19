@@ -1,15 +1,12 @@
 import { mockChrome } from "./chrome.mock";
 import "./webapis.mock";
 
-import {
-  GET_CURRENT_AVATAR_BEHAVIOUR_ID,
-  ResolvedAvatar,
-  getCurrentAvatar,
-} from "../avatars";
+import { ResolvedAvatar, getCurrentAvatar } from "../avatars";
 import {
   GetAvatarMessage,
   MSG_GET_AVATAR,
   _avatarVersionTag,
+  _generateAvatarVersionTag,
   _getAvatar,
   _handleMessage,
   _sha256,
@@ -62,9 +59,12 @@ test.each`
     bodyHtml: string;
   }) => {
     document.body.innerHTML = bodyHtml;
-    await expect(_avatarVersionTag()).resolves.toEqual(
+    await expect(_avatarVersionTag("__token__")).resolves.toEqual(
       expected &&
-        (await _sha256(`${GET_CURRENT_AVATAR_BEHAVIOUR_ID}:${expected}`))
+        (await _generateAvatarVersionTag({
+          authToken: "__token__",
+          avatarUrl: `https://notused.reddit.com${expected}?a=1`,
+        }))
     );
   }
 );

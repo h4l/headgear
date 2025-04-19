@@ -442,7 +442,7 @@ export async function _resolveAvatar({
  * Include this in cache keys that hold avatar data to invalidate the cache when
  * getCurrentAvatar() could return a different result.
  */
-export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 5;
+export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 6;
 
 export async function getCurrentAvatar({
   apiToken,

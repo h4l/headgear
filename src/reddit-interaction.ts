@@ -22,15 +22,39 @@ export function isGetAvatarMessage(obj: unknown): obj is GetAvatarMessage {
 }
 
 /**
- * Get a string value that changes when the user's avatar is modified.
+ * Get a string value that changes when the user's avatar is modified or the
+ * logged-in user changes.
  */
-export async function _avatarVersionTag(): Promise<string | undefined> {
+export async function _avatarVersionTag(
+  authToken: string
+): Promise<string | undefined> {
   const [avatarUrl] = Array.from(
     document.querySelectorAll('img[alt="User avatar"]')
   ).map((img) => (img as HTMLImageElement).src);
   if (avatarUrl === undefined) return;
+  return _generateAvatarVersionTag({ authToken, avatarUrl });
+}
+
+/**
+ * Generate an opaque token that changes when the authToken or avatarUrl change.
+ */
+export async function _generateAvatarVersionTag({
+  authToken,
+  avatarUrl,
+}: {
+  authToken: string;
+  avatarUrl: string;
+}): Promise<string> {
   return await _sha256(
-    `${GET_CURRENT_AVATAR_BEHAVIOUR_ID}:${new URL(avatarUrl).pathname}`
+    JSON.stringify([
+      GET_CURRENT_AVATAR_BEHAVIOUR_ID,
+      new URL(avatarUrl).pathname,
+      // Incorporate the auth token in the cache version to invalidate it if a
+      // user changes, but don't include the whole token, as the hashed value is
+      // shared with the page, the page shouldn't have access to the token, and
+      // this allows us to not rely on the hash function being secure.
+      authToken.substring(0, 10),
+    ])
   );
 }
 
@@ -67,7 +91,7 @@ interface GetAvatarOptions {
 export async function _getAvatar({
   apiToken,
 }: GetAvatarOptions): Promise<ResolvedAvatar | null> {
-  const versionTag = await _avatarVersionTag();
+  const versionTag = await _avatarVersionTag(apiToken);
   if (versionTag !== undefined) {
     const cachedAvatar = (await chrome.storage.local.get(AVATAR_CACHE_KEY))[
       AVATAR_CACHE_KEY
