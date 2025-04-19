@@ -25,10 +25,16 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-const USER_AVATAR_IMG_HTML = `
+const USER_AVATAR_IMG_HTML_1 = `
 <div>
   <div><img alt="User avatar" src="https://styles.redditmedia.com/example/user-avatar-image-123.png?width=256&amp;height=256&amp;crop=256:256,smart&amp;s=xxxxxxxxx"></div>
   <div><img alt="User avatar" src="https://styles.redditmedia.com/example/user-avatar-image-123.png?width=256&amp;height=256&amp;crop=256:256,smart&amp;s=xxxxxxxxx"></div>
+<div>`;
+
+const USER_AVATAR_IMG_HTML_2 = `
+<div>
+  <div><image href="https://styles.redditmedia.com/t5_abcdef/styles/profileIcon_snoof04a451f-e917-40a9-8dec-b55af1ad33c9-headshot.png?width=64&height=64&frame=1&auto=webp&crop=&s=3723351ec61571f2b993861c0137890569ed2c5d" alt="User Avatar" clip-path="url(#f4cb8a2df13ff)" height="100%" width="100%"></image></div>
+  <div><image href="https://styles.redditmedia.com/t5_abcdef/styles/profileIcon_snoof04a451f-e917-40a9-8dec-b55af1ad33c9-headshot.png?width=64&height=64&frame=1&auto=webp&crop=&s=3723351ec61571f2b993861c0137890569ed2c5d" alt="User Avatar" clip-path="url(#f4cb8a2df13ff)" height="100%" width="100%"></image></div>
 <div>`;
 
 const GET_AVATAR_MESSAGE: Readonly<GetAvatarMessage> = {
@@ -46,9 +52,10 @@ test("_sha256", async () => {
 });
 
 test.each`
-  name                  | expected                                | bodyHtml
-  ${"no tag available"} | ${undefined}                            | ${""}
-  ${"tag available"}    | ${"/example/user-avatar-image-123.png"} | ${USER_AVATAR_IMG_HTML}
+  name                   | expected                                                                                 | bodyHtml
+  ${"no tag available"}  | ${undefined}                                                                             | ${""}
+  ${"tag available old"} | ${"/example/user-avatar-image-123.png"}                                                  | ${USER_AVATAR_IMG_HTML_1}
+  ${"tag available new"} | ${"/t5_abcdef/styles/profileIcon_snoof04a451f-e917-40a9-8dec-b55af1ad33c9-headshot.png"} | ${USER_AVATAR_IMG_HTML_2}
 `(
   "_avatarVersionTag() with $name",
   async ({
@@ -79,7 +86,7 @@ describe("avatar fetching", () => {
 
   describe("_getAvatar()", () => {
     test("caches requests", async () => {
-      document.body.innerHTML = USER_AVATAR_IMG_HTML;
+      document.body.innerHTML = USER_AVATAR_IMG_HTML_2;
 
       await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);

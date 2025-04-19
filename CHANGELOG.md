@@ -13,6 +13,9 @@ and this project adheres to
 - Loading avatars works again. It had
   [stopped working as a result of reddit restructuring some of its web pages](https://github.com/h4l/headgear/issues/45).
   ([#46](https://github.com/h4l/headgear/pull/46))
+- Avatar data caching now works again. It had stopped working due to the HTML
+  structure of reddit web pages changing.
+  ([#46](https://github.com/h4l/headgear/pull/46))
 
 ### Changed
 

@@ -29,9 +29,14 @@ export async function _avatarVersionTag(
   authToken: string
 ): Promise<string | undefined> {
   const [avatarUrl] = Array.from(
-    document.querySelectorAll('img[alt="User avatar"]')
-  ).map((img) => (img as HTMLImageElement).src);
-  if (avatarUrl === undefined) return;
+    document.querySelectorAll(
+      // The img version used to be used, but now the image version is for me.
+      // But let's keep both as reddit often shows different versions of the UI
+      // to different users.
+      ['image[alt="user avatar" i]', 'img[alt="user avatar" i]'].join(",")
+    )
+  ).map((img) => img.getAttribute("src") || img.getAttribute("href"));
+  if (!avatarUrl) return;
   return _generateAvatarVersionTag({ authToken, avatarUrl });
 }
 
