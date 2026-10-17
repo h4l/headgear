@@ -1,1 +1,3 @@
 dist
+# Captured Reddit responses, kept verbatim
+src/__tests__/*-response*.html
