@@ -10,8 +10,8 @@ active:z-10 active:ring-2 active:ring-blue-700 active:text-blue-700
 dark:active:ring-blue-300 dark:active:text-blue-200
   disabled:cursor-not-allowed disabled:text-gray-500 disabled:active:ring-0 disabled:active:text-gray-500
   disabled:hover:text-gray-500
-  peer-disabled:cursor-not-allowed peer-disabled:text-gray-500 peer-disabled:active:ring-0 peer-disabled:active:text-gray-500
-  peer-disabled:hover:text-gray-500
+  peer-disabled:cursor-not-allowed peer-disabled:text-gray-500 active:peer-disabled:ring-0 active:peer-disabled:text-gray-500
+  hover:peer-disabled:text-gray-500
   relative
 `}
   />

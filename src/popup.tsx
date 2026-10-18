@@ -210,7 +210,7 @@ export function ImageStyleOption(props: {
       {controlsDisabled && disabledReason && (
         <div
           role="tooltip"
-          class="inline-block absolute top-4 left-4 cursor-not-allowed _invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:bg-gray-700"
+          class="inline-block absolute top-4 left-4 cursor-not-allowed _invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:bg-gray-700"
         >
           {disabledReason}
         </div>
@@ -496,7 +496,7 @@ export function Controls() {
     <div class="grow-0 shrink-0 basis-[350px] h-full flex flex-col bg-neutral-100 text-gray-900 dark:bg-gray-800 dark:text-slate-50">
       <div class="px-4 flex my-4">
         <img class="ml-auto w-14 mb-1 mr-3" src="../img/logo.svg" />
-        <div class="mr-auto flex-shrink">
+        <div class="mr-auto shrink">
           <h1 class="text-3xl font-bold">Headgear</h1>
           <p class="text-xs">Unleash your Reddit Avatar.</p>
         </div>
@@ -507,7 +507,7 @@ export function Controls() {
           updateScrollPosition(e.currentTarget.scrollTop);
         }}
         ref={scrollContainer}
-        class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 flex-grow overflow-y-scroll pl-4 pr-4"
+        class="border border-gray-300 dark:border-gray-600 border-l-0 border-r-0 grow overflow-y-scroll pl-4 pr-4"
       >
         <ImageStyleOption
           name={ImageStyleType.STANDARD}
@@ -552,7 +552,7 @@ export function Controls() {
           </a>{" "}
           moons on Reddit, or via{" "}
           <a
-            class="rounded dark:text-slate-50  bg-slate-200 dark:bg-slate-600 font-mono my-2 p-1 leading-6"
+            class="rounded-sm dark:text-slate-50  bg-slate-200 dark:bg-slate-600 font-mono my-2 p-1 leading-6"
             target="_blank"
             rel="noreferrer"
             href={`https://blockscan.com/address/${HEADGEAR_ADDRESS}`}
@@ -576,7 +576,7 @@ function AvatarData(): JSX.Element {
         your Avatar. Currently it can't (directly) be used for anything, but may
         be interesting to some people.
       </p>
-      <div class="flex rounded-md shadow-sm mt-4 mb-4" role="group">
+      <div class="flex rounded-md shadow-xs mt-4 mb-4" role="group">
         <button
           type="button"
           disabled
@@ -624,13 +624,13 @@ export function BottomButtons() {
       <button
         aria-label="Settings"
         onClick={toggleImageOptionsUI}
-        class={`flex-shrink
+        class={`shrink
       ${
         controlsState.value?.imageOptionsUIOpen
           ? "bg-orange-600 relative z-10"
           : "bg-indigo-600"
       }
-      hover:ring active:ring hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600
+      hover:ring-3 active:ring-3 hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600
       hover:text-white hover:ring-indigo-500 active:ring-indigo-400
       flex text-lg font-medium
       text-slate-50 p-3
@@ -652,7 +652,7 @@ function bottomBarButtonStyle(disabled: boolean): string {
   ${
     disabled
       ? "cursor-not-allowed"
-      : "hover:ring active:ring hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600"
+      : "hover:ring-3 active:ring-3 hover:ring-inset active:ring-inset hover:bg-gradient-radial hover:from-indigo-500 hover:to-indigo-600"
   }
   bg-indigo-600 hover:text-white hover:ring-indigo-500 active:ring-indigo-400
   flex text-lg text-slate-50 p-3`;
@@ -747,7 +747,7 @@ export function DownloadImageButton(): JSX.Element {
       ref={downloadLinkElement}
       role="button"
       aria-disabled={disabled || undefined}
-      class={`flex-grow ${bottomBarButtonStyle(disabled)} ph-no-capture`}
+      class={`grow ${bottomBarButtonStyle(disabled)} ph-no-capture`}
       onClick={
         disabled
           ? () => false
@@ -762,7 +762,7 @@ export function DownloadImageButton(): JSX.Element {
       <span
         class={`\
       ${disabled ? "" : "hover:scale-105"}
-      m-auto hover:motion-reduce:scale-100  transition-transform ease-out
+      m-auto motion-reduce:hover:scale-100  transition-transform ease-out
       `}
       >
         {iconArrowDown}{" "}
@@ -844,19 +844,19 @@ export function CopyImageButton(): JSX.Element {
   };
 
   return (
-    <span class="relative flex-shrink ph-no-capture">
+    <span class="relative shrink ph-no-capture">
       <div
         aria-role="tooltip"
-        class={`-top-10 -left-[2.7rem] flex absolute w-36
+        class={`-top-10 left-[-2.7rem] flex absolute w-36
         ${hovering.value ? "opacity-100" : "opacity-0"}
         ${hidden.value ? "hidden" : ""}
         transition-opacity duration-300`}
       >
         <div
           role="tooltip"
-          class={`flex-shrink mx-auto
+          class={`shrink mx-auto
          z-10 py-2 px-3
-        text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm
+        text-sm font-medium text-white bg-gray-900 rounded-lg shadow-xs
         dark:bg-gray-700`}
         >
           {labels[copyState.value]}
@@ -890,7 +890,7 @@ export function CopyImageButton(): JSX.Element {
         <span
           class={`
         ${disabled ? "" : "hover:scale-105"}
-        m-auto hover:motion-reduce:scale-100  transition-transform ease-out`}
+        m-auto motion-reduce:hover:scale-100  transition-transform ease-out`}
         >
           <IconCopy class="w-7 h-7 inline m-1" />
         </span>
@@ -1084,7 +1084,7 @@ export function ImageOptions(): JSX.Element {
         <div>
           <button
             type="button"
-            class={`rounded py-1 px-2 text-xs font-medium mt-4 ${BUTTON_STYLES}`}
+            class={`rounded-sm py-1 px-2 text-xs font-medium mt-4 ${BUTTON_STYLES}`}
             onClick={openAnalyticsConsentUI}
           >
             Usage Sharing Options

@@ -90,8 +90,8 @@ export function AnalyticsConsent(): JSX.Element {
           uiOpen
             ? "right-[8%]"
             : fadingOut.value
-              ? "-right-[84%]"
-              : "-right-[84%] invisible"
+              ? "right-[-84%]"
+              : "right-[-84%] invisible"
         }
         ${!wasClosed && uiOpen ? "transition-none" : "transition-[right]"}
         rounded-md

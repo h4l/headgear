@@ -1,3 +1,61 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --animate-fade-in: fade-in 1s ease-in;
+  --animate-delayed-fade-in:
+    hide 0s, fade-in 2s ease-in 250ms 1 normal forwards;
+
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes hide {
+    0%,
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/*
+  Tailwind CSS v4 changed the default cursor of buttons to `default` and the
+  default placeholder color to the current text color at 50% opacity. Keep
+  the Tailwind CSS v3 defaults.
+*/
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
