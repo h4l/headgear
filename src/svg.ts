@@ -1,13 +1,8 @@
 import * as css from "css";
-import {
-  CssSelectorParser,
-  Rule,
-  RuleSet,
-  Selectors,
-} from "css-selector-parser";
+import { createParser, render, traverse } from "css-selector-parser";
 import countBy from "lodash.countby";
 
-import { assert, assertNever } from "./assert";
+import { assert } from "./assert";
 import { NFTInfo, ResolvedAccessory, ResolvedAvatar } from "./avatars";
 import { default as headshotCircleTemplateSrc } from "./img/avatar-svg/headshot-circle-template.svg";
 import { default as headshotCommentsTemplateSrc } from "./img/avatar-svg/headshot-comments-template.svg";
@@ -25,8 +20,7 @@ import { isTextAnchor } from "./text-to-path/interface";
 
 export const SVGNS = "http://www.w3.org/2000/svg";
 const XLINKNS = "http://www.w3.org/1999/xlink";
-const cssSelectors = new CssSelectorParser();
-cssSelectors.registerAttrEqualityMods("~");
+const parseCssSelector = createParser();
 
 export interface PrefixedCSSSelector {
   cssSelector: string;
@@ -58,40 +52,25 @@ export function addPrefixesToCSSSelectorClasses({
   cssSelector: string;
   prefix: string;
 }): PrefixedCSSSelector {
-  const ast = cssSelectors.parse(cssSelector);
+  const ast = parseCssSelector(cssSelector);
 
   const classes = new Set<string>();
-  const visitNode = (node: Selectors | RuleSet | Rule): void => {
-    if (node.type === "ruleSet") {
-      visitNode(node.rule);
-    } else if (node.type === "selectors") {
-      node.selectors.forEach(visitNode);
-    } else if (node.type === "rule") {
-      if (node.classNames !== undefined) {
-        node.classNames.forEach((cls) => {
-          classes.add(cls);
-        });
-        node.classNames = node.classNames.map((cls) => `${prefix}${cls}`);
-      }
-      (node.attrs || []).forEach((attr) => {
-        if (
-          attr.name === "class" &&
-          "operator" in attr &&
-          attr.operator === "~=" &&
-          attr.valueType === "string"
-        ) {
-          classes.add(attr.value);
-          attr.value = `${prefix}${attr.value}`;
-        }
-      });
-      if (node.rule) visitNode(node.rule);
-    } else {
-      assertNever(node);
+  traverse(ast, (node) => {
+    if (node.type === "ClassName") {
+      classes.add(node.name);
+      node.name = `${prefix}${node.name}`;
+    } else if (
+      node.type === "Attribute" &&
+      node.name === "class" &&
+      node.operator === "~=" &&
+      node.value?.type === "String"
+    ) {
+      classes.add(node.value.value);
+      node.value.value = `${prefix}${node.value.value}`;
     }
-  };
-  visitNode(ast);
+  });
   return {
-    cssSelector: cssSelectors.render(ast),
+    cssSelector: render(ast),
     classes,
   };
 }

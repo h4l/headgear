@@ -37,7 +37,7 @@
     "copy-webpack-plugin": "^14.0.0",
     "css": "^3.0.0",
     "css-loader": "^7.1.5",
-    "css-selector-parser": "^1.4.1",
+    "css-selector-parser": "^3.3.0",
     "eslint": "^9.39.5",
     "eslint-config-preact": "^2.0.0",
     "eslint-plugin-jest": "^29.17.0",
