@@ -1,4 +1,4 @@
-import { PostHog } from "posthog-js";
+import { PostHog } from "posthog-js/dist/module.no-external";
 
 import { assert } from "../assert";
 import { AnalyticsPreference } from "../popup-state-persistence";

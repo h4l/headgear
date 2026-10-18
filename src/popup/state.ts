@@ -1,5 +1,5 @@
 import { Signal, signal } from "@preact/signals";
-import { PostHog } from "posthog-js";
+import { PostHog } from "posthog-js/dist/module.no-external";
 import { createContext } from "preact";
 
 import { ResolvedAvatar } from "../avatars";

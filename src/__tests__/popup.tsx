@@ -7,7 +7,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/preact";
-import { posthog } from "posthog-js";
+import { posthog } from "posthog-js/dist/module.no-external";
 import { ComponentChildren } from "preact";
 import { Fragment, JSX } from "preact/jsx-runtime";
 

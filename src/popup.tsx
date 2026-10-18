@@ -1,7 +1,7 @@
 import { Signal, effect, signal, useSignal } from "@preact/signals";
 import debounce from "lodash.debounce";
 import memoizeOne from "memoize-one";
-import { PostHog, posthog } from "posthog-js";
+import { PostHog, posthog } from "posthog-js/dist/module.no-external";
 import { ComponentChildren, Fragment, JSX, createRef } from "preact";
 import {
   useContext,
@@ -1799,6 +1799,11 @@ export function _initAnalyticsState({
           posthog.init("phc_K9Dy2B8IvBa1kToYWXN6wuvdkmnBHWqkz6o2hmJZl1e", {
             api_host: "https://eu.posthog.com",
             persistence: "localStorage",
+            // Browser extensions may not load dynamically-sourced code at
+            // runtime. PostHog provides a no-external build and advises to
+            // set disable_external_dependency_loading:
+            // https://posthog.com/docs/advanced/browser-extension
+            disable_external_dependency_loading: true,
             debug: HeadgearGlobal.HEADGEAR_BUILD.mode === "development",
           }) ?? undefined;
         assert(postHog);
