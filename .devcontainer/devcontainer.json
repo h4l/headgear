@@ -49,9 +49,12 @@
         },
         "editor.detectIndentation": true,
         "jest.jestCommandLine": "npx jest",
-        "jest.autoRun": "off",
+        "jest.runMode": "on-demand",
         "cSpell.enabled": true,
-        "cSpell.enableFiletypes": ["git-commit"]
+        "cSpell.enabledFileTypes": {
+          "*": true,
+          "markdown": true
+        }
       }
     }
   },
