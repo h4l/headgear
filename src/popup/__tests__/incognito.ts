@@ -19,9 +19,11 @@ describe("isIncognitoSignal()", () => {
   `(
     "reflects current window's incognito $isIncognito value",
     async ({ isIncognito }: { isIncognito: boolean }) => {
-      jest.spyOn(chrome.windows, "getCurrent").mockResolvedValueOnce({
-        incognito: isIncognito,
-      } as chrome.windows.Window);
+      jest
+        .mocked<() => Promise<chrome.windows.Window>>(chrome.windows.getCurrent)
+        .mockResolvedValueOnce({
+          incognito: isIncognito,
+        } as chrome.windows.Window);
 
       const signal = getIsIncognitoSignal();
 

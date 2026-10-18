@@ -20,7 +20,9 @@ describe("textToPath()", () => {
       value: '<path d="M 0,0 h 5 v 5 z"/>',
     };
     jest
-      .mocked(chrome.runtime.sendMessage)
+      .mocked<(message: unknown) => Promise<unknown>>(
+        chrome.runtime.sendMessage
+      )
       .mockResolvedValueOnce(messageResponse);
     const options: TextToPathOptions = {
       fontUrl: "/foo.woff",
@@ -54,7 +56,9 @@ describe("textToPath()", () => {
   });
   test("rejects invalid message response", async () => {
     jest
-      .mocked(chrome.runtime.sendMessage)
+      .mocked<(message: unknown) => Promise<unknown>>(
+        chrome.runtime.sendMessage
+      )
       .mockResolvedValueOnce({ unexpected: "blah" });
     await expect(() =>
       textToPath({ fontUrl: "/foo.woff", text: "Hi" })
@@ -66,7 +70,9 @@ describe("textToPath()", () => {
       reason: new Error("things broke"),
     };
     jest
-      .mocked(chrome.runtime.sendMessage)
+      .mocked<(message: unknown) => Promise<unknown>>(
+        chrome.runtime.sendMessage
+      )
       .mockResolvedValueOnce(responseMessage);
     await expect(() =>
       textToPath({ fontUrl: "/foo.woff", text: "Hi" })

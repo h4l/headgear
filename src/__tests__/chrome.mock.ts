@@ -2,6 +2,8 @@
 import { assert } from "../assert";
 
 type chrome = typeof window.chrome;
+type ExtensionConnectEvent = typeof chrome.runtime.onConnect;
+type ExtensionMessageEvent = typeof chrome.runtime.onMessage;
 
 export class MockStorageArea implements jest.Mocked<chrome.storage.StorageArea> {
   readonly data: { [key: string]: unknown } = {};
@@ -55,7 +57,10 @@ export class MockStorageArea implements jest.Mocked<chrome.storage.StorageArea> 
   setAccessLevel = jest.fn<any, any>((): never => {
     throw new Error("Method not implemented.");
   });
-  get onChanged(): chrome.storage.StorageAreaChangedEvent {
+  getKeys = jest.fn<any, any>((): never => {
+    throw new Error("Method not implemented.");
+  });
+  get onChanged(): chrome.storage.StorageArea["onChanged"] {
     throw new Error("Property not implemented");
   }
 }
@@ -64,24 +69,22 @@ export class MockSyncStorageArea
   extends MockStorageArea
   implements chrome.storage.SyncStorageArea
 {
-  MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = Number.POSITIVE_INFINITY;
-  QUOTA_BYTES = Number.POSITIVE_INFINITY;
-  QUOTA_BYTES_PER_ITEM = Number.POSITIVE_INFINITY;
-  MAX_ITEMS = Number.POSITIVE_INFINITY;
-  MAX_WRITE_OPERATIONS_PER_HOUR = Number.POSITIVE_INFINITY;
-  MAX_WRITE_OPERATIONS_PER_MINUTE = Number.POSITIVE_INFINITY;
+  MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = 1000000 as const;
+  QUOTA_BYTES = 102400 as const;
+  QUOTA_BYTES_PER_ITEM = 8192 as const;
+  MAX_ITEMS = 512 as const;
+  MAX_WRITE_OPERATIONS_PER_HOUR = 1800 as const;
+  MAX_WRITE_OPERATIONS_PER_MINUTE = 120 as const;
 }
 
 export class MockLocalStorageArea
   extends MockStorageArea
   implements chrome.storage.LocalStorageArea
 {
-  QUOTA_BYTES = Number.POSITIVE_INFINITY;
+  QUOTA_BYTES = 10485760 as const;
 }
 
-export function mockOnMessage(): jest.Mocked<
-  Partial<chrome.runtime.ExtensionMessageEvent>
-> {
+export function mockOnMessage(): jest.Mocked<Partial<ExtensionMessageEvent>> {
   return {
     addListener: jest.fn(),
   };
@@ -127,7 +130,7 @@ type ExtensionMessageEventCallback = (
 
 class MockExtensionMessageEvent
   extends MockEvent<ExtensionMessageEventCallback>
-  implements chrome.runtime.ExtensionMessageEvent
+  implements ExtensionMessageEvent
 {
   sender: chrome.runtime.MessageSender = Object.freeze({});
   sendMessage: typeof chrome.runtime.sendMessage<any, any>;
@@ -261,8 +264,8 @@ export function mockChrome(): chrome {
     storage: storage as typeof chrome.storage,
     runtime: {
       connect,
-      onConnect: onConnect as chrome.runtime.ExtensionConnectEvent,
-      onMessage: onMessage as chrome.runtime.ExtensionMessageEvent,
+      onConnect: onConnect as ExtensionConnectEvent,
+      onMessage: onMessage as ExtensionMessageEvent,
       sendMessage: jest
         .fn()
         .mockImplementation(

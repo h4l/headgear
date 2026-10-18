@@ -1512,10 +1512,11 @@ export async function _loadControlsStateFromStorage(): Promise<ControlsStateObje
     STORAGE_KEY_IMAGE_CONTROLS
   ];
   if (typeof controls === "object" && controls !== null) {
+    const storedControls = controls as Record<string, unknown>;
     const defaultedControls = Object.fromEntries(
       Object.entries(DEFAULT_CONTROLS_STATE).map(([k, v]) => [
         k,
-        controls[k] !== undefined ? controls[k] : v,
+        storedControls[k] !== undefined ? storedControls[k] : v,
       ])
     );
     if (isControlsStateObject(defaultedControls)) {

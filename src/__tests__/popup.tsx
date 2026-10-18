@@ -116,12 +116,20 @@ describe("create & initialise RootState", () => {
       url: "https://www.reddit.com/",
     };
     jest
-      .mocked(window.chrome.tabs.query)
+      .mocked<(queryInfo: chrome.tabs.QueryInfo) => Promise<chrome.tabs.Tab[]>>(
+        window.chrome.tabs.query
+      )
       .mockResolvedValue([tab as chrome.tabs.Tab]);
-    jest.mocked(chrome.cookies.get).mockResolvedValue({
-      name: "token_v2",
-      value: "__token__",
-    } as chrome.cookies.Cookie);
+    jest
+      .mocked<
+        (
+          details: chrome.cookies.CookieDetails
+        ) => Promise<chrome.cookies.Cookie | null>
+      >(chrome.cookies.get)
+      .mockResolvedValue({
+        name: "token_v2",
+        value: "__token__",
+      } as chrome.cookies.Cookie);
   });
 
   test("controlsState changes trigger messages on image-controls-changed channel", () => {
@@ -218,7 +226,11 @@ describe("create & initialise RootState", () => {
     "avatarDataState becomes NOT_LOGGED_IN error state if an auth cookie is not available",
     async (getCookieResult: Partial<chrome.cookies.Cookie> | null) => {
       jest
-        .mocked(chrome.cookies.get)
+        .mocked<
+          (
+            details: chrome.cookies.CookieDetails
+          ) => Promise<chrome.cookies.Cookie | null>
+        >(chrome.cookies.get)
         .mockResolvedValue(getCookieResult as chrome.cookies.Cookie | null);
       jest
         .mocked(chrome.scripting.executeScript)
@@ -256,7 +268,9 @@ describe("create & initialise RootState", () => {
       .mocked(chrome.scripting.executeScript)
       .mockResolvedValue([{ frameId: 0, result: null }] as never);
     jest
-      .mocked(chrome.tabs.sendMessage)
+      .mocked<(tabId: number, message: unknown) => Promise<unknown>>(
+        chrome.tabs.sendMessage
+      )
       .mockResolvedValue([undefined, mockAvatarData]);
     const rootState = createRootState();
     _initialiseRootState(rootState);
@@ -281,7 +295,9 @@ describe("create & initialise RootState", () => {
       .mocked(chrome.scripting.executeScript)
       .mockResolvedValue([{ frameId: 0, result: null }] as never);
     jest
-      .mocked(chrome.tabs.sendMessage)
+      .mocked<(tabId: number, message: unknown) => Promise<unknown>>(
+        chrome.tabs.sendMessage
+      )
       .mockResolvedValue([
         { message: "An expected error occurred" },
         undefined,
@@ -305,7 +321,9 @@ describe("create & initialise RootState", () => {
       .mocked(chrome.scripting.executeScript)
       .mockResolvedValue([{ frameId: 0, result: null }] as never);
     jest
-      .mocked(chrome.tabs.sendMessage)
+      .mocked<(tabId: number, message: unknown) => Promise<unknown>>(
+        chrome.tabs.sendMessage
+      )
       .mockRejectedValue(new Error("An unexpected error occurred"));
     const rootState = createRootState();
     _initialiseRootState(rootState);

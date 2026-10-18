@@ -29,7 +29,9 @@ describe("polyfillWebExtensionsAPI()", () => {
 describe("throwIfExecuteScriptResultFailed()", () => {
   test("does not throw for successful results", () => {
     expect(() =>
-      throwIfExecuteScriptResultFailed([{ frameId: 123, result: undefined }])
+      throwIfExecuteScriptResultFailed([
+        { documentId: "abc", frameId: 123, result: undefined },
+      ])
     ).not.toThrow();
   });
 
@@ -37,6 +39,7 @@ describe("throwIfExecuteScriptResultFailed()", () => {
     const errorResult: chrome.scripting.InjectionResult<unknown> & {
       error: unknown;
     } = {
+      documentId: "abc",
       frameId: 123,
       result: undefined,
       error: "Example error",
