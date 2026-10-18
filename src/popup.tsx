@@ -71,7 +71,7 @@ import { rasteriseSVG } from "./svg-rasterisation";
 const HEADGEAR_ADDRESS = "0xcF4CbFd13BCAc9E30d4fd666BD8d2a81536C01d5";
 
 class GetAvatarError extends Error {}
-class UserAuthTokenNotAvailableError extends GetAvatarError {}
+class UserNotLoggedInError extends GetAvatarError {}
 
 const iconArrowDown = (
   <svg
@@ -308,7 +308,7 @@ export function AvatarDataErrorMessage({
         </p>
       </CouldNotLoadAvatarMessage>
     );
-  } else if (error.type === AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE) {
+  } else if (error.type === AvatarDataErrorType.NOT_LOGGED_IN) {
     return (
       <CouldNotLoadAvatarMessage
         title="Are you logged in?"
@@ -1387,17 +1387,17 @@ export async function _getUserCurrentAvatar(
 ): Promise<ResolvedAvatar | null> {
   const tabId = tab.id;
   assert(typeof tabId === "number");
+  if (!(await _isUserLoggedIn())) {
+    throw new UserNotLoggedInError("reddit.com token_v2 cookie not available");
+  }
+
   const result = await chrome.scripting.executeScript({
     target: { tabId },
     files: ["/reddit.js"],
   });
   throwIfExecuteScriptResultFailed(result);
 
-  const authToken = await _getUserAuthToken();
-  const getAvatarMessage: GetAvatarMessage = {
-    type: MSG_GET_AVATAR,
-    apiToken: authToken,
-  };
+  const getAvatarMessage: GetAvatarMessage = { type: MSG_GET_AVATAR };
 
   const [err, avatar] = (await chrome.tabs.sendMessage(
     tabId,
@@ -1407,17 +1407,18 @@ export async function _getUserCurrentAvatar(
   return avatar;
 }
 
-export async function _getUserAuthToken(): Promise<string> {
+/**
+ * Detect whether the user is logged in to reddit.com.
+ *
+ * Reddit sets the token_v2 auth cookie for logged-in users. We only check for
+ * its presence — its value is deliberately not used or passed anywhere.
+ */
+export async function _isUserLoggedIn(): Promise<boolean> {
   const authTokenCookie = await chrome.cookies.get({
     url: "https://www.reddit.com/",
     name: "token_v2",
   });
-  const authToken = authTokenCookie?.value;
-  if (!authToken)
-    throw new UserAuthTokenNotAvailableError(
-      "reddit.com token_v2 cookie not available"
-    );
-  return authToken;
+  return !!authTokenCookie?.value;
 }
 
 export function createRootState(): RootState {
@@ -1459,9 +1460,9 @@ export function _loadAvatarDataState(state: Signal<AvatarDataState>) {
     .catch((err) => {
       const exception = err instanceof Error ? err : new Error(err);
       let error: AvatarDataError;
-      if (exception instanceof UserAuthTokenNotAvailableError) {
+      if (exception instanceof UserNotLoggedInError) {
         error = {
-          type: AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE,
+          type: AvatarDataErrorType.NOT_LOGGED_IN,
           message: exception.message,
         };
       } else if (exception instanceof GetAvatarError) {

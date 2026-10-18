@@ -7,27 +7,20 @@ import {
 export const MSG_GET_AVATAR = "get-avatar";
 export interface GetAvatarMessage {
   type: typeof MSG_GET_AVATAR;
-  apiToken: string;
 }
 const AVATAR_CACHE_KEY = "cached-current-avatar";
 
 export function isGetAvatarMessage(obj: unknown): obj is GetAvatarMessage {
   if (!(typeof obj === "object" && obj)) return false;
   const msg = obj as Partial<GetAvatarMessage>;
-  return (
-    msg.type === MSG_GET_AVATAR &&
-    typeof msg.apiToken === "string" &&
-    !!msg.apiToken
-  );
+  return msg.type === MSG_GET_AVATAR;
 }
 
 /**
  * Get a string value that changes when the user's avatar is modified or the
  * logged-in user changes.
  */
-export async function _avatarVersionTag(
-  authToken: string
-): Promise<string | undefined> {
+export async function _avatarVersionTag(): Promise<string | undefined> {
   const [avatarUrl] = Array.from(
     document.querySelectorAll(
       // The img version used to be used, but now the image version is for me.
@@ -37,28 +30,25 @@ export async function _avatarVersionTag(
     )
   ).map((img) => img.getAttribute("src") || img.getAttribute("href"));
   if (!avatarUrl) return;
-  return _generateAvatarVersionTag({ authToken, avatarUrl });
+  return _generateAvatarVersionTag({ avatarUrl });
 }
 
 /**
- * Generate an opaque token that changes when the authToken or avatarUrl change.
+ * Generate an opaque token that changes when the avatarUrl changes.
+ *
+ * The avatar image URL path contains one or more long high entropy IDs — it can
+ * be expected not to be the same both for different users and for the same user
+ * when their avatar changes.
  */
 export async function _generateAvatarVersionTag({
-  authToken,
   avatarUrl,
 }: {
-  authToken: string;
   avatarUrl: string;
 }): Promise<string> {
   return await _sha256(
     JSON.stringify([
       GET_CURRENT_AVATAR_BEHAVIOUR_ID,
       new URL(avatarUrl).pathname,
-      // Incorporate the auth token in the cache version to invalidate it if a
-      // user changes, but don't include the whole token, as the hashed value is
-      // shared with the page, the page shouldn't have access to the token, and
-      // this allows us to not rely on the hash function being secure.
-      authToken.substring(0, 10),
     ])
   );
 }
@@ -83,20 +73,14 @@ interface CachedAvatar {
   avatar: ResolvedAvatar | null;
 }
 
-interface GetAvatarOptions {
-  apiToken: string;
-}
-
 /**
  * Get the user's current avatar.
  *
  * The result is cached in local storage — the Reddit API requests required to
  * assemble the Avatar data are pretty heavy.
  */
-export async function _getAvatar({
-  apiToken,
-}: GetAvatarOptions): Promise<ResolvedAvatar | null> {
-  const versionTag = await _avatarVersionTag(apiToken);
+export async function _getAvatar(): Promise<ResolvedAvatar | null> {
+  const versionTag = await _avatarVersionTag();
   if (versionTag !== undefined) {
     const cachedAvatar = (await chrome.storage.local.get(AVATAR_CACHE_KEY))[
       AVATAR_CACHE_KEY
@@ -127,7 +111,7 @@ export function _handleMessage(
   if (!isGetAvatarMessage(message)) {
     throw new Error(`unexpected message: ${message}`);
   }
-  _getAvatar({ apiToken: message.apiToken })
+  _getAvatar()
     .then((avatar) => sendResponse([undefined, avatar]))
     .catch((err) => sendResponse([{ message: err.message }, undefined]));
   // indicate we call sendResponse asynchronously

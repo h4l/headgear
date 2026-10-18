@@ -14,6 +14,12 @@ and this project adheres to
   Headgear used to fetch avatar and NFT data. Headgear now reads this data from
   the HTML of Reddit's Avatar Builder and NFT details pages instead.
 
+### Changed
+
+- Headgear no longer needs an auth token to make API requests, so the value of
+  Reddit's auth token cookie is not actively used, but Headgear does still check
+  for the presence of the cookie to detect whether a user is logged in.
+
 ## [0.7.0] - 2025-04-19
 
 ### Fixed

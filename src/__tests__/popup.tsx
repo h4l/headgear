@@ -215,7 +215,7 @@ describe("create & initialise RootState", () => {
   });
 
   test.each([[null], [{ name: "token_v2", value: "" }]])(
-    "avatarDataState becomes AUTH_TOKEN_NOT_AVAILABLE error state if an auth cookie is not available",
+    "avatarDataState becomes NOT_LOGGED_IN error state if an auth cookie is not available",
     async (getCookieResult: Partial<chrome.cookies.Cookie> | null) => {
       jest
         .mocked(chrome.cookies.get)
@@ -239,10 +239,11 @@ describe("create & initialise RootState", () => {
         url: "https://www.reddit.com/",
         name: "token_v2",
       });
+      expect(chrome.scripting.executeScript).not.toHaveBeenCalled();
       expect(avatarDataState.value).toEqual({
         type: DataStateType.ERROR,
         error: {
-          type: AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE,
+          type: AvatarDataErrorType.NOT_LOGGED_IN,
           message: "reddit.com token_v2 cookie not available",
         },
       });
@@ -269,10 +270,7 @@ describe("create & initialise RootState", () => {
       target: { tabId: 123 },
       files: ["/reddit.js"],
     });
-    const getAvatarMessage: GetAvatarMessage = {
-      type: MSG_GET_AVATAR,
-      apiToken: "__token__",
-    };
+    const getAvatarMessage: GetAvatarMessage = { type: MSG_GET_AVATAR };
     expect(chrome.tabs.sendMessage).toBeCalledWith(123, getAvatarMessage);
     expect(avatarDataState.value.tab).toBe(tab);
     expect(avatarDataState.value.avatar).toBe(mockAvatarData);

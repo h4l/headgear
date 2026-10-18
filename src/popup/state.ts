@@ -13,11 +13,11 @@ export enum AvatarDataErrorType {
   NOT_REDDIT_TAB,
   GET_AVATAR_FAILED,
   USER_HAS_NO_AVATAR,
-  AUTH_TOKEN_NOT_AVAILABLE,
+  NOT_LOGGED_IN,
 }
 export type AvatarDataError =
   | { type: AvatarDataErrorType.UNKNOWN; exception: Error }
-  | { type: AvatarDataErrorType.AUTH_TOKEN_NOT_AVAILABLE; message: string }
+  | { type: AvatarDataErrorType.NOT_LOGGED_IN; message: string }
   | { type: AvatarDataErrorType.GET_AVATAR_FAILED; message: string }
   | {
       type: AvatarDataErrorType.NOT_REDDIT_TAB;

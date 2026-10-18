@@ -39,7 +39,6 @@ const USER_AVATAR_IMG_HTML_2 = `
 
 const GET_AVATAR_MESSAGE: Readonly<GetAvatarMessage> = {
   type: MSG_GET_AVATAR,
-  apiToken: "__token__",
 };
 
 test("_sha256", async () => {
@@ -66,10 +65,9 @@ test.each`
     bodyHtml: string;
   }) => {
     document.body.innerHTML = bodyHtml;
-    await expect(_avatarVersionTag("__token__")).resolves.toEqual(
+    await expect(_avatarVersionTag()).resolves.toEqual(
       expected &&
         (await _generateAvatarVersionTag({
-          authToken: "__token__",
           avatarUrl: `https://notused.reddit.com${expected}?a=1`,
         }))
     );
@@ -88,11 +86,11 @@ describe("avatar fetching", () => {
     test("caches requests", async () => {
       document.body.innerHTML = USER_AVATAR_IMG_HTML_2;
 
-      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
+      await expect(_getAvatar()).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);
 
       // avatar is now cached, so subsequent calls will not re-fetch
-      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
+      await expect(_getAvatar()).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);
     });
 
@@ -100,11 +98,11 @@ describe("avatar fetching", () => {
       // page with no avatar image to use as a cache key
       document.body.innerHTML = "";
 
-      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
+      await expect(_getAvatar()).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(1);
 
       // avatar is NOT cached, so subsequent calls will re-fetch
-      await expect(_getAvatar({ apiToken: "__token__" })).resolves.toBe(avatar);
+      await expect(_getAvatar()).resolves.toBe(avatar);
       expect(getCurrentAvatar).toHaveBeenCalledTimes(2);
     });
   });
