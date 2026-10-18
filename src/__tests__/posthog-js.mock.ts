@@ -4,23 +4,19 @@ import { assert } from "../assert";
 import { AnalyticsPreference } from "../popup-state-persistence";
 
 export type OptInOut =
-  | AnalyticsPreference.OPTED_IN
-  | AnalyticsPreference.OPTED_OUT;
+  AnalyticsPreference.OPTED_IN | AnalyticsPreference.OPTED_OUT;
 type ResetState = { capturingPreference?: OptInOut };
 
-export class MockPostHog
-  implements
-    Pick<
-      PostHog,
-      | "capture"
-      | "init"
-      | "opt_in_capturing"
-      | "opt_out_capturing"
-      | "has_opted_in_capturing"
-      | "has_opted_out_capturing"
-      | "register"
-    >
-{
+export class MockPostHog implements Pick<
+  PostHog,
+  | "capture"
+  | "init"
+  | "opt_in_capturing"
+  | "opt_out_capturing"
+  | "has_opted_in_capturing"
+  | "has_opted_out_capturing"
+  | "register"
+> {
   capture: PostHog["capture"] = jest.fn();
   init: PostHog["init"] = jest.fn();
   register: PostHog["register"] = jest.fn();

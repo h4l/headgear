@@ -26,7 +26,7 @@ export class Superseded extends Error {}
  */
 export function computedAsync<
   T extends Record<string, Signal<unknown>>,
-  U
+  U,
 >(options: {
   signals: T;
   compute: (options: {

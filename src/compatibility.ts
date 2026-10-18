@@ -19,8 +19,8 @@ export function polyfillWebExtensionsAPI() {
   }
 }
 
-interface FirefoxInjectionResult<T>
-  extends chrome.scripting.InjectionResult<T> {
+interface FirefoxInjectionResult<T> extends chrome.scripting
+  .InjectionResult<T> {
   error?: unknown;
 }
 

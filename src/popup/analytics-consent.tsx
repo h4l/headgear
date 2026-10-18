@@ -74,8 +74,8 @@ export function AnalyticsConsent(): JSX.Element {
           controlsState.value?.analyticsConsentUIOpen
             ? "opacity-100"
             : fadingOut.value
-            ? "opacity-0"
-            : "hidden opacity-0"
+              ? "opacity-0"
+              : "hidden opacity-0"
         }
         transition-opacity
         absolute z-20 left-0 right-0 top-0 bottom-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80
@@ -90,8 +90,8 @@ export function AnalyticsConsent(): JSX.Element {
           uiOpen
             ? "right-[8%]"
             : fadingOut.value
-            ? "-right-[84%]"
-            : "-right-[84%] invisible"
+              ? "-right-[84%]"
+              : "-right-[84%] invisible"
         }
         ${!wasClosed && uiOpen ? "transition-none" : "transition-[right]"}
         rounded-md

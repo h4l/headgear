@@ -377,8 +377,8 @@ export function createDistinctAccessoryIds(accessories: ResolvedAccessory[]) {
     idDuplicates[a.id] === 1
       ? a.id
       : slotDuplicates[slotId(a)] === 1
-      ? slotId(a)
-      : `${slotId(a)}_${i}`
+        ? slotId(a)
+        : `${slotId(a)}_${i}`
   );
 }
 
@@ -563,12 +563,12 @@ function formatSeriesSize(seriesSize: number) {
   return seriesSize < 1000
     ? seriesSize.toFixed(0)
     : Math.round(seriesSize / 1000) < 10
-    ? `${(seriesSize / 1000).toFixed(1).replace(/\.0$/, "")}k`
-    : Math.round(seriesSize / 1000) < 1000
-    ? `${(seriesSize / 1000).toFixed(0).replace(/\.0$/, "")}k`
-    : Math.round(seriesSize / 1e6) < 10
-    ? `${(seriesSize / 1e6).toFixed(1).replace(/\.0$/, "")}m`
-    : `${(seriesSize / 1e6).toFixed(0).replace(/\.0$/, "")}m`;
+      ? `${(seriesSize / 1000).toFixed(1).replace(/\.0$/, "")}k`
+      : Math.round(seriesSize / 1000) < 1000
+        ? `${(seriesSize / 1000).toFixed(0).replace(/\.0$/, "")}k`
+        : Math.round(seriesSize / 1e6) < 10
+          ? `${(seriesSize / 1e6).toFixed(1).replace(/\.0$/, "")}m`
+          : `${(seriesSize / 1e6).toFixed(0).replace(/\.0$/, "")}m`;
 }
 
 export async function _nftNameSVG(options: {

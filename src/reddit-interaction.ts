@@ -65,8 +65,7 @@ export async function _sha256(text: string): Promise<string> {
 }
 
 export type GetAvatarMessageResponse =
-  | [undefined, ResolvedAvatar | null]
-  | [{ message: string }, undefined];
+  [undefined, ResolvedAvatar | null] | [{ message: string }, undefined];
 
 interface CachedAvatar {
   versionTag: string;

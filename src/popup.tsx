@@ -961,8 +961,8 @@ export function ImageOptions(): JSX.Element {
           controlsState.value?.imageOptionsUIOpen
             ? "opacity-100"
             : fadingOut.value
-            ? "opacity-0"
-            : "hidden opacity-0"
+              ? "opacity-0"
+              : "hidden opacity-0"
         }
         transition-opacity
         absolute left-0 right-0 top-0 bottom-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80
@@ -977,8 +977,8 @@ export function ImageOptions(): JSX.Element {
           uiOpen
             ? "right-4"
             : fadingOut.value
-            ? "-right-80"
-            : "-right-80 invisible"
+              ? "-right-80"
+              : "-right-80 invisible"
         }
         ${!wasClosed && uiOpen ? "transition-none" : "transition-[right]"}
         rounded-md

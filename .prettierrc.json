@@ -1,4 +1,6 @@
 {
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "trailingComma": "es5",
   "importOrder": ["\\.mock(\\.ts)?$", "^[./]"],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,

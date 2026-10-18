@@ -3,9 +3,7 @@ import { assert } from "../assert";
 
 type chrome = typeof window.chrome;
 
-export class MockStorageArea
-  implements jest.Mocked<chrome.storage.StorageArea>
-{
+export class MockStorageArea implements jest.Mocked<chrome.storage.StorageArea> {
   readonly data: { [key: string]: unknown } = {};
   get = jest.fn<any, any>(
     async (
@@ -20,10 +18,10 @@ export class MockStorageArea
       const result = !keys
         ? { ...this.data }
         : typeof keys === "string"
-        ? { [keys]: undefined }
-        : Array.isArray(keys)
-        ? Object.fromEntries(keys.map((k) => [k, undefined]))
-        : {};
+          ? { [keys]: undefined }
+          : Array.isArray(keys)
+            ? Object.fromEntries(keys.map((k) => [k, undefined]))
+            : {};
       for (const key in result) {
         if (key in this.data) {
           result[key] = this.data[key];
@@ -89,9 +87,9 @@ export function mockOnMessage(): jest.Mocked<
   };
 }
 
-export class MockEvent<T extends (...args: any) => void>
-  implements jest.Mocked<chrome.events.Event<T>>
-{
+export class MockEvent<T extends (...args: any) => void> implements jest.Mocked<
+  chrome.events.Event<T>
+> {
   listeners: Array<T> = [];
   addListener = jest.fn((callback: T): void => {
     this.listeners.push(callback);

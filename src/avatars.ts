@@ -47,17 +47,15 @@ function _isObject(value: unknown): value is Record<string, unknown> {
 function _validateSlotAccessory(
   value: unknown
 ): asserts value is SlotAccessory {
-  if (
-    !(
-      _isObject(value) &&
-      typeof value.id === "string" &&
-      Array.isArray(value.customizableClasses) &&
-      value.customizableClasses.every((cls) => typeof cls === "string") &&
-      _isObject(value.asset) &&
-      typeof value.asset.imageUrl === "string" &&
-      typeof value.asset.slotNumber === "number"
-    )
-  ) {
+  if (!(
+    _isObject(value) &&
+    typeof value.id === "string" &&
+    Array.isArray(value.customizableClasses) &&
+    value.customizableClasses.every((cls) => typeof cls === "string") &&
+    _isObject(value.asset) &&
+    typeof value.asset.imageUrl === "string" &&
+    typeof value.asset.slotNumber === "number"
+  )) {
     throw new Error(
       `Slot accessory is not structured as expected: ${JSON.stringify(value)}`
     );
@@ -68,17 +66,15 @@ function validateAvatarState(json: unknown): asserts json is AvatarState {
   const msg = "Avatar state JSON is not structured as expected";
   const state = json as Partial<Record<keyof AvatarState, unknown>>;
   const bg = state?.backgroundImage;
-  if (
-    !(
-      _isObject(state) &&
-      _isObject(state.accessoriesBySlot) &&
-      _isObject(state.customColorsByClassName) &&
-      (bg === null ||
-        (_isObject(bg) &&
-          typeof bg.id === "string" &&
-          typeof bg.url === "string"))
-    )
-  ) {
+  if (!(
+    _isObject(state) &&
+    _isObject(state.accessoriesBySlot) &&
+    _isObject(state.customColorsByClassName) &&
+    (bg === null ||
+      (_isObject(bg) &&
+        typeof bg.id === "string" &&
+        typeof bg.url === "string"))
+  )) {
     throw new Error(msg);
   }
 
