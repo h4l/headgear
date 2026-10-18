@@ -9,7 +9,7 @@ import {
   IgnorePlugin,
   sources,
 } from "webpack";
-import merge from "webpack-merge";
+import { merge } from "webpack-merge";
 
 import { assert } from "./src/assert";
 import { HeadgearGlobalObject } from "./src/headgear-global";
