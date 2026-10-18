@@ -204,7 +204,7 @@ describe("create & initialise RootState", () => {
     await waitFor(() => {
       expect(avatarDataState.value.type).toBe(DataStateType.ERROR);
     });
-    expect(chrome.tabs.query).toBeCalledWith({
+    expect(chrome.tabs.query).toHaveBeenCalledWith({
       currentWindow: true,
       active: true,
     });
@@ -231,11 +231,11 @@ describe("create & initialise RootState", () => {
       await waitFor(() => {
         expect(avatarDataState.value.type).toBe(DataStateType.ERROR);
       });
-      expect(chrome.tabs.query).toBeCalledWith({
+      expect(chrome.tabs.query).toHaveBeenCalledWith({
         currentWindow: true,
         active: true,
       });
-      expect(chrome.cookies.get).toBeCalledWith({
+      expect(chrome.cookies.get).toHaveBeenCalledWith({
         url: "https://www.reddit.com/",
         name: "token_v2",
       });
@@ -266,12 +266,12 @@ describe("create & initialise RootState", () => {
       expect(avatarDataState.value.type).toBe(DataStateType.LOADED);
     });
     assert(avatarDataState.value.type === DataStateType.LOADED);
-    expect(chrome.scripting.executeScript).toBeCalledWith({
+    expect(chrome.scripting.executeScript).toHaveBeenCalledWith({
       target: { tabId: 123 },
       files: ["/reddit.js"],
     });
     const getAvatarMessage: GetAvatarMessage = { type: MSG_GET_AVATAR };
-    expect(chrome.tabs.sendMessage).toBeCalledWith(123, getAvatarMessage);
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, getAvatarMessage);
     expect(avatarDataState.value.tab).toBe(tab);
     expect(avatarDataState.value.avatar).toBe(mockAvatarData);
   });
@@ -491,7 +491,7 @@ describe("<ClosePopupButton>", () => {
     render(<ClosePopupButton />);
     fireEvent.click(await screen.findByRole("button"));
     await waitFor(() => {
-      expect(close).toBeCalledTimes(1);
+      expect(close).toHaveBeenCalledTimes(1);
     });
   });
 });
@@ -892,7 +892,7 @@ describe("<CopyImageButton>", () => {
       fireEvent.click(button);
 
       await waitFor(async () => {
-        expect(navigator.clipboard.write).toBeCalledTimes(1);
+        expect(navigator.clipboard.write).toHaveBeenCalledTimes(1);
         const [[[clipboardItem]]] = jest.mocked(navigator.clipboard.write).mock
           .calls;
         assert(clipboardItem instanceof MockClipboardItem);
@@ -1017,7 +1017,7 @@ describe("<DisplayArea>", () => {
     expect(errorContainer).toHaveTextContent(
       "Headgear hit an error while generating the image to be downloaded/copied."
     );
-    expect(console.error).toBeCalled();
+    expect(console.error).toHaveBeenCalled();
     await cleanup();
   });
 });
@@ -1501,8 +1501,8 @@ describe("_createOutputImageState()", () => {
     // The jobs are executed asynchronously and aborted if another job has been
     // queued since an earlier job was created, so we only render the image
     // once, despite triggering several state changes.
-    expect(rasteriseSVG).toBeCalledTimes(1);
-    expect(rasteriseSVG).toBeCalledWith({
+    expect(rasteriseSVG).toHaveBeenCalledTimes(1);
+    expect(rasteriseSVG).toHaveBeenCalledWith({
       svg: avatarSvgState.value,
       width: 1009,
       height: 1009,

@@ -12,7 +12,7 @@ describe("getFont", () => {
     const font = {} as unknown as Font;
     jest.mocked(load).mockResolvedValueOnce(font);
     await expect(getFont("/foo")).resolves.toBe(font);
-    expect(load).toBeCalledWith("/foo");
+    expect(load).toHaveBeenCalledWith("/foo");
   });
 
   test("uses cache for duplicate requests", async () => {
@@ -20,7 +20,7 @@ describe("getFont", () => {
     jest.mocked(load).mockResolvedValueOnce(font);
     await expect(getFont("/bar")).resolves.toBe(font);
     await expect(getFont("/bar")).resolves.toBe(font);
-    expect(load).toBeCalledWith("/bar");
-    expect(load).toBeCalledTimes(1);
+    expect(load).toHaveBeenCalledWith("/bar");
+    expect(load).toHaveBeenCalledTimes(1);
   });
 });

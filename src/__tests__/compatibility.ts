@@ -43,7 +43,7 @@ describe("throwIfExecuteScriptResultFailed()", () => {
     };
     expect(() => {
       throwIfExecuteScriptResultFailed([errorResult]);
-    }).toThrowError("chrome.scripting.executeScript() failed: Example error");
+    }).toThrow("chrome.scripting.executeScript() failed: Example error");
   });
 });
 
@@ -94,8 +94,8 @@ describe("writeImageToClipboard()", () => {
     const imageBlob = new Blob(["PNG"], { type: "image/png" });
     await writeImageToClipboard(imageBlob);
 
-    expect(globalThis.navigator.clipboard.write).toBeCalledTimes(1);
-    expect(globalThis.navigator.clipboard.write).toBeCalledWith([
+    expect(globalThis.navigator.clipboard.write).toHaveBeenCalledTimes(1);
+    expect(globalThis.navigator.clipboard.write).toHaveBeenCalledWith([
       new ClipboardItem({ "image/png": imageBlob }),
     ]);
   });
@@ -115,8 +115,11 @@ describe("writeImageToClipboard()", () => {
 
     await writeImageToClipboard(imageBlob);
 
-    expect(setImageData).toBeCalledTimes(1);
-    expect(setImageData).toBeCalledWith(await imageBlob.arrayBuffer(), "png");
+    expect(setImageData).toHaveBeenCalledTimes(1);
+    expect(setImageData).toHaveBeenCalledWith(
+      await imageBlob.arrayBuffer(),
+      "png"
+    );
   });
 
   test("Browsers without either fail with an error", async () => {

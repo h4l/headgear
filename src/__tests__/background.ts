@@ -39,8 +39,8 @@ describe("_persistImageControlsOnChange()", () => {
     expect(chrome.runtime.onConnect.addListener).toHaveBeenCalledTimes(1);
 
     onConnect.callListeners(port);
-    expect(port.onMessage.addListener).toBeCalledTimes(1);
-    expect(port.onDisconnect.addListener).toBeCalledTimes(1);
+    expect(port.onMessage.addListener).toHaveBeenCalledTimes(1);
+    expect(port.onDisconnect.addListener).toHaveBeenCalledTimes(1);
 
     port.postMessage(controlsState1);
     port.postMessage(controlsState2);

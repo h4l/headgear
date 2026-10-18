@@ -51,7 +51,7 @@ describe("registerMessageListener()", () => {
       await expect(chrome.runtime.sendMessage(message)).resolves.toEqual(
         responseMessage
       );
-      expect(implementation.textToPath).toBeCalledWith(makeOptions());
+      expect(implementation.textToPath).toHaveBeenCalledWith(makeOptions());
     });
   });
 
@@ -71,6 +71,6 @@ describe("registerMessageListener()", () => {
     await expect(chrome.runtime.sendMessage(message)).resolves.toEqual(
       responseMessage
     );
-    expect(implementation.textToPath).toBeCalledWith(makeOptions());
+    expect(implementation.textToPath).toHaveBeenCalledWith(makeOptions());
   });
 });

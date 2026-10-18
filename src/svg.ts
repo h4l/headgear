@@ -103,9 +103,9 @@ function _isRule(node: css.Node): node is css.Rule {
   return node.type === "rule";
 }
 
-interface ParentNode extends css.Node {
+type ParentNode = css.Node & {
   rules?: Array<css.Node> | undefined;
-}
+};
 
 function _isParentNode(node: css.Node): node is ParentNode {
   return "rules" in node;

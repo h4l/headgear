@@ -216,7 +216,7 @@ describe("createAccessoryCustomisationCSSRules()", () => {
         accessories: [{ ...accessory, customizableClasses: ["foo", "bar"] }],
         styles: [{ className: "foo", fill: "#fff" }],
       })
-    ).not.toThrowError();
+    ).not.toThrow();
   });
 
   test("allows customisation styles not used in accessories", () => {
@@ -229,7 +229,7 @@ describe("createAccessoryCustomisationCSSRules()", () => {
           { className: "bar", fill: "#fff" },
         ],
       })
-    ).not.toThrowError();
+    ).not.toThrow();
   });
 
   test("throws if styles use unexpected properties", () => {
@@ -244,10 +244,10 @@ describe("createAccessoryCustomisationCSSRules()", () => {
           } as SVGStyle,
         ],
       });
-    expect(triggerFn).toThrowError(
+    expect(triggerFn).toThrow(
       "Customisation style object contains unsupported properties:"
     );
-    expect(triggerFn).toThrowError('"unsupported value"');
+    expect(triggerFn).toThrow('"unsupported value"');
   });
 });
 

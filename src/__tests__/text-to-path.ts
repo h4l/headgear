@@ -42,7 +42,7 @@ describe("textToPath()", () => {
       },
     };
     const response = await textToPath(options);
-    expect(chrome.runtime.sendMessage).toBeCalledWith({
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       type: MESSAGE_TEXT_TO_PATH,
       ...options,
     });
