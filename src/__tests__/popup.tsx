@@ -787,7 +787,6 @@ describe("Avatar Image Download Filename", () => {
 
 describe("<CopyImageButton>", () => {
   class MockClipboardItem implements ClipboardItem {
-    // eslint-disable-next-line no-useless-constructor
     constructor(
       public items: Record<string, string | Blob | PromiseLike<string | Blob>>
     ) {}
