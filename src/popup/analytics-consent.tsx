@@ -86,7 +86,6 @@ export function AnalyticsConsent(): JSX.Element {
         aria-modal="true"
         aria-label="Image Output Options"
         aria-hidden={!uiOpen}
-        open={uiOpen}
         class={`absolute z-30 shadow-xl ${
           uiOpen
             ? "right-[8%]"
