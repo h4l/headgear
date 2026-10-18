@@ -799,6 +799,12 @@ describe("<CopyImageButton>", () => {
     async getType(): Promise<Blob> {
       throw new Error("not implemented");
     }
+    get presentationStyle(): PresentationStyle {
+      throw new Error("Method not implemented.");
+    }
+    static supports(type: string): boolean {
+      throw new Error("Method not implemented.");
+    }
   }
   beforeEach(() => {
     // jsdom doesn't implement the clipboard API

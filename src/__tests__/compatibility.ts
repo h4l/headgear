@@ -61,6 +61,12 @@ describe("writeImageToClipboard()", () => {
     getType(): Promise<Blob> {
       throw new Error("Method not implemented.");
     }
+    get presentationStyle(): PresentationStyle {
+      throw new Error("Method not implemented.");
+    }
+    static supports(type: string): boolean {
+      throw new Error("Method not implemented.");
+    }
   }
   beforeEach(() => {
     assert(globalThis.ClipboardItem === undefined);
