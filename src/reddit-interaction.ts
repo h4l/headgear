@@ -111,7 +111,7 @@ export async function _getAvatar({
     );
   }
 
-  const avatar = await getCurrentAvatar({ apiToken });
+  const avatar = await getCurrentAvatar();
   if (versionTag !== undefined) {
     const cachedAvatar: CachedAvatar = { versionTag, avatar };
     await chrome.storage.local.set({ [AVATAR_CACHE_KEY]: cachedAvatar });

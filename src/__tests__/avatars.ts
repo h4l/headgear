@@ -1,32 +1,21 @@
-import { MockOptionsMethodPost } from "fetch-mock";
 import fetchMock from "fetch-mock-jest";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 
 import { assert } from "../assert";
 import {
-  AvatarDataResponseData,
-  AvatarNFTInfoResponseData,
-  _GQL_QUERY_ID_AVATAR_DATA,
-  _GQL_QUERY_ID_NFT_INFO,
-  _fetchAvatarData,
-  _fetchAvatarNFTData,
+  _AVATAR_EDIT_URL,
+  _NFT_CARD_URL_PREFIX,
+  _fetchAvatarState,
+  _fetchNftCardData,
   _validateSVGStyle,
   getCurrentAvatar,
 } from "../avatars";
 
-const AVATAR_DATA_REQUEST: MockOptionsMethodPost = {
-  name: "avatar-data",
-  url: "https://gql.reddit.com/",
-  matchPartialBody: true,
-  body: { id: _GQL_QUERY_ID_AVATAR_DATA },
+const PARTIAL_HTML_HEADERS = {
+  "content-type": "text/vnd.reddit.partial+html; charset=utf-8",
 };
-const NFT_INFO_REQUEST: MockOptionsMethodPost = {
-  name: "nft-info",
-  url: "https://gql.reddit.com/",
-  matchPartialBody: true,
-  body: { id: _GQL_QUERY_ID_NFT_INFO },
-};
+const NFT_ID = "nft_eip155:137_9d8542ef1237933badbe867291f6c0434b8d315c_2713";
 
 beforeEach(() => {
   fetchMock.restore();
@@ -58,116 +47,193 @@ afterAll(() => {
   jest.mocked(FileReader.prototype.readAsDataURL).mockReset();
 });
 
-async function exampleAvatarDataResponseJSON(): Promise<AvatarDataResponseData> {
-  return JSON.parse(
-    await readFile(resolve(__dirname, "avatar-data-response.json"), {
-      encoding: "utf-8",
-    })
-  ) as AvatarDataResponseData;
+async function readFixture(name: string): Promise<string> {
+  return await readFile(resolve(__dirname, name), { encoding: "utf-8" });
 }
 
-async function exampleNonNftAvatarDataResponseJSON(): Promise<AvatarDataResponseData> {
-  return JSON.parse(
-    await readFile(resolve(__dirname, "non-nft-avatar-data-response.json"), {
-      encoding: "utf-8",
-    })
-  ) as AvatarDataResponseData;
+type AvatarEditFixture = "nft" | "non-nft" | "no-avatar";
+async function mockAvatarEditResponse(
+  fixture: AvatarEditFixture
+): Promise<void> {
+  fetchMock.get(_AVATAR_EDIT_URL, {
+    headers: PARTIAL_HTML_HEADERS,
+    body: await readFixture(`avatar-edit-response-${fixture}.html`),
+  });
 }
 
-async function exampleAvatarNFTInfoResponseDataJSON(): Promise<AvatarNFTInfoResponseData> {
-  return JSON.parse(
-    await readFile(resolve(__dirname, "nft-info-response.json"), {
-      encoding: "utf-8",
-    })
-  ) as AvatarNFTInfoResponseData;
+type NftCardFixture = "limited" | "unlimited";
+async function mockNftCardResponse(fixture: NftCardFixture): Promise<void> {
+  fetchMock.get(`begin:${_NFT_CARD_URL_PREFIX}`, {
+    headers: PARTIAL_HTML_HEADERS,
+    body: await readFixture(
+      `product-detail-card-view-data-fetcher-item-response-drop-size-${fixture}.html`
+    ),
+  });
 }
 
-describe("_fetchAvatarData()", () => {
-  test("throws on failed API call", async () => {
-    fetchMock.post(AVATAR_DATA_REQUEST, {
+function mockAvatarStateResponse(initialState: string): void {
+  const attr = initialState.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  fetchMock.get(_AVATAR_EDIT_URL, {
+    headers: PARTIAL_HTML_HEADERS,
+    body: `<avatar-state-container initial-state="${attr}"></avatar-state-container>`,
+  });
+}
+
+function mockImageResponses(): void {
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
+    return {
+      headers: { "content-type": "image/svg+xml" },
+      body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
+    };
+  });
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*.png", () => {
+    return {
+      headers: { "content-type": "image/png" },
+      body: "fakedata",
+    };
+  });
+}
+
+describe("_fetchAvatarState()", () => {
+  test("throws on failed request", async () => {
+    fetchMock.get(_AVATAR_EDIT_URL, {
       status: 500,
       body: "Server is on fire.",
     });
-    await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
-      `Avatar Data API request failed: 500 Internal Server Error: Server is on fire.`
+    await expect(_fetchAvatarState()).rejects.toThrow(
+      `Request for ${_AVATAR_EDIT_URL} failed: 500 Internal Server Error: Server is on fire.`
     );
   });
 
-  test("throws on unexpected API response data", async () => {
-    fetchMock.post(AVATAR_DATA_REQUEST, { body: {} });
-    await expect(_fetchAvatarData({ apiToken: "123" })).rejects.toThrow(
-      `Avatar Data API response JSON is not structured as expected`
-    );
-  });
-
-  test("returns API response data", async () => {
-    fetchMock.post(AVATAR_DATA_REQUEST, {
-      body: await exampleAvatarDataResponseJSON(),
+  test("throws when page has no avatar-state-container", async () => {
+    // e.g. when logged out
+    fetchMock.get(_AVATAR_EDIT_URL, {
+      headers: PARTIAL_HTML_HEADERS,
+      body: "<div>Log in</div>",
     });
-    await expect(_fetchAvatarData({ apiToken: "123" })).resolves.toEqual(
-      (
-        await exampleAvatarDataResponseJSON()
-      ).data
+    await expect(_fetchAvatarState()).rejects.toThrow(
+      "Avatar edit page is not structured as expected: no avatar-state-container initial-state"
     );
-    expect(fetchMock).toHaveFetched("https://gql.reddit.com/", {
-      headers: { authorization: "Bearer 123" },
-      body: { id: _GQL_QUERY_ID_AVATAR_DATA },
-      matchPartialBody: true,
+  });
+
+  test("throws when initial-state is not JSON", async () => {
+    mockAvatarStateResponse("{nope");
+    await expect(_fetchAvatarState()).rejects.toThrow(
+      "Avatar edit page is not structured as expected: avatar-state-container initial-state is not valid JSON"
+    );
+  });
+
+  test.each([
+    [{}],
+    [
+      {
+        accessoriesBySlot: {},
+        backgroundImage: { id: "nft_foo" },
+        customColorsByClassName: {},
+      },
+    ],
+    [
+      {
+        accessoriesBySlot: { HAIR: { id: "hair" } },
+        backgroundImage: null,
+        customColorsByClassName: {},
+      },
+    ],
+    [
+      {
+        accessoriesBySlot: {},
+        backgroundImage: null,
+        customColorsByClassName: {
+          body: { className: "body", fill: "#fff", unsupported: "foo" },
+        },
+      },
+    ],
+  ])("throws on unexpected initial-state JSON: %j", async (state) => {
+    mockAvatarStateResponse(JSON.stringify(state));
+    await expect(_fetchAvatarState()).rejects.toThrow(
+      "Avatar state JSON is not structured as expected"
+    );
+  });
+
+  test("returns avatar state", async () => {
+    await mockAvatarEditResponse("nft");
+    const state = await _fetchAvatarState();
+
+    expect(state.backgroundImage).toEqual({
+      id: NFT_ID,
+      url: "https://i.redd.it/snoovatar/snoo_assets/submissions/temp/ziREML_VnuE_.png",
+    });
+    expect(Object.keys(state.accessoriesBySlot).sort()).toEqual([
+      "BACKGROUND",
+      "BODY",
+      "BODY_BOTTOM",
+      "FACE_LOWER",
+      "FACE_UPPER",
+      "HEAD_ACCESSORY",
+    ]);
+    expect(Object.keys(state.customColorsByClassName).sort()).toEqual([
+      "body",
+      "eyes",
+      "facialhair",
+      "hair",
+    ]);
+    expect(fetchMock).toHaveFetched(_AVATAR_EDIT_URL, {
+      headers: { accept: "text/vnd.reddit.partial+html, text/html;q=0.9" },
     });
   });
 });
 
-describe("_fetchAvatarNFTData()", () => {
-  test("throws on failed API call", async () => {
-    fetchMock.post(NFT_INFO_REQUEST, {
+describe("_fetchNftCardData()", () => {
+  test("throws on failed request", async () => {
+    fetchMock.get(`begin:${_NFT_CARD_URL_PREFIX}`, {
       status: 500,
       body: "Server is on fire.",
     });
-    await expect(
-      _fetchAvatarNFTData({
-        apiToken: "123",
-        nftId: "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
-      })
-    ).rejects.toThrow(
-      `Avatar Data API request failed: 500 Internal Server Error: Server is on fire.`
+    await expect(_fetchNftCardData(NFT_ID)).rejects.toThrow(
+      "failed: 500 Internal Server Error: Server is on fire."
     );
   });
 
-  test("throws on unexpected API response data", async () => {
-    fetchMock.post(NFT_INFO_REQUEST, { body: {} });
-    await expect(
-      _fetchAvatarNFTData({
-        apiToken: "123",
-        nftId: "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
-      })
-    ).rejects.toThrow(
-      `Avatar NFT Info API response JSON is not structured as expected`
-    );
-  });
-
-  test("returns API response data", async () => {
-    fetchMock.post(NFT_INFO_REQUEST, {
-      body: await exampleAvatarNFTInfoResponseDataJSON(),
+  test("throws when response has no product-detail-card-view", async () => {
+    fetchMock.get(`begin:${_NFT_CARD_URL_PREFIX}`, {
+      headers: PARTIAL_HTML_HEADERS,
+      body: "<div></div>",
     });
-    await expect(
-      _fetchAvatarNFTData({
-        apiToken: "123",
-        nftId: "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477",
-      })
-    ).resolves.toEqual(
-      (
-        await exampleAvatarNFTInfoResponseDataJSON()
-      ).data.inventoryItems.edges[0].node
+    await expect(_fetchNftCardData(NFT_ID)).rejects.toThrow(
+      "NFT details are not structured as expected: no product-detail-card-view nft-title"
     );
-    expect(fetchMock).toHaveFetched("https://gql.reddit.com/", {
-      headers: { authorization: "Bearer 123" },
-      body: {
-        id: "e9865cc4d93d",
-        variables: {
-          ids: ["nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477"],
-        },
-      },
-      matchPartialBody: true,
+  });
+
+  test.each([
+    ["missing", ""],
+    ["empty", ` drop-size=""`],
+    ["negative", ` drop-size="-1"`],
+    ["fractional", ` drop-size="1.5"`],
+    ["non-numeric", ` drop-size="1k"`],
+  ])("throws when drop-size is %s", async (_, dropSizeAttr) => {
+    fetchMock.get(`begin:${_NFT_CARD_URL_PREFIX}`, {
+      headers: PARTIAL_HTML_HEADERS,
+      body: `<product-detail-card-view nft-title="Foo #1"${dropSizeAttr}></product-detail-card-view>`,
+    });
+    await expect(_fetchNftCardData(NFT_ID)).rejects.toThrow(
+      "NFT details are not structured as expected: product-detail-card-view drop-size is not a non-negative integer"
+    );
+  });
+
+  test("returns data for limited-size NFT", async () => {
+    await mockNftCardResponse("limited");
+    await expect(_fetchNftCardData(NFT_ID)).resolves.toEqual({
+      name: "Confrontation #114",
+      seriesSize: 1000,
+    });
+    expect(fetchMock).toHaveFetched(`${_NFT_CARD_URL_PREFIX}${NFT_ID}`);
+  });
+
+  test("returns null seriesSize for unlimited-size NFT", async () => {
+    await mockNftCardResponse("unlimited");
+    await expect(_fetchNftCardData(NFT_ID)).resolves.toEqual({
+      name: "Coin Collectors #16089",
+      seriesSize: null,
     });
   });
 });
@@ -182,9 +248,7 @@ test.each([[{}], [{ className: "foo", fill: "#fff", unsupported: "foo" }]])(
 );
 
 test("getCurrentAvatar() throws on non SVG asset image", async () => {
-  fetchMock.post(AVATAR_DATA_REQUEST, {
-    body: await exampleNonNftAvatarDataResponseJSON(),
-  });
+  await mockAvatarEditResponse("non-nft");
   fetchMock.get("glob:https://i.redd.it/snoovatar/*", () => {
     return {
       headers: { "content-type": "image/png" },
@@ -192,110 +256,76 @@ test("getCurrentAvatar() throws on non SVG asset image", async () => {
     };
   });
 
-  await expect(getCurrentAvatar({ apiToken: "foo" })).rejects.toThrow(
+  await expect(getCurrentAvatar()).rejects.toThrow(
     "Response is not an image in SVG format"
   );
 });
 
 test("getCurrentAvatar() returns avatar with NFT info for NFT avatar", async () => {
-  fetchMock.post(AVATAR_DATA_REQUEST, {
-    body: await exampleAvatarDataResponseJSON(),
-  });
-  fetchMock.post(NFT_INFO_REQUEST, {
-    body: await exampleAvatarNFTInfoResponseDataJSON(),
-  });
-  fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
-    return {
-      headers: { "content-type": "image/svg+xml" },
-      body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
-    };
-  });
-  fetchMock.get("glob:https://i.redd.it/snoovatar/*", () => {
-    return {
-      headers: { "content-type": "image/png" },
-      body: "fakedata",
-    };
-  });
+  await mockAvatarEditResponse("nft");
+  await mockNftCardResponse("limited");
+  mockImageResponses();
 
-  const avatarData = await exampleAvatarDataResponseJSON();
-  const avatar = avatarData.data.avatarBuilderCatalog.avatar;
-  const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
-  assert(avatar && resolvedAvatar);
+  const resolvedAvatar = await getCurrentAvatar();
+  assert(resolvedAvatar);
 
-  expect(resolvedAvatar.styles).toEqual(avatar.styles);
-  expect([...new Set(resolvedAvatar.accessories.map((acc) => acc.id))]).toEqual(
-    [...new Set(avatar.accessoryIds)]
+  expect(resolvedAvatar.styles).toEqual([
+    { className: "body", fill: "#000000" },
+    { className: "eyes", fill: "#F0F0F0" },
+    { className: "facialhair", fill: "#000000" },
+    { className: "hair", fill: "#000000" },
+  ]);
+  expect(
+    resolvedAvatar.accessories.map((acc) => [acc.id, acc.slotNumber]).sort()
+  ).toEqual(
+    [
+      ["basic_background_001", 0],
+      ["t2_d7lr6_face_lower_Hgh0ORZxMJQ", 50],
+      ["t2_k8ezrq7t_head_accessory_Wu_GZ-z43jU", 80],
+      ["t2_kismpatm_body_bottom_I77vXq9YiOo", 30],
+      ["t2_kismpatm_body_tsyjIwl5E3M", 40],
+      ["t2_shywnhcgb_face_upper_tbGOBEp3Cto", 60],
+    ].sort()
   );
-  expect(
-    resolvedAvatar.accessories.every(
-      (acc) => typeof acc.slotNumber === "number"
-    )
-  ).toBeTruthy();
-  expect(
-    resolvedAvatar.accessories.every((acc) => /<svg\b/.test(acc.svgData))
-  ).toBeTruthy();
-  expect(
-    new Set(resolvedAvatar.accessories.map((acc) => acc.svgData)).size
-  ).toBe(resolvedAvatar.accessories.length);
-
   expect(
     resolvedAvatar.accessories.find(
-      (acc) => acc.id === "gaming_body_bottom_006"
+      (acc) => acc.id === "t2_d7lr6_face_lower_Hgh0ORZxMJQ"
     )
   ).toEqual({
-    customizableClasses: ["jumpsuit", "shoes", "body"],
-    id: "gaming_body_bottom_006",
-    slotNumber: 30,
-    svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/accessory_assets/vO5m6xr_4KQ_gaming_body_bottom_006.svg --></svg>`,
+    customizableClasses: ["body"],
+    id: "t2_d7lr6_face_lower_Hgh0ORZxMJQ",
+    slotNumber: 50,
+    svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/snoo_assets/submissions/Hgh0ORZxMJQ_.svg --></svg>`,
   });
 
-  // The hair accessory has two asset layers
-  expect(
-    resolvedAvatar.accessories.filter((acc) => acc.id === "outfits_1_hair_006")
-      .length
-  ).toBe(2);
-
   // This is an NFT avatar
-  const nftInfo = resolvedAvatar.nftInfo;
-  assert(nftInfo);
-  expect(nftInfo.nftId).toEqual(
-    "nft_eip155:137_425bf054ef7bad65b7bdd8e6587b1c3500e4f4ca_477"
-  );
-  expect(nftInfo.backgroundImage.httpUrl).toBe(
-    "https://i.redd.it/snoovatar/snoo_assets/UI4W3ys3XdI_BGC_les_rock_001.png"
-  );
-  expect(nftInfo.backgroundImage.dataUrl).toEqual(
-    "data:image/png;base64,ZmFrZWRhdGE="
-  );
-  expect(nftInfo.name).toEqual("Les Rock #478");
-  expect(nftInfo.seriesSize).toEqual(1000);
+  expect(resolvedAvatar.nftInfo).toEqual({
+    nftId: NFT_ID,
+    name: "Confrontation #114",
+    seriesSize: 1000,
+    backgroundImage: {
+      httpUrl:
+        "https://i.redd.it/snoovatar/snoo_assets/submissions/temp/ziREML_VnuE_.png",
+      dataUrl: "data:image/png;base64,ZmFrZWRhdGE=",
+    },
+  });
+  expect(fetchMock).toHaveFetched(`${_NFT_CARD_URL_PREFIX}${NFT_ID}`);
 });
 
 test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
-  fetchMock.post(AVATAR_DATA_REQUEST, {
-    body: await exampleNonNftAvatarDataResponseJSON(),
-  });
-  fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
-    return {
-      headers: { "content-type": "image/svg+xml" },
-      body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
-    };
-  });
+  await mockAvatarEditResponse("non-nft");
+  mockImageResponses();
 
-  const avatarData = await exampleNonNftAvatarDataResponseJSON();
-  const avatar = avatarData.data.avatarBuilderCatalog.avatar;
-  const resolvedAvatar = await getCurrentAvatar({ apiToken: "foo" });
-  assert(avatar && resolvedAvatar);
+  const resolvedAvatar = await getCurrentAvatar();
+  assert(resolvedAvatar);
 
-  expect(resolvedAvatar.styles).toEqual(avatar.styles);
-  expect([...new Set(resolvedAvatar.accessories.map((acc) => acc.id))]).toEqual(
-    [...new Set(avatar.accessoryIds)]
-  );
-  expect(
-    resolvedAvatar.accessories.every(
-      (acc) => typeof acc.slotNumber === "number"
-    )
-  ).toBeTruthy();
+  expect(resolvedAvatar.styles).toEqual([
+    { className: "body", fill: "#FFFFFF" },
+    { className: "eyes", fill: "#FF4500" },
+    { className: "facialhair", fill: "#C08D41" },
+    { className: "hair", fill: "#C08D41" },
+  ]);
+  expect(resolvedAvatar.accessories.length).toBe(9);
   expect(
     resolvedAvatar.accessories.every((acc) => /<svg\b/.test(acc.svgData))
   ).toBeTruthy();
@@ -303,28 +333,22 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
     new Set(resolvedAvatar.accessories.map((acc) => acc.svgData)).size
   ).toBe(resolvedAvatar.accessories.length);
 
+  // The hair accessory has two asset layers, occupying two slots
   expect(
-    resolvedAvatar.accessories.find(
-      (acc) => acc.id === "premium_cricket_helmet"
-    )
-  ).toEqual({
-    customizableClasses: ["hat"],
-    id: "premium_cricket_helmet",
-    slotNumber: 80,
-    svgData: `<svg xmlns="http://www.w3.org/2000/svg"><!-- https://i.redd.it/snoovatar/accessory_assets/_9an0Q3Akvo_cricket_helmet.svg --></svg>`,
-  });
-  // The hair accessory has two asset layers
-  expect(
-    resolvedAvatar.accessories.filter((acc) => acc.id === "outfits_1_hair_006")
-      .length
-  ).toBe(2);
+    resolvedAvatar.accessories
+      .filter(
+        (acc) => acc.id === "ParamountPics_StreetFighterhair_007_VERSION_2"
+      )
+      .map((acc) => acc.slotNumber)
+      .sort((a, b) => a - b)
+  ).toEqual([20, 70]);
 
   expect(resolvedAvatar.nftInfo).toBeFalsy();
+  expect(fetchMock).not.toHaveFetched(`begin:${_NFT_CARD_URL_PREFIX}`);
 });
 
-test("getCurrentAvatar() resolves to none when users have no avatar", async () => {
-  const body = await exampleNonNftAvatarDataResponseJSON();
-  body.data.avatarBuilderCatalog.avatar = null;
-  fetchMock.post(AVATAR_DATA_REQUEST, { body });
-  await expect(getCurrentAvatar({ apiToken: "foo" })).resolves.toBeNull();
+test("getCurrentAvatar() resolves to null when users have no avatar", async () => {
+  await mockAvatarEditResponse("no-avatar");
+  await expect(getCurrentAvatar()).resolves.toBeNull();
+  expect(fetchMock.calls().length).toBe(1);
 });

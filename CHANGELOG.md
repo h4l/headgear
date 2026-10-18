@@ -8,7 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Nothing yet
+### Fixed
+
+- Loading avatars works again. Reddit removed the GraphQL API endpoints that
+  Headgear used to fetch avatar and NFT data. Headgear now reads this data from
+  the HTML of Reddit's Avatar Builder and NFT details pages instead.
 
 ## [0.7.0] - 2025-04-19
 

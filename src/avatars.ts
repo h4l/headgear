@@ -1,69 +1,33 @@
-export interface AvatarDataResponseData {
-  data: AvatarData;
-}
-
-interface AvatarData {
-  avatarBuilderCatalog: AvatarBuilderCatalog;
-}
-
-interface AvatarBuilderCatalog {
-  accessories: AvatarAccessory[];
-  avatar: null | UserAvatar;
-  pastAvatars: UserAvatar[];
-  outfits: Array<AvatarOutfit | NftAvatarOutfit>;
-}
-
-interface AvatarOutfit {
-  id: string;
-}
-interface NftAvatarOutfit extends AvatarOutfit {
-  /** NFT name for NFT outfits. */
-  title: string;
-  /** The NFT's background image — only for NFT outfits. */
-  backgroundImage: {
-    url: string;
-  };
-  inventoryItem: {
+/**
+ * The user's current avatar, as described by the Avatar Builder page's
+ * `<avatar-state-container initial-state="...">` attribute.
+ */
+export interface AvatarState {
+  /** Keyed by slot name, e.g. "HAIR", "HAIR_BACK", "BACKGROUND". */
+  accessoriesBySlot: Record<string, SlotAccessory>;
+  /** An NFT background, or null for regular avatars. */
+  backgroundImage: null | {
     /** The NFT id, e.g. `nft_eip155:${CHAIN_ID}_${CONTRACT_ID}_${TOKEN_ID}` */
     id: string;
-  };
-  /** The serial number of the NFT. 0-based, the display value is this + 1. */
-  tokenId: string;
-  contractAddress: string;
-}
-
-interface AvatarAccessory {
-  assets: AccessoryAsset[];
-  isAvailableForCloset: boolean;
-  capabilityRequired: null | "PREMIUM";
-  customizableClasses: string[];
-  defaultAccessoryId: string;
-  id: string;
-  sectionId: string;
-  state: "RESTRICTED" | "ENABLED";
-  tags: string[];
-}
-
-interface AccessoryAsset {
-  accessoryId: string;
-  imageUrl: string;
-  slotNumber: number;
-}
-
-interface UserAvatar {
-  accessoryIds: string[];
-  styles: SVGStyle[];
-  fullImage: {
-    /**
-     * The avatar rendered as a PNG.
-     *
-     * NFT avatars use a URL structure that contains the NFT ID encoded in
-     * base64. This seems to be the only way to distinguish NFT avatars from
-     * regular ones, and also the way to determine which NFT background &
-     * name/serial is used for the avatar's card.
-     */
     url: string;
   };
+  customColorsByClassName: Record<string, SVGStyle>;
+}
+
+/**
+ * An accessory occupying a slot. Accessories with multiple layers (e.g. hair
+ * with a front and back layer) are represented by multiple instances of
+ * `SlotAccessory`, each with the same `id` but different `asset`.
+ */
+interface SlotAccessory {
+  id: string;
+  customizableClasses: string[];
+  asset: SlotAsset;
+}
+
+interface SlotAsset {
+  imageUrl: string;
+  slotNumber: number;
 }
 
 export interface SVGStyle {
@@ -71,82 +35,66 @@ export interface SVGStyle {
   fill: string;
 }
 
-export interface AvatarNFTInfoResponseData {
-  data: {
-    inventoryItems: {
-      edges: [
-        {
-          node: NFTInfoResponse;
-        }
-      ];
-    };
-  };
-}
-interface NFTInfoResponse {
+export interface NftCardData {
   name: string;
-  drop: {
-    size: null | number;
-  };
-  benefits: {
-    avatarOutfit: {
-      backgroundImage: {
-        url: string;
-      };
-    };
-  };
+  seriesSize: number | null;
 }
 
-function validateAvatarNFTInfoResponseData(
-  json: unknown
-): asserts json is AvatarNFTInfoResponseData {
-  const data = json as Partial<AvatarNFTInfoResponseData>;
-  const size = data?.data?.inventoryItems?.edges?.[0]?.node?.drop?.size;
+function _isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function _validateSlotAccessory(
+  value: unknown
+): asserts value is SlotAccessory {
   if (
     !(
-      typeof data?.data?.inventoryItems?.edges?.[0]?.node?.name === "string" &&
-      (size === null || typeof size === "number") &&
-      typeof data?.data?.inventoryItems?.edges?.[0]?.node?.benefits
-        ?.avatarOutfit?.backgroundImage?.url === "string"
+      _isObject(value) &&
+      typeof value.id === "string" &&
+      Array.isArray(value.customizableClasses) &&
+      value.customizableClasses.every((cls) => typeof cls === "string") &&
+      _isObject(value.asset) &&
+      typeof value.asset.imageUrl === "string" &&
+      typeof value.asset.slotNumber === "number"
     )
   ) {
     throw new Error(
-      "Avatar NFT Info API response JSON is not structured as expected"
+      `Slot accessory is not structured as expected: ${JSON.stringify(value)}`
     );
   }
 }
 
-function validateAvatarDataResponseData(
-  json: unknown
-): asserts json is AvatarDataResponseData {
-  const msg = "Avatar Data API response JSON is not structured as expected";
-  const data = json as Partial<AvatarDataResponseData>;
+function validateAvatarState(json: unknown): asserts json is AvatarState {
+  const msg = "Avatar state JSON is not structured as expected";
+  const state = json as Partial<Record<keyof AvatarState, unknown>>;
+  const bg = state?.backgroundImage;
   if (
     !(
-      Array.isArray(data?.data?.avatarBuilderCatalog?.accessories) &&
-      (data?.data?.avatarBuilderCatalog?.avatar === null ||
-        (typeof data?.data?.avatarBuilderCatalog?.avatar === "object" &&
-          Array.isArray(data?.data?.avatarBuilderCatalog?.avatar?.styles))) &&
-      typeof data?.data?.avatarBuilderCatalog?.pastAvatars === "object" &&
-      Array.isArray(data?.data?.avatarBuilderCatalog?.outfits)
+      _isObject(state) &&
+      _isObject(state.accessoriesBySlot) &&
+      _isObject(state.customColorsByClassName) &&
+      (bg === null ||
+        (_isObject(bg) &&
+          typeof bg.id === "string" &&
+          typeof bg.url === "string"))
     )
   ) {
     throw new Error(msg);
   }
-  if (data?.data?.avatarBuilderCatalog?.avatar === null) {
-    return;
-  }
 
-  // We need to be strict about the contents of the style objects, as if they
-  // contain unexpected properties our merged SVGs will not render as intended.
   try {
-    (data.data.avatarBuilderCatalog.avatar.styles as object[]).forEach((obj) =>
-      _validateSVGStyle(obj)
+    Object.values(state.accessoriesBySlot).forEach((acc) =>
+      _validateSlotAccessory(acc)
+    );
+    // We need to be strict about the contents of the style objects, as if they
+    // contain unexpected properties our merged SVGs will not render as
+    // intended.
+    Object.values(state.customColorsByClassName).forEach((style) =>
+      _validateSVGStyle(style as object)
     );
   } catch (e) {
     if (!(e instanceof Error)) throw e;
-    throw new Error(
-      `${msg}. User Avatar styles are not structured as expected. ${e.message}`
-    );
+    throw new Error(`${msg}. ${e.message}`);
   }
 }
 
@@ -154,96 +102,91 @@ async function _failedResponseSummary(resp: Response): Promise<string> {
   return `${resp.status} ${resp.statusText}: ${await resp.text()}`;
 }
 
-async function _graphqlJsonApiRequest<T>({
-  apiToken,
-  bodyJSON,
-}: {
-  apiToken: string;
-  bodyJSON: string;
-}): Promise<T> {
-  const resp = await fetch("https://gql.reddit.com/", {
-    headers: {
-      authorization: `Bearer ${apiToken}`,
-      "Content-Type": "application/json",
-    },
-    referrer: "https://www.reddit.com/",
-    referrerPolicy: "origin-when-cross-origin",
-    body: bodyJSON,
-    method: "POST",
-    mode: "cors",
-    credentials: "omit",
+/**
+ * Avatar data comes from internal endpoints of Reddit's web UI, which respond
+ * with HTML that we parse to read the data out of element attributes. Reddit
+ * doesn't provide access to Avatar info through its public API.
+ *
+ * This is fundamentally the reason why Headgear is a browser extension instead
+ * of a stand-alone web app. These requests are made from the content script
+ * running in the user's reddit.com tab, so they're same-origin requests that
+ * carry the user's session cookies, giving Headgear the same view of Reddit
+ * the logged-in user has.
+ *
+ * Being internal, these endpoints and the HTML structure they respond with
+ * could be changed or removed at any time.
+ *
+ * The endpoints can be found by using a browser's dev tools to observe HTTP
+ * requests made when opening the Avatar Builder.
+ */
+export const _AVATAR_EDIT_URL =
+  "https://www.reddit.com/avatar/edit?tab=Outfits";
+export const _NFT_CARD_URL_PREFIX =
+  "https://www.reddit.com/svc/shreddit/product-detail-card-view-data-fetcher/item/";
+
+/**
+ * Fetch a Reddit web page, preferring Reddit's partial HTML format, which
+ * omits the page's outer structure.
+ *
+ * The returned Document is inert: it has no browsing context, so its scripts
+ * don't run, event handler attributes don't fire, and no subresources load. It
+ * must only be read from — its nodes must never be inserted into or adopted by
+ * the live page's document, as they would no longer be inert.
+ */
+async function _fetchPartialHtml(url: string): Promise<Document> {
+  const resp = await fetch(url, {
+    headers: { accept: "text/vnd.reddit.partial+html, text/html;q=0.9" },
   });
   if (!resp.ok) {
     throw new Error(
-      `Avatar Data API request failed: ${await _failedResponseSummary(resp)}`
+      `Request for ${url} failed: ${await _failedResponseSummary(resp)}`
     );
   }
-  return await resp.json();
+  return new DOMParser().parseFromString(await resp.text(), "text/html");
 }
 
-/**
- * These IDs identify GraphQL queries understood by Reddit's gql.reddit.com
- * GraphQL server. This is not a public API. Reddit doesn't provide access to
- * Avatar info through its public API, so the only way to get at it is via the
- * internal APIs used by the Reddit Avatar Builder and NFT shop.
- *
- * This is fundamentally the reason why Headgear is a browser extension instead
- * of a stand-alone web app. By being a browser extension, a user effectively
- * grants Headgear access to Reddit with the same permissions they themselves
- * have when logged in. An external API client gets different access tokens that
- * are not able to access these internal APIs.
- *
- * Being internal, these APIs could be changed or removed at any time. And the
- * query IDs can also change.
- *
- * The IDs can be found by using a browser's dev tools to observe HTTP requests
- * made when opening the Avatar Builder.
- *
- * TODO: We should set up a scheduled CI build to try to catch when these IDs
- *   change.
- */
-// AvatarBuilderCatalogWithStorefront GQL query
-export const _GQL_QUERY_ID_AVATAR_DATA = "e60eb3c641f1";
-// GetNftDetails GQL query
-export const _GQL_QUERY_ID_NFT_INFO = "e9865cc4d93d";
-
-export async function _fetchAvatarData({
-  apiToken,
-}: {
-  apiToken: string;
-}): Promise<AvatarData> {
-  const json = await _graphqlJsonApiRequest({
-    apiToken,
-    bodyJSON: JSON.stringify({
-      variables: {
-        // true has some interesting results... 👀
-        includeDistributionCampaigns: false,
-      },
-      id: _GQL_QUERY_ID_AVATAR_DATA,
-    }),
-  });
-  validateAvatarDataResponseData(json);
-  return json.data;
+export async function _fetchAvatarState(): Promise<AvatarState> {
+  const doc = await _fetchPartialHtml(_AVATAR_EDIT_URL);
+  const initialState = doc
+    .querySelector("avatar-state-container")
+    ?.getAttribute("initial-state");
+  if (typeof initialState !== "string") {
+    throw new Error(
+      "Avatar edit page is not structured as expected: no avatar-state-container initial-state"
+    );
+  }
+  let json: unknown;
+  try {
+    json = JSON.parse(initialState);
+  } catch (e) {
+    throw new Error(
+      `Avatar edit page is not structured as expected: avatar-state-container initial-state is not valid JSON: ${e}`
+    );
+  }
+  validateAvatarState(json);
+  return json;
 }
 
-export async function _fetchAvatarNFTData({
-  apiToken,
-  nftId,
-}: {
-  apiToken: string;
-  nftId: string;
-}): Promise<NFTInfoResponse> {
-  const json = await _graphqlJsonApiRequest({
-    apiToken,
-    bodyJSON: JSON.stringify({
-      variables: {
-        ids: [nftId],
-      },
-      id: _GQL_QUERY_ID_NFT_INFO,
-    }),
-  });
-  validateAvatarNFTInfoResponseData(json);
-  return json.data.inventoryItems.edges[0].node;
+export async function _fetchNftCardData(nftId: string): Promise<NftCardData> {
+  const doc = await _fetchPartialHtml(`${_NFT_CARD_URL_PREFIX}${nftId}`);
+  const card = doc.querySelector("product-detail-card-view");
+  const name = card?.getAttribute("nft-title");
+  if (!card || !name) {
+    throw new Error(
+      "NFT details are not structured as expected: no product-detail-card-view nft-title"
+    );
+  }
+  const dropSize = card.getAttribute("drop-size");
+  if (dropSize === null || !/^\d+$/.test(dropSize)) {
+    throw new Error(
+      `NFT details are not structured as expected: product-detail-card-view drop-size is not a non-negative integer: ${JSON.stringify(
+        dropSize
+      )}`
+    );
+  }
+  // Unlimited series have drop-size="0"
+  const seriesSize = Number(dropSize);
+  return { name, seriesSize: seriesSize > 0 ? seriesSize : null };
 }
 
 export interface ResolvedAccessory {
@@ -299,81 +242,53 @@ export function _validateSVGStyle(obj: object): asserts obj is SVGStyle {
   );
 }
 
-function _resolveAccessory({
-  accessoryId,
-  accessories,
-}: {
-  accessoryId: string;
-  accessories: Map<string, AvatarAccessory>;
-}): Promise<ResolvedAccessory>[] {
-  const accessory = accessories.get(accessoryId);
-  if (accessory === undefined) {
-    throw new Error(
-      `No accessory data is available for Accessory ID: ${accessoryId}`
-    );
-  }
-
-  const resolvedAssets = accessory.assets.map(async (asset) => {
-    let svgData: string;
-    try {
-      const svgResp = await fetch(asset.imageUrl, { credentials: "omit" });
-      if (!svgResp.ok)
-        throw new Error(`Request failed: ${_failedResponseSummary(svgResp)}`);
-      if (
-        !/\bimage\/svg\+xml\b/.test(svgResp.headers.get("content-type") || "")
-      )
-        throw new Error(`Response is not an image in SVG format`);
-      svgData = await svgResp.text();
-    } catch (e) {
-      if (!(e instanceof Error)) throw e;
+async function _resolveAccessory(
+  accessory: SlotAccessory
+): Promise<ResolvedAccessory> {
+  let svgData: string;
+  try {
+    const svgResp = await fetch(accessory.asset.imageUrl, {
+      credentials: "omit",
+    });
+    if (!svgResp.ok)
       throw new Error(
-        `Failed to fetch SVG data for Accessory ID ${accessoryId}: ${e.message}`
+        `Request failed: ${await _failedResponseSummary(svgResp)}`
       );
-    }
-
-    return {
-      id: accessory.id,
-      slotNumber: asset.slotNumber,
-      customizableClasses: accessory.customizableClasses,
-      svgData,
-    };
-  });
-
-  if (resolvedAssets.length === 0) {
+    if (!/\bimage\/svg\+xml\b/.test(svgResp.headers.get("content-type") || ""))
+      throw new Error(`Response is not an image in SVG format`);
+    svgData = await svgResp.text();
+  } catch (e) {
+    if (!(e instanceof Error)) throw e;
     throw new Error(
-      `Accessory ID ${accessoryId} has no asset: ${JSON.stringify(accessory)}`
+      `Failed to fetch SVG data for Accessory ID ${accessory.id}: ${e.message}`
     );
   }
-  return resolvedAssets;
-}
 
-export function _getNftId(avatar: UserAvatar): string | null {
-  const match = /\/nftv2_([^_]+)_/.exec(avatar.fullImage.url);
-  if (match) {
-    return atob(match[1]);
-  }
-  return null;
+  return {
+    id: accessory.id,
+    slotNumber: accessory.asset.slotNumber,
+    customizableClasses: accessory.customizableClasses,
+    svgData,
+  };
 }
 
 export async function _resolveNftInfo({
-  apiToken,
   nftId,
+  backgroundUrl,
 }: {
-  apiToken: string;
   nftId: string;
+  backgroundUrl: string;
 }): Promise<NFTInfo> {
-  const nftInfoResponse = await _fetchAvatarNFTData({ apiToken, nftId });
+  const [cardData, backgroundDataUrl] = await Promise.all([
+    _fetchNftCardData(nftId),
+    _resolveHttpImageUrlToDataUrl(backgroundUrl),
+  ]);
 
   return {
     nftId,
-    name: nftInfoResponse.name,
-    seriesSize: nftInfoResponse.drop.size,
-    backgroundImage: {
-      httpUrl: nftInfoResponse.benefits.avatarOutfit.backgroundImage.url,
-      dataUrl: await _resolveHttpImageUrlToDataUrl(
-        nftInfoResponse.benefits.avatarOutfit.backgroundImage.url
-      ),
-    },
+    name: cardData.name,
+    seriesSize: cardData.seriesSize,
+    backgroundImage: { httpUrl: backgroundUrl, dataUrl: backgroundDataUrl },
   };
 }
 
@@ -406,32 +321,24 @@ export async function _resolveHttpImageUrlToDataUrl(
  *
  * The result contains everything needed to render the Avatar as an SVG image.
  */
-export async function _resolveAvatar({
-  apiToken,
-  avatarData,
-}: {
-  apiToken: string;
-  avatarData: AvatarData;
-}): Promise<ResolvedAvatar | null> {
-  const userAvatar = avatarData.avatarBuilderCatalog.avatar;
-  // avatar is null for users who've never used the avatar builder
-  if (!userAvatar) return null;
-  const accessories = new Map<string, AvatarAccessory>(
-    avatarData.avatarBuilderCatalog.accessories.map((acc) => [acc.id, acc])
-  );
-  const nftId = _getNftId(userAvatar);
-  const futureNftInfo = nftId
-    ? _resolveNftInfo({ apiToken, nftId })
+export async function _resolveAvatar(
+  avatarState: AvatarState
+): Promise<ResolvedAvatar | null> {
+  const slotAccessories = Object.values(avatarState.accessoriesBySlot);
+  // There are no accessories for users who've never used the avatar builder
+  if (slotAccessories.length === 0) return null;
+
+  const background = avatarState.backgroundImage;
+  const futureNftInfo = background?.id.startsWith("nft_")
+    ? _resolveNftInfo({ nftId: background.id, backgroundUrl: background.url })
     : undefined;
-  const futureAccessories = userAvatar.accessoryIds.flatMap((accessoryId) =>
-    _resolveAccessory({ accessoryId, accessories })
-  );
+  const futureAccessories = slotAccessories.map(_resolveAccessory);
   // Fetch everything concurrently
-  await Promise.allSettled([...futureAccessories, nftId]);
+  await Promise.allSettled([...futureAccessories, futureNftInfo]);
 
   return {
     accessories: await Promise.all(futureAccessories),
-    styles: userAvatar.styles,
+    styles: Object.values(avatarState.customColorsByClassName),
     nftInfo: await futureNftInfo,
   };
 }
@@ -442,13 +349,8 @@ export async function _resolveAvatar({
  * Include this in cache keys that hold avatar data to invalidate the cache when
  * getCurrentAvatar() could return a different result.
  */
-export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 6;
+export const GET_CURRENT_AVATAR_BEHAVIOUR_ID = 7;
 
-export async function getCurrentAvatar({
-  apiToken,
-}: {
-  apiToken: string;
-}): Promise<ResolvedAvatar | null> {
-  const avatarData = await _fetchAvatarData({ apiToken });
-  return _resolveAvatar({ apiToken, avatarData });
+export async function getCurrentAvatar(): Promise<ResolvedAvatar | null> {
+  return _resolveAvatar(await _fetchAvatarState());
 }
