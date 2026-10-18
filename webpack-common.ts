@@ -80,7 +80,7 @@ class GenerateManifestPlugin {
       manifest.browser_specific_settings = {
         gecko: {
           id: "headgear@h4l.users.github.com",
-          strict_min_version: validateStrictMinVersion("109.0"),
+          strict_min_version: validateStrictMinVersion("128.0"),
         },
       };
       // Firefox doesn't support service_worker, it uses background scripts

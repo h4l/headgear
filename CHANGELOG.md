@@ -19,6 +19,8 @@ and this project adheres to
 - Headgear no longer needs an auth token to make API requests, so the value of
   Reddit's auth token cookie is not actively used, but Headgear does still check
   for the presence of the cookie to detect whether a user is logged in.
+- Firefox minimum supported version increased: `strict_min_version` value in
+  Firefox manifest is now `128.0`.
 
 ## [0.7.0] - 2025-04-19
 
