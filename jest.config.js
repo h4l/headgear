@@ -1,7 +1,7 @@
 /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
   preset: "ts-jest",
-  testEnvironment: "jsdom",
+  testEnvironment: "<rootDir>/jest-environment-jsdom-with-fetch.js",
   testEnvironmentOptions: {
     // jsdom test environment uses "browser" by default. This causes jest to
     // import the "browser" export from package.json. Preact (and probably other

@@ -1,4 +1,4 @@
-import fetchMock from "fetch-mock-jest";
+import fetchMock from "@fetch-mock/jest";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 
@@ -18,10 +18,11 @@ const PARTIAL_HTML_HEADERS = {
 const NFT_ID = "nft_eip155:137_9d8542ef1237933badbe867291f6c0434b8d315c_2713";
 
 beforeEach(() => {
-  fetchMock.restore();
+  fetchMock.mockReset();
 });
 
 beforeAll(() => {
+  fetchMock.mockGlobal();
   const _origReadAsDataURL = FileReader.prototype.readAsDataURL;
   jest
     .spyOn(FileReader.prototype, "readAsDataURL")
@@ -44,6 +45,7 @@ beforeAll(() => {
     });
 });
 afterAll(() => {
+  fetchMock.mockRestore();
   jest.mocked(FileReader.prototype.readAsDataURL).mockReset();
 });
 
@@ -80,7 +82,7 @@ function mockAvatarStateResponse(initialState: string): void {
 }
 
 function mockImageResponses(): void {
-  fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", (url) => {
+  fetchMock.get("glob:https://i.redd.it/snoovatar/*.svg", ({ url }) => {
     return {
       headers: { "content-type": "image/svg+xml" },
       body: `<svg xmlns="http://www.w3.org/2000/svg"><!-- ${url} --></svg>`,
@@ -350,5 +352,5 @@ test("getCurrentAvatar() omits NFT info for regular avatars", async () => {
 test("getCurrentAvatar() resolves to null when users have no avatar", async () => {
   await mockAvatarEditResponse("no-avatar");
   await expect(getCurrentAvatar()).resolves.toBeNull();
-  expect(fetchMock.calls().length).toBe(1);
+  expect(fetchMock.callHistory.calls().length).toBe(1);
 });
