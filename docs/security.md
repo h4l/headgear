@@ -131,14 +131,26 @@ in your dev tools).
 > only publish minified builds. Preact's source maps are included though.)
 
 Release builds are made by GitHub Actions CI, and published to the repo's
-Releases, so the build environment is verifiable. The build generates file
-hashes to allow the release files to be tied to the CI build. The .zip archive
-built by CI is then published to the Chrome Web store. You can use the [Chrome
+Releases, so the build environment is verifiable. The release files have GitHub
+artifact attestations, which tie them to the commit and CI run that built them,
+and the build is reproducible, so you can rebuild a release yourself and compare
+the files (see [Release Builds](developing.md#release-builds)). The build also
+lists the hashes of the files inside each release `.zip`.
+
+When a GitHub Release is published, CI verifies the attestations of the `.zip`
+files and submits them unmodified to the Chrome Web Store and Firefox Add-ons
+(see [releasing.md](releasing.md)). Releases are only ever submitted to the
+stores by these CI workflows, never uploaded manually, so the files the stores
+distribute are the ones CI built from the tagged commit. You can use the [Chrome
 extension source viewer extension] to download the version of Headgear published
-on the Chrome Web store, and cross-reference the file hashes with those reported
-by the CI build. Note that GitHub deletes CI logs after 90 days. All the files
-should match, except for `manifest.json`, because The Chrome Web Store modifies
-it to include an update URL. It's easy to see that the content matches though.
+on the Chrome Web store, and cross-reference the file hashes with those of the
+release. All the files should match, except for `manifest.json`, because The
+Chrome Web Store modifies it to include an update URL, and the store adds a
+`_metadata/` directory. It's easy to see that the content matches though.
+Similarly, the `.xpi` file published by Firefox Add-ons only differs from the
+release by the `META-INF/` directory containing Mozilla's signature. The signed
+`.xpi` is also attached to the GitHub Release, with an attestation from the CI
+run that submitted it.
 
 [chrome extension source viewer extension]:
   chrome-extension://jifpbeccnghkjeaalbbjmodiffmgedin/crxviewer.html?crx=https%3A%2F%2Fclients2.google.com%2Fservice%2Fupdate2%2Fcrx%3Fresponse%3Dredirect%26os%3Dmac%26arch%3Darm64%26os_arch%3Darm64%26nacl_arch%3Darm%26prod%3Dchromiumcrx%26prodchannel%3Dunknown%26prodversion%3D9999.0.9999.0%26acceptformat%3Dcrx2%2Ccrx3%26x%3Did%253Denohpjpndpodijgkfibkcpfdchjhfljp%2526uc&zipname=enohpjpndpodijgkfibkcpfdchjhfljp.zip
