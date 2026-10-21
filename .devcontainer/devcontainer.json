@@ -3,10 +3,7 @@
 {
   "name": "Node.js & TypeScript",
   "build": {
-    "dockerfile": "Dockerfile",
-    "args": {
-      "VARIANT": "18-bullseye"
-    }
+    "dockerfile": "Dockerfile"
   },
   "mounts": [
     // If you're not using a bind mount for the workspace, you probably want to
@@ -27,7 +24,8 @@
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
         "orta.vscode-jest",
-        "streetsidesoftware.code-spell-checker"
+        "streetsidesoftware.code-spell-checker",
+        "hashicorp.hcl"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -59,5 +57,13 @@
     }
   },
   "postCreateCommand": "npm install",
-  "remoteUser": "node"
+  "remoteUser": "node",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false, // Debian Trixie does not have packages for moby
+      "installDockerBuildx": true,
+      "version": "latest",
+      "dockerDashComposeVersion": "latest"
+    }
+  }
 }
