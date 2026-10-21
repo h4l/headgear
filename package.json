@@ -11,9 +11,7 @@
     "test-watch": "jest --watch",
     "eslint": "eslint src",
     "prettier-check": "prettier --check .",
-    "create-release-zip": "scripts/create-release-zip.sh",
-    "create-release-zips": "npm run create-release-zip chrome && npm run create-release-zip firefox",
-    "assemble-release-files": "scripts/assemble-release-files.sh"
+    "create-git-release-tag": "version=$(jq < package.json -r .version); git tag -a \"v${version:?}\" -m \"${version:?}\""
   },
   "author": "Hal Blackburn",
   "license": "MIT",
