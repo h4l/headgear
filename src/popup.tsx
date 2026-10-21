@@ -440,9 +440,7 @@ export function DisplayArea() {
   }
 
   return (
-    <div class="grow _bg-slate-700 _bg-gradient-to-br bg-gradient-radial from-slate-600 to-slate-800 p-6">
-      {content}
-    </div>
+    <div class="grow bg-radial from-slate-600 to-slate-800 p-6">{content}</div>
   );
 }
 
@@ -965,7 +963,7 @@ export function ImageOptions(): JSX.Element {
               : "hidden opacity-0"
         }
         transition-opacity
-        absolute left-0 right-0 top-0 bottom-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80
+        absolute left-0 right-0 top-0 bottom-0 bg-gray-900/50 dark:bg-gray-900/80
         `}
       />
       <div

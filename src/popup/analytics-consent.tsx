@@ -78,7 +78,7 @@ export function AnalyticsConsent(): JSX.Element {
               : "hidden opacity-0"
         }
         transition-opacity
-        absolute z-20 left-0 right-0 top-0 bottom-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80
+        absolute z-20 left-0 right-0 top-0 bottom-0 bg-gray-900/50 dark:bg-gray-900/80
         `}
       />
       <div
