@@ -3,6 +3,7 @@
 !.eslintignore
 !.eslintrc.js
 !.devcontainer
+!.dockerignore
 # marking .git as ignored can confuse VSCode when editing .git/COMMIT_EDITMSG
 !.git
 !.github

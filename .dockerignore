@@ -1,0 +1,17 @@
+# Include only files we need
+*
+!.prettier*
+!CHANGELOG.md
+!LICENSE
+!README.md
+!__mocks__
+!/docs
+!eslint.config.mjs
+!jest*
+!package-lock.json
+!package.json
+!postcss.config.js
+!scripts
+!src
+!tsconfig.json
+!webpack-*
