@@ -1,0 +1,70 @@
+name: Submit extension release archive to Firefox Add-ons
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: "bash -euo pipefail {0}"
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    environment: Firefox Add-ons
+    # We don't submit pre-releases to AMO, so don't run on prerelease releases.
+    # (workflow_dispatch runs can still be prerelease, but scripts/amo-submit.sh
+    # will reject due to AMO_ALLOW_PRERELEASE=false by default.)
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') && !(github.event_name == 'release'
+      && github.event.release.prerelease)
+    permissions:
+      # required to upload files to releases
+      contents: write
+      # required to create attestations
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y uuid jwt
+
+      - id: submit
+        name: Submit GitHub Release version to Firefox Add-ons
+        run: |
+          result_json=$(scripts/amo-submit.sh "${TAG:?}")
+          echo "result_json=${result_json:?}" | tee -a "${GITHUB_OUTPUT:?}"
+        env:
+          TAG: ${{ github.ref_name }}
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Create GitHub attestations for signed .xpi archive
+        uses: actions/attest@v4
+        # The .xpi is signed by Mozilla, which shows it was approved by AMO. The
+        # attestation shows that it came from this CI run, which submitted the
+        # release archive that was attested by the ci workflow.
+        #
+        # The attestation allows people to verify that we didn't privately
+        # upload a release with the same version.
+        if: fromJson(steps.submit.outputs.result_json).signed_xpi_file
+        with:
+          subject-path:
+            ${{ fromJson(steps.submit.outputs.result_json).signed_xpi_file }}
+
+      - name: Attach signed .xpi archive to GitHub Release
+        if: fromJson(steps.submit.outputs.result_json).signed_xpi_file
+        run: |
+          gh release upload "${TAG:?}" "${SIGNED_XPI_FILE:?}"
+        env:
+          SIGNED_XPI_FILE:
+            ${{ fromJson(steps.submit.outputs.result_json).signed_xpi_file }}
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
