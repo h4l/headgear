@@ -1276,7 +1276,7 @@ export function OutputImageExactRadio(props: {
 export function Headgear() {
   return (
     // 800x600 is the current largest size a popup can be.
-    <div class="w-[800px] h-[600px] flex flex-row relative text-base">
+    <div class="w-[800px] h-[600px] flex flex-row relative text-base overflow-clip">
       <ClosePopupButton />
       <DisplayArea />
       <Controls />

@@ -13,6 +13,7 @@ and this project adheres to
 - Loading avatars works again. Reddit removed the GraphQL API endpoints that
   Headgear used to fetch avatar and NFT data. Headgear now reads this data from
   the HTML of Reddit's Avatar Builder and NFT details pages instead.
+- Popup UI is no longer able to scroll out of view sideways.
 
 ### Changed
 
