@@ -17,10 +17,8 @@ Environment Variables:
     DEFAULT_PUBLISH (publish as soon as it is approved) or STAGED_PUBLISH
     (publish manually from the Developer Dashboard after approval). If empty,
     the uploaded version is left as a draft.  [Default: ""]
-  CWS_CLIENT_ID
-  CWS_CLIENT_SECRET
-  CWS_REFRESH_TOKEN
-    OAuth credentials used by cws-auth.sh. See docs/dev/cws-auth.md
+  CWS_ACCESS_TOKEN
+    OAuth Access Token with the chromewebstore scope, used by cws-auth.sh.
   GITHUB_REPOSITORY
     The GitHub repository (owner/name) the release and attestations belong to.
   RELEASE_NAME
