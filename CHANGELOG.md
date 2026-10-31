@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.8.1] - 2026-10-31
+
 Fixed:
 
 - Correct bug in Chrome Web Store release script that caused 0.8.0 to fail to
@@ -219,7 +223,8 @@ The first release.
 - Download these SVG Avatar images
 - Support for Chrome-based browsers
 
-[unreleased]: https://github.com/h4l/headgear/compare/v0.8.0...HEAD
+[unreleased]: https://github.com/h4l/headgear/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/h4l/headgear/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/h4l/headgear/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/h4l/headgear/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/h4l/headgear/compare/v0.5.1...v0.6.0
