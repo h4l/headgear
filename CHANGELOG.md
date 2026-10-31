@@ -24,6 +24,7 @@ and this project adheres to
   Firefox manifest is now `128.0`.
 - Bundled JavaScript code no longer contains `Function("return this")()` calls;
   it uses `globalThis` instead.
+- Remove "Support this project" banner
 
 ## [0.7.0] - 2025-04-19
 
