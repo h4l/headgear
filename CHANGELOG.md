@@ -10,6 +10,12 @@ and this project adheres to
 
 Nothing yet.
 
+## [0.8.0-rc.1] - 2026-10-31
+
+### Changed
+
+- Nothing — this is a test release RC1.
+
 ## [0.8.0] - 2026-10-31
 
 ### Fixed
