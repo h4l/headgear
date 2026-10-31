@@ -124,6 +124,9 @@ export async function createConfig(options: {
 
   const config: Configuration = {
     name: options.browser,
+    // ES2020 lets webpack's runtime use globalThis directly, rather than
+    // falling back to Function('return this')().
+    target: ["web", "es2020"],
     entry: {
       background: "./src/background-entry.ts",
       popup: "./src/popup-entry.tsx",
@@ -146,6 +149,16 @@ export async function createConfig(options: {
           enforce: "pre",
           test: /\.js$/,
           include: [/\/node_modules\/.*(?<=\/)@?preact\b/],
+        },
+        // Dependencies like lodash use Function('return this')() to get the
+        // global object, which the extension stores flag as eval.
+        {
+          test: /\.[cm]?js$/,
+          include: /node_modules/,
+          loader: path.resolve(
+            __dirname,
+            "webpack-loader-function-constructor-return-this.ts"
+          ),
         },
         {
           test: /\.css$/,

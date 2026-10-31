@@ -22,6 +22,8 @@ and this project adheres to
   for the presence of the cookie to detect whether a user is logged in.
 - Firefox minimum supported version increased: `strict_min_version` value in
   Firefox manifest is now `128.0`.
+- Bundled JavaScript code no longer contains `Function("return this")()` calls;
+  it uses `globalThis` instead.
 
 ## [0.7.0] - 2025-04-19
 
