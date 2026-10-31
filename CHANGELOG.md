@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.8.0] - 2026-10-31
+
 ### Fixed
 
 - Loading avatars works again. Reddit removed the GraphQL API endpoints that
@@ -212,7 +216,8 @@ The first release.
 - Download these SVG Avatar images
 - Support for Chrome-based browsers
 
-[unreleased]: https://github.com/h4l/headgear/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/h4l/headgear/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/h4l/headgear/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/h4l/headgear/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/h4l/headgear/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/h4l/headgear/compare/v0.5.0...v0.5.1
