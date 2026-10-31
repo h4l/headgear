@@ -73,11 +73,11 @@ if jq <<<"${release_json:?}" -e '.isPrerelease' > /dev/null; then
   err_exit "GitHub Release ${tag:?} is a pre-release"
 fi
 
-release_archive_name="{$RELEASE_NAME:?}-chrome-${tag:?}.zip"
+release_archive_name="${RELEASE_NAME:?}-chrome-${tag:?}.zip"
 release_asset_json=$(
   release_archive_name=${release_archive_name:?} jq <<<"${release_json:?}" -e \
     'first(.assets[] | select(.name == env.release_archive_name))'
-)
+) || err_exit "GitHub Release ${tag:?} has no asset named ${release_archive_name@Q}"
 release_archive_url=$(jq <<<"${release_asset_json:?}" -er '.url')
 release_archive_file="${dir:?}/${release_archive_name:?}"
 

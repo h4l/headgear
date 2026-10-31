@@ -8,7 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
-Nothing yet.
+Fixed:
+
+- Correct bug in Chrome Web Store release script that caused 0.8.0 to fail to
+  release.
 
 ## [0.8.0] - 2026-10-31
 
